@@ -1,0 +1,36 @@
+.container {
+  display: flex;
+  justify-content: center;
+}
+
+.layoutHeader {
+  height: 75px;
+  background-color: #30d97c;
+}
+
+.content {
+  margin-top: 25px;
+  max-width: 900px;
+  width: 100%;
+}
+
+.title {
+  color: #464646;
+  text-align: center;
+  padding-top: 10px;
+}
+
+.col {
+  flex-grow: 1;
+}
+
+.colWide {
+  flex-grow: 2;
+}
+
+.name {
+  margin-right: 20px;
+  position: absolute;
+  right: 20px;
+  top: 25px;
+}

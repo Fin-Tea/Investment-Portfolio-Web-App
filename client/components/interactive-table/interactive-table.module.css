@@ -1,0 +1,9 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.underline {
+  height: 3px;
+  width: 100%;
+}

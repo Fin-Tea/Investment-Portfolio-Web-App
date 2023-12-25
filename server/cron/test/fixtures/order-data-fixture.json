@@ -1,0 +1,728 @@
+[
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "SIGQ",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310461000",
+          "symbol": "SPY_110321C461",
+          "description": "SPY Nov 03 2021 461.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "SELL_TO_CLOSE",
+        "positionEffect": "CLOSING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4681434637,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-03T13:57:43+0000",
+    "closeTime": "2021-11-03T13:57:43+0000",
+    "tag": "API_TOS:Empty",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 15,
+        "orderRemainingQuantity": 10,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 15,
+            "mismarkedQuantity": 0,
+            "price": 1.41,
+            "time": "2021-11-03T13:57:43+0000"
+          }
+        ]
+      },
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 10,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 10,
+            "mismarkedQuantity": 0,
+            "price": 1.41,
+            "time": "2021-11-03T13:57:43+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "SIGQ",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310461000",
+          "symbol": "SPY_110321C461",
+          "description": "SPY Nov 03 2021 461.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "BUY_TO_OPEN",
+        "positionEffect": "OPENING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4680692714,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-03T13:38:30+0000",
+    "closeTime": "2021-11-03T13:38:30+0000",
+    "tag": "API_TOS:TRADE_ALL",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 1.35,
+            "time": "2021-11-03T13:38:30+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "DFIN",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310461000",
+          "symbol": "SPY_110321C461",
+          "description": "SPY Nov 03 2021 461.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "SELL_TO_CLOSE",
+        "positionEffect": "CLOSING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4680692435,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-03T13:36:08+0000",
+    "closeTime": "2021-11-03T13:36:08+0000",
+    "tag": "API_TOS:Empty",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 1.41,
+            "time": "2021-11-03T13:36:08+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "CDRG",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310461000",
+          "symbol": "SPY_110321C461",
+          "description": "SPY Nov 03 2021 461.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "BUY_TO_OPEN",
+        "positionEffect": "OPENING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4680692287,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-03T13:34:43+0000",
+    "closeTime": "2021-11-03T13:34:43+0000",
+    "tag": "API_TOS:TRADE_ALL",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 17,
+        "orderRemainingQuantity": 8,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 17,
+            "mismarkedQuantity": 0,
+            "price": 1.52,
+            "time": "2021-11-03T13:34:43+0000"
+          }
+        ]
+      },
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 8,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 8,
+            "mismarkedQuantity": 0,
+            "price": 1.52,
+            "time": "2021-11-03T13:34:43+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "SIGQ",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310461000",
+          "symbol": "SPY_110321C461",
+          "description": "SPY Nov 03 2021 461.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "SELL_TO_CLOSE",
+        "positionEffect": "CLOSING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4675906314,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-02T16:38:08+0000",
+    "closeTime": "2021-11-02T16:38:08+0000",
+    "tag": "API_TOS:Empty",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 2.02,
+            "time": "2021-11-02T16:38:08+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "SIGQ",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310461000",
+          "symbol": "SPY_110321C461",
+          "description": "SPY Nov 03 2021 461.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "BUY_TO_OPEN",
+        "positionEffect": "OPENING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4675905002,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-02T16:04:13+0000",
+    "closeTime": "2021-11-02T16:04:13+0000",
+    "tag": "API_TOS:TRADE_ALL",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 1.74,
+            "time": "2021-11-02T16:04:13+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "CDRG",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310460000",
+          "symbol": "SPY_110321C460",
+          "description": "SPY Nov 03 2021 460.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "SELL_TO_CLOSE",
+        "positionEffect": "CLOSING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4672709398,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-02T13:59:08+0000",
+    "closeTime": "2021-11-02T13:59:08+0000",
+    "tag": "API_TOS:Empty",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 2.37,
+            "time": "2021-11-02T13:59:08+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "CDRG",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310460000",
+          "symbol": "SPY_110321C460",
+          "description": "SPY Nov 03 2021 460.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "BUY_TO_OPEN",
+        "positionEffect": "OPENING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4671923819,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-02T13:44:14+0000",
+    "closeTime": "2021-11-02T13:44:14+0000",
+    "tag": "API_TOS:TRADE_ALL",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 2.05,
+            "time": "2021-11-02T13:44:14+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "CDRG",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..W310461000",
+          "symbol": "SPY_110321P461",
+          "description": "SPY Nov 03 2021 461.0 Put",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "SELL_TO_CLOSE",
+        "positionEffect": "CLOSING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4671923220,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-02T13:39:11+0000",
+    "closeTime": "2021-11-02T13:39:11+0000",
+    "tag": "API_TOS:Empty",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 10,
+        "orderRemainingQuantity": 15,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 10,
+            "mismarkedQuantity": 0,
+            "price": 1.78,
+            "time": "2021-11-02T13:39:11+0000"
+          }
+        ]
+      },
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 5,
+        "orderRemainingQuantity": 10,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 5,
+            "mismarkedQuantity": 0,
+            "price": 1.78,
+            "time": "2021-11-02T13:39:11+0000"
+          }
+        ]
+      },
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 5,
+        "orderRemainingQuantity": 5,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 5,
+            "mismarkedQuantity": 0,
+            "price": 1.78,
+            "time": "2021-11-02T13:39:11+0000"
+          }
+        ]
+      },
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 5,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 5,
+            "mismarkedQuantity": 0,
+            "price": 1.78,
+            "time": "2021-11-02T13:39:11+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "SIGQ",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..W310461000",
+          "symbol": "SPY_110321P461",
+          "description": "SPY Nov 03 2021 461.0 Put",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "BUY_TO_OPEN",
+        "positionEffect": "OPENING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4671246509,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-02T13:34:00+0000",
+    "closeTime": "2021-11-02T13:34:01+0000",
+    "tag": "API_TOS:TRADE_ALL",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 2.02,
+            "time": "2021-11-02T13:34:01+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "SIGQ",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310460000",
+          "symbol": "SPY_110321C460",
+          "description": "SPY Nov 03 2021 460.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "SELL_TO_CLOSE",
+        "positionEffect": "CLOSING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4661779730,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-01T13:37:53+0000",
+    "closeTime": "2021-11-01T13:37:53+0000",
+    "tag": "API_TOS:Empty",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 25,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 25,
+            "mismarkedQuantity": 0,
+            "price": 1.96,
+            "time": "2021-11-01T13:37:53+0000"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "session": "NORMAL",
+    "duration": "DAY",
+    "orderType": "MARKET",
+    "complexOrderStrategyType": "NONE",
+    "quantity": 25,
+    "filledQuantity": 25,
+    "remainingQuantity": 0,
+    "requestedDestination": "AUTO",
+    "destinationLinkName": "MSCO",
+    "orderLegCollection": [
+      {
+        "orderLegType": "OPTION",
+        "legId": 1,
+        "instrument": {
+          "assetType": "OPTION",
+          "cusip": "0SPY..K310460000",
+          "symbol": "SPY_110321C460",
+          "description": "SPY Nov 03 2021 460.0 Call",
+          "underlyingSymbol": "SPY"
+        },
+        "instruction": "BUY_TO_OPEN",
+        "positionEffect": "OPENING",
+        "quantity": 25
+      }
+    ],
+    "orderStrategyType": "SINGLE",
+    "orderId": 4661246663,
+    "cancelable": false,
+    "editable": false,
+    "status": "FILLED",
+    "enteredTime": "2021-11-01T13:30:14+0000",
+    "closeTime": "2021-11-01T13:30:14+0000",
+    "tag": "API_TOS:TRADE_ALL",
+    "accountId": 237055806,
+    "orderActivityCollection": [
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 17,
+        "orderRemainingQuantity": 8,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 17,
+            "mismarkedQuantity": 0,
+            "price": 2.24,
+            "time": "2021-11-01T13:30:14+0000"
+          }
+        ]
+      },
+      {
+        "activityType": "EXECUTION",
+        "executionType": "FILL",
+        "quantity": 8,
+        "orderRemainingQuantity": 0,
+        "executionLegs": [
+          {
+            "legId": 1,
+            "quantity": 8,
+            "mismarkedQuantity": 0,
+            "price": 2.25,
+            "time": "2021-11-01T13:30:14+0000"
+          }
+        ]
+      }
+    ]
+  }
+]

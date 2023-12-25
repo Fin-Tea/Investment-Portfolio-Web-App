@@ -1,0 +1,226 @@
+[
+    {
+      "session": "NORMAL",
+      "duration": "DAY",
+      "orderType": "MARKET",
+      "complexOrderStrategyType": "NONE",
+      "quantity": 1,
+      "filledQuantity": 1,
+      "remainingQuantity": 0,
+      "requestedDestination": "AUTO",
+      "destinationLinkName": "CDRG",
+      "orderLegCollection": [
+        {
+          "orderLegType": "OPTION",
+          "legId": 1,
+          "instrument": {
+            "assetType": "OPTION",
+            "cusip": "0SPY..XH10468000",
+            "symbol": "SPY_121721P468",
+            "description": "SPDR S&P500 ETF TRUST PUT December 468",
+            "type": "VANILLA",
+            "putCall": "PUT",
+            "underlyingSymbol": "SPY"
+          },
+          "instruction": "SELL_TO_CLOSE",
+          "positionEffect": "CLOSING",
+          "quantity": 1
+        }
+      ],
+      "orderStrategyType": "SINGLE",
+      "orderId": 5781532873,
+      "cancelable": false,
+      "editable": false,
+      "status": "FILLED",
+      "enteredTime": "2021-12-17T15:18:23+0000",
+      "closeTime": "2021-12-17T15:18:23+0000",
+      "tag": "API_TOS:Empty",
+      "accountId": 237055806,
+      "orderActivityCollection": [
+        {
+          "activityType": "EXECUTION",
+          "activityId": 35430200994,
+          "executionType": "FILL",
+          "quantity": 1,
+          "orderRemainingQuantity": 0,
+          "executionLegs": [
+            {
+              "legId": 1,
+              "quantity": 1,
+              "mismarkedQuantity": 0,
+              "price": 9.7,
+              "time": "2021-12-17T15:18:23+0000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "session": "NORMAL",
+      "duration": "DAY",
+      "orderType": "MARKET",
+      "complexOrderStrategyType": "NONE",
+      "quantity": 1,
+      "filledQuantity": 1,
+      "remainingQuantity": 0,
+      "requestedDestination": "AUTO",
+      "destinationLinkName": "CDRG",
+      "orderLegCollection": [
+        {
+          "orderLegType": "OPTION",
+          "legId": 1,
+          "instrument": {
+            "assetType": "OPTION",
+            "cusip": "0SPY..XH10468000",
+            "symbol": "SPY_121721P468",
+            "description": "SPDR S&P500 ETF TRUST PUT December 468",
+            "type": "VANILLA",
+            "putCall": "PUT",
+            "underlyingSymbol": "SPY"
+          },
+          "instruction": "BUY_TO_OPEN",
+          "positionEffect": "OPENING",
+          "quantity": 1
+        }
+      ],
+      "orderStrategyType": "SINGLE",
+      "orderId": 5777250290,
+      "cancelable": false,
+      "editable": false,
+      "status": "FILLED",
+      "enteredTime": "2021-12-16T19:09:35+0000",
+      "closeTime": "2021-12-16T19:09:36+0000",
+      "tag": "API_TOS:TRADE_ALL",
+      "accountId": 237055806,
+      "orderActivityCollection": [
+        {
+          "activityType": "EXECUTION",
+          "activityId": 35389819548,
+          "executionType": "FILL",
+          "quantity": 1,
+          "orderRemainingQuantity": 0,
+          "executionLegs": [
+            {
+              "legId": 1,
+              "quantity": 1,
+              "mismarkedQuantity": 0,
+              "price": 3.11,
+              "time": "2021-12-16T19:09:36+0000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "session": "NORMAL",
+      "duration": "DAY",
+      "orderType": "MARKET",
+      "complexOrderStrategyType": "NONE",
+      "quantity": 1,
+      "filledQuantity": 1,
+      "remainingQuantity": 0,
+      "requestedDestination": "AUTO",
+      "destinationLinkName": "CDRG",
+      "orderLegCollection": [
+        {
+          "orderLegType": "OPTION",
+          "legId": 1,
+          "instrument": {
+            "assetType": "OPTION",
+            "cusip": "0SPY..XH10461000",
+            "symbol": "SPY_121721P461",
+            "description": "SPDR S&P500 ETF TRUST PUT December 461",
+            "type": "VANILLA",
+            "putCall": "PUT",
+            "underlyingSymbol": "SPY"
+          },
+          "instruction": "SELL_TO_CLOSE",
+          "positionEffect": "CLOSING",
+          "quantity": 1
+        }
+      ],
+      "orderStrategyType": "SINGLE",
+      "orderId": 5774530455,
+      "cancelable": false,
+      "editable": false,
+      "status": "FILLED",
+      "enteredTime": "2021-12-16T16:05:47+0000",
+      "closeTime": "2021-12-16T16:05:47+0000",
+      "tag": "API_TOS:Empty",
+      "accountId": 237055806,
+      "orderActivityCollection": [
+        {
+          "activityType": "EXECUTION",
+          "activityId": 35376943039,
+          "executionType": "FILL",
+          "quantity": 1,
+          "orderRemainingQuantity": 0,
+          "executionLegs": [
+            {
+              "legId": 1,
+              "quantity": 1,
+              "mismarkedQuantity": 0,
+              "price": 0.38,
+              "time": "2021-12-16T16:05:47+0000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "session": "NORMAL",
+      "duration": "DAY",
+      "orderType": "MARKET",
+      "complexOrderStrategyType": "NONE",
+      "quantity": 1,
+      "filledQuantity": 1,
+      "remainingQuantity": 0,
+      "requestedDestination": "AUTO",
+      "destinationLinkName": "SIGQ",
+      "orderLegCollection": [
+        {
+          "orderLegType": "OPTION",
+          "legId": 1,
+          "instrument": {
+            "assetType": "OPTION",
+            "cusip": "0SPY..XH10461000",
+            "symbol": "SPY_121721P461",
+            "description": "SPDR S&P500 ETF TRUST PUT December 461",
+            "type": "VANILLA",
+            "putCall": "PUT",
+            "underlyingSymbol": "SPY"
+          },
+          "instruction": "BUY_TO_OPEN",
+          "positionEffect": "OPENING",
+          "quantity": 1
+        }
+      ],
+      "orderStrategyType": "SINGLE",
+      "orderId": 5760921639,
+      "cancelable": false,
+      "editable": false,
+      "status": "FILLED",
+      "enteredTime": "2021-12-14T18:45:15+0000",
+      "closeTime": "2021-12-14T18:45:16+0000",
+      "tag": "API_TOS:TRADE_ALL",
+      "accountId": 237055806,
+      "orderActivityCollection": [
+        {
+          "activityType": "EXECUTION",
+          "activityId": 35281202345,
+          "executionType": "FILL",
+          "quantity": 1,
+          "orderRemainingQuantity": 0,
+          "executionLegs": [
+            {
+              "legId": 1,
+              "quantity": 1,
+              "mismarkedQuantity": 0,
+              "price": 4.72,
+              "time": "2021-12-14T18:45:16+0000"
+            }
+          ]
+        }
+      ]
+    }
+  ]
