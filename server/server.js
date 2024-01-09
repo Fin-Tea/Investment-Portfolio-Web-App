@@ -14,7 +14,7 @@ const config = require("./config");
 export const PORT = 8080;
 
 const key = fs.readFileSync("./security/key.pem");
-const cert = fs.readFileSync("./security/cert.pem");
+const cert = fs.readFileSync("./security/new_cert.pem");
 
 const app = express();
 
