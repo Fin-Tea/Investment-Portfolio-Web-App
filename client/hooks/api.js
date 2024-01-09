@@ -16,7 +16,7 @@ export default function useApi(port) {
       method === "POST" && options.contentType !== "multipart/form-data"
         ? { "Content-Type": options.contentType || "application/json" }
         : undefined;
-    const body = data;
+    let body = data;
 
     if (
       data &&

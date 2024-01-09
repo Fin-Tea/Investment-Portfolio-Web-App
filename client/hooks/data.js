@@ -14,8 +14,8 @@ export default function useData(port) {
 
       if (user.selectedAccountId === "all") {
         accountId = user.id;
-        if (type === "POST") {
-          data?.allAccounts = true;
+        if (type === "POST" && data) {
+          data.allAccounts = true;
         } else {
           decoratedEndpoint = appendQueryParam(endpoint, "allAccounts", "true");
         }
