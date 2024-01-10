@@ -10,6 +10,9 @@ import JournalEntryModal from "../../../components/app/journal-entry-modal";
 import TradePlan from "../../../components/app/journal-forms/trade-plan";
 import Milestone from "../../../components/app/journal-forms/milestone";
 import ImprovementArea from "../../../components/app/journal-forms/improvement-area";
+import Finstrument from "../../../components/app/journal-forms/finstrument";
+import Reflection from "../../../components/app/journal-forms/reflection";
+import News from "../../../components/app/journal-forms/news";
 import { formatJournalDate } from "../../../date-utils";
 
 
@@ -26,7 +29,10 @@ const filterPills = [
 const formMap = {
     "Trade Plans": TradePlan,
     "Milestones": Milestone,
-    "Improvement Areas": ImprovementArea
+    "Improvement Areas": ImprovementArea,
+    "Finstruments": Finstrument,
+    "Reflections": Reflection,
+    "News": News,
 }
 
 const journalEntryFixtures = [
