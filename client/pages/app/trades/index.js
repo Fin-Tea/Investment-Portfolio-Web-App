@@ -345,13 +345,13 @@ export default function Trades() {
       <div className="h-full">
         <div className="py-4 h-full flex">
           <div className="ml-5 w-11/12 h-full flex flex-col border-x border-y border-gray-300 bg-white pb-4 mx-auto overflow-auto">
-            <div className="text-center">
+            <div>
               <div className="pt-2 text-center relative">
                 <h2 className="mb-0 text-2xl self-center">Trades</h2>
               </div>
               <div className="flex justify-between w-[90%] mx-auto">
                 <div>
-                    <span>Last Updated On</span>
+                    <span className="text-sm">Last Updated<br /> <i>Dec. 30, 2021 @ 7:57 PM</i></span>
                 </div>
                 <div>
                 <button className="mr-5 rounded-full bg-purple-800 text-white px-4 py-1">
