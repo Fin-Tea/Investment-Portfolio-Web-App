@@ -8,7 +8,7 @@ export default function BaseForm({ id, header, onSave, onDelete, children }) {
         <button className="mr-12 rounded-md bg-purple-800 text-white px-4" onClick={() => onDelete && onDelete(id)}>Delete</button>
         <button className="ml-12 rounded-md bg-purple-800 text-white px-4" onClick={() => onSave && onSave(id)}>Save</button>
       </div>
-      <div className="mt-4 pb-4 px-4 overflow-scroll max-h-[50vh]">{children}</div>
+      <div className="mt-4 pb-4 px-4 overflow-auto max-h-[50vh]">{children}</div>
     </div>
   );
 }

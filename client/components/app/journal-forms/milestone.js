@@ -27,10 +27,10 @@ export default function Milestone({ id, onSubmit }) {
         </div>
       </div>
       <div className="mt-4">
-        <label className="text-sm ml">Date Achieved</label>
+        <label className="text-sm ml">Date Reached</label>
         <div className="flex items-center">
         <DatePicker className="border rounded-md text-sm p-2" selected={achievedOn} onChange={(date) => setAchievedOn(date)} />
-        <Tooltip text="(Keep blank until achieved)" />
+        <Tooltip text="(Keep blank until completed)" />
         </div>
       </div>
 

@@ -23,7 +23,7 @@ export default function Reflection({ id, onSubmit }) {
   }
 
   return (
-    <BaseForm header="Finstruments">
+    <BaseForm header="Reflection">
       <div>
         <label className="text-sm ml">Timeframe*</label>
         <div className="flex flex-wrap">

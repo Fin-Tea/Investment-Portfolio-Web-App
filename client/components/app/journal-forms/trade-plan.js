@@ -14,6 +14,7 @@ const confirmationFixtures = [{ label: "Order Absorption" }, { label: "RSI Overs
 
 export default function TradePlan({ id, onSubmit }) {
   const [symbol, setSymbol] = useState("");
+  const [strategy, setStrategy] = useState("");
   const [catalyst, setCatalyst] = useState("");
   const [tradeDirection, setTradeDirection] = useState(null);
   const [entry, setEntry] = useState(null);
@@ -77,6 +78,17 @@ export default function TradePlan({ id, onSubmit }) {
           tooltip="The symbol of the financial instrument being invested in or traded (e.g. AAPL for Apple)"
         />
       </div>
+
+      <div className="mt-4">
+        <label className="text-sm ml">Strategy*</label>
+        <Autocomplete
+          items={[{ label: "Supply & Demand" }, { label: "Gap Up/Down" }, { label: "RSI Reversal" }, { label: "Head & Shoulders" }, { label: "Double Top/Bottom" }, { label: "Bull/Bear Flag" }, { label: "Bull/Bear Engulfing Candle" }, { label: "Value Investing" }]}
+          onSearch={(value) => setStrategy(value)}
+          onSelect={({ label }) => setStrategy(label)}
+          tooltip="The repeatable trading/investing pattern/setup you are putting into action"
+        />
+      </div>
+
       <div className="mt-4">
         <label className="text-sm ml">News Catalyst</label>
         <Autocomplete
