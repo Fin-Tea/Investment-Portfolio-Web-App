@@ -18,10 +18,10 @@ const testData2 = [
   { x: new Date("2021-12-31"), y: 10011 },
 ];
 
-export default function LineChart({ title, data, showDataPoints }) {
+export default function LineChart({ title, data, dataset2, prefix, suffix, showDataPoints }) {
   return (
     <div>
-      <Header style={{ marginBottom: -25 }}>{title}</Header>
+      <Header style={{ marginBottom: 0 }}>{title}</Header>
       <VictoryChart
         theme={VictoryTheme.grayscale}
         scale={{ x: "time" }}
@@ -30,7 +30,7 @@ export default function LineChart({ title, data, showDataPoints }) {
           <VictoryVoronoiContainer
             labels={({ datum }) => {
               console.log(datum);
-              return `$${datum.y}`;
+              return `${prefix}${datum.y}${suffix}`;
             }}
             voronoiBlacklist={["scatter"]}
           />
@@ -39,7 +39,7 @@ export default function LineChart({ title, data, showDataPoints }) {
         {/* Y axis */}
         <VictoryAxis
           dependentAxis
-          tickFormat={(t) => `$${parseFloat(t).toLocaleString("en-US")}`}
+          tickFormat={(t) => `${prefix}${parseFloat(t).toLocaleString("en-US")}${suffix}`}
           width={5}
           style={{
             axis: {
@@ -59,7 +59,7 @@ export default function LineChart({ title, data, showDataPoints }) {
         <VictoryAxis
           standalone={false}
           tickValues={data.map((d) => d.x)}
-          tickFormat={(t) => `${t.getMonth() + 1}/${t.getDate()}`}
+          tickFormat={(t) => { const dt = new Date(t); return `${dt.getMonth() + 1}/${dt.getDate()}`}}
           style={{
             axis: {
               stroke: "#777777",
@@ -78,6 +78,14 @@ export default function LineChart({ title, data, showDataPoints }) {
           }}
           data={data}
         />
+        {dataset2 && (<VictoryLine
+          name="line"
+          style={{
+            data: { stroke: "#ff0000" },
+            parent: { border: "1px solid #ccc" },
+          }}
+          data={dataset2}
+        />)}
         {showDataPoints && (
           <VictoryScatter
             name="scatter"
@@ -94,11 +102,15 @@ export default function LineChart({ title, data, showDataPoints }) {
 LineChart.propTypes = {
   title: PropTypes.string,
   data: PropTypes.arrayOf({}),
+  prefix: PropTypes.string,
+  suffix: PropTypes.string,
   showDataPoints: PropTypes.bool,
 };
 
 LineChart.defaultProps = {
   title: "",
   data: testData2,
+  prefix: "",
+  suffix: "",
   showDataPoints: true,
 };
