@@ -403,7 +403,7 @@ export default function TradeHistory({
     },
   ];
 
-  const data = trades.map((trade) => {
+  const data = testData.map((trade) => {
     const {
       id,
       tradeOpenedAt,

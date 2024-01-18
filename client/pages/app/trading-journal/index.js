@@ -66,7 +66,7 @@ export default function TradingJournal() {
             <div className="flex mt-4 w-full flex-wrap">
                 {filterPills.map(({ label, value }) => (<Pill className="m-0.5" key={value} id={value} onClick={updateFilterIds} >{label}</Pill>))}
             </div>
-            <div className="mt-4 max-h-60 overflow-scroll px-2">
+            <div className="mt-4 max-h-60 overflow-auto px-2">
                 {journalEntryFixtures.map(({id, tag, symbol, createdAt, entryText }) => (<div><JournalEntry id={id} tag={tag} symbol={symbol} date={formatJournalDate(createdAt)} entryText={entryText} /><hr className="w-full border-t border-gray-300 mx-auto mt-0" /> </div>))}
             </div>
         </SideView>
