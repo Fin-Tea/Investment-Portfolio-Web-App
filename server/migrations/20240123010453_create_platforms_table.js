@@ -32,5 +32,5 @@ exports.up = function(knex) {
 };
 
 exports.down = function(knex) {
-  return knex.schema.dropTable("platform");
+  return knex.schema.dropTable("platforms");
 };

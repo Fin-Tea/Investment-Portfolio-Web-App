@@ -1,11 +1,6 @@
 
 exports.up = function(knex) {
     return knex.schema.alterTable("tradePlans", (t) => {
-        t.integer("tradePlanId")
-          .unsigned()
-          .index()
-          .references("id")
-          .inTable("tradePlans");
         t.integer("journalEntryId")
           .unsigned()
           .index()
