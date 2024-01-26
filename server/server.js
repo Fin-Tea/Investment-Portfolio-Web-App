@@ -5,6 +5,7 @@ const https = require("https");
 const fs = require("fs");
 const authMiddleware = require("./middleware").default;
 const accountService = require("./services/account");
+const journalService = require("./services/journal");
 const tdAmeritrade = require("./integrations/tdameritrade");
 const tradingService = require("./services/trades");
 const improvementActionsService = require("./services/improvementActions");
@@ -367,6 +368,36 @@ app.get(
 );
 
 app.get(
+  "/api/account/:accountId/journalEntries",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+    const { rowsPerPage, numPages, page, tagId, id } = req.query;
+
+    const options = {};
+
+    if (rowsPerPage && numPages) {
+      // TODO: rowsPerPage && numPage must be >= 1
+      const rowsPerPageNum = parseInt(rowsPerPage);
+
+      if (page) {
+        options.limit = rowsPerPageNum;
+        options.offset = rowsPerPageNum * (parseInt(page) - 1);
+      } else {
+        options.limit = parseInt(rowsPerPage) * parseInt(numPages);
+      }
+    }
+
+    const journalEntries = await journalService.readJournalEntries(
+      accountId,
+      options
+    );
+
+    res.json({ journalEntries });
+  }
+);
+
+app.get(
   "/api/account/:accountId/tradeInsights",
   authMiddleware,
   async (req, res) => {
@@ -498,6 +529,25 @@ app.delete(
   }
 );
 
+app.delete(
+  "/api/account/:accountId/journalEntry/:journalEntryId",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId, journalEntryId } = req.params;
+
+    try {
+      const result = await journalService.deleteJournalEntry(
+        accountId,
+        journalEntryId
+      );
+
+      res.json(result);
+    } catch (e) {
+      res.json({ error: e });
+    }
+  }
+);
+
 app.post(
   "/api/account/:accountId/improvementActions",
   authMiddleware,
@@ -594,6 +644,31 @@ app.post(
   }
 );
 
+app.post(
+  "/api/account/:accountId/journalEntry",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+
+    // need to create
+    const { tagId, ...journalEntryFields } = req.body; // TODO: add yup schema validation
+
+    console.log("journalEntryCreate");
+    console.log(JSON.stringify(journalEntryFields));
+
+    try {
+      const journalEntry = await journalService.createJournalEntry(
+        accountId,
+        tagId,
+        journalEntryFields
+      );
+      res.json({ journalEntry });
+    } catch (e) {
+      res.json({ error: e.message });
+    }
+  }
+);
+
 app.post("/api/account/:accountId/uploadTradeHistory", async (req, res) => {
   const { accountId } = req.params;
   try {
@@ -628,5 +703,29 @@ app.post("/api/account/:accountId/uploadTradeHistory", async (req, res) => {
     return res.json({ error: e.message });
   }
 });
+
+app.put(
+  "/api/account/:accountId/journalEntry",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+
+    const { id, ...journalEntryFields } = req.body; // TODO: add yup schema validation
+
+    console.log("journalEntryUpdate");
+    console.log(JSON.stringify(journalEntry));
+
+    try {
+      const journalEntry = await journalService.updateJournalEntry(
+        accountId,
+        id,
+        journalEntryFields
+      );
+      res.json({ journalEntry });
+    } catch (e) {
+      res.json({ error: e.message });
+    }
+  }
+);
 
 export default server;
