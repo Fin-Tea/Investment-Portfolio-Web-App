@@ -13,7 +13,7 @@ export default function useApi(port) {
   async function makeApiCall(endpoint, method = "GET", data, options = {}) {
     const url = ` ${getHost(port)}${endpoint}`;
     const headers =
-      method === "POST" && options.contentType !== "multipart/form-data"
+      (method === "POST" || method === "PUT" || method === "DELETE") && options.contentType !== "multipart/form-data"
         ? { "Content-Type": options.contentType || "application/json" }
         : undefined;
     let body = data;
