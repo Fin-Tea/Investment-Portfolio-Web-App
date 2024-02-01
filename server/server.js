@@ -35,7 +35,7 @@ app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", config.clientBaseUrl);
 
   // Request methods you wish to allow
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE", "OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE", "OPTIONS");
 
   // Request headers you wish to allow
   res.setHeader(
@@ -543,7 +543,7 @@ app.delete(
 
       res.json(result);
     } catch (e) {
-      res.json({ error: e });
+      res.json({ error: e.message });
     }
   }
 );
@@ -705,20 +705,20 @@ app.post("/api/account/:accountId/uploadTradeHistory", async (req, res) => {
 });
 
 app.put(
-  "/api/account/:accountId/journalEntry",
+  "/api/account/:accountId/journalEntry/:journalEntryId",
   authMiddleware,
   async (req, res) => {
-    const { accountId } = req.params;
+    const { accountId, journalEntryId } = req.params;
 
-    const { id, ...journalEntryFields } = req.body; // TODO: add yup schema validation
+    const journalEntryFields = req.body; // TODO: add yup schema validation
 
-    console.log("journalEntryUpdate");
-    console.log(JSON.stringify(journalEntry));
+    console.log("journalEntryId", journalEntryId);
+    console.log("journalEntryUpdate", JSON.stringify(journalEntryFields));
 
     try {
       const journalEntry = await journalService.updateJournalEntry(
         accountId,
-        id,
+        journalEntryId,
         journalEntryFields
       );
       res.json({ journalEntry });

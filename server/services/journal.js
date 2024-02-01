@@ -66,6 +66,7 @@ async function createTradePlanEntry(journalEntry, formFields, currentDate) {
     priceTarget3,
     positionSizePercent3,
     newsCatalyst,
+    setup,
     confirmations,
   } = formFields;
 
@@ -76,6 +77,7 @@ async function createTradePlanEntry(journalEntry, formFields, currentDate) {
         journalEntryId,
         securitySymbol,
         tradeDirectionType,
+        setup,
         entry,
         exit,
         stopLoss,
@@ -114,7 +116,8 @@ async function createTradePlanEntry(journalEntry, formFields, currentDate) {
       "positionSizePercent3"
     )
     .from("tradePlans")
-    .where({ id: tradePlanId });
+    .where({ id: tradePlanId })
+    .first();
 
   if (newsCatalyst) {
     const { label, sentimentType, statusType, url, newsText } = newsCatalyst;
@@ -137,7 +140,8 @@ async function createTradePlanEntry(journalEntry, formFields, currentDate) {
     const dbNewsCatalyst = await db
       .select("id", "label", "sentimentType", "statusType", "url", "newsText")
       .from("newsCatalysts")
-      .where({ id: newsCatalystId });
+      .where({ id: newsCatalystId })
+      .first();
 
     tradePlan.newsCatalyst = dbNewsCatalyst;
   }
@@ -316,7 +320,7 @@ async function readTradePlanEntries(journalEntryIds) {
       "journalEntryId",
       "securitySymbol",
       "tradeDirectionType",
-      "setups",
+      "setup",
       "entry",
       "exit",
       "stopLoss",
@@ -455,7 +459,7 @@ function createJournalEntryMap(entries) {
 export async function readJournalEntries(accountId, options = {}) {
   const { limit, offset, journalEntryId, journalTagId } = options;
 
-  let builder = await db
+  let builder = db
     .select("id", "accountId", "journalTagId", "createdAt", "updatedAt")
     .from("journalEntries")
     .where({ accountId });
@@ -466,7 +470,7 @@ export async function readJournalEntries(accountId, options = {}) {
     builder = builder.andWhere({ journalTagId });
   }
 
-  builder = builder.whereNull("deletedAt");
+  builder = builder.andWhere({ deletedAt: null });
 
   if (limit) {
     builder = builder.limit(limit);
@@ -475,7 +479,9 @@ export async function readJournalEntries(accountId, options = {}) {
     }
   }
 
-  let journalEntries = await builder();
+  let journalEntries = await builder;
+
+  console.log("journalEntries", JSON.stringify(journalEntries));
 
   const {
     tradePlansJournalIds,
@@ -489,19 +495,19 @@ export async function readJournalEntries(accountId, options = {}) {
 
       switch (journalTagId) {
         case 1:
-          tradePlansJournalIds.push(id);
+          acc.tradePlansJournalIds.push(id);
           break;
         case 2:
-          milestoneJournalIds.push(id);
+          acc.milestoneJournalIds.push(id);
           break;
         case 3:
-          improvementAreaJournalIds.push(id);
+          acc.improvementAreaJournalIds.push(id);
           break;
         case 4:
-          finstrumentJournalIds.push(id);
+          acc.finstrumentJournalIds.push(id);
           break;
         case 5:
-          reflectionJournalIds.push(id);
+          acc.reflectionJournalIds.push(id);
           break;
       }
 
@@ -515,13 +521,14 @@ export async function readJournalEntries(accountId, options = {}) {
       reflectionJournalIds: [],
     }
   );
-
+  console.log("tradePlanIds", JSON.stringify(tradePlansJournalIds));
   const tradePlans = await readTradePlanEntries(tradePlansJournalIds);
+  console.log("tradePlans", JSON.stringify(tradePlans));
   const milestones = await readMilestoneEntries(milestoneJournalIds);
   const improvementAreas = await readImprovementAreaEntries(
     improvementAreaJournalIds
   );
-  const finstruments = await readFinstrumentEntries(improvementAreaJournalIds);
+  const finstruments = await readFinstrumentEntries(finstrumentJournalIds);
   const reflections = await readReflectionEntries(reflectionJournalIds);
 
   const tradePlansMap = createJournalEntryMap(tradePlans);
@@ -530,8 +537,11 @@ export async function readJournalEntries(accountId, options = {}) {
   const finstrumentsMap = createJournalEntryMap(finstruments);
   const reflectionsMap = createJournalEntryMap(reflections);
 
+  console.log("tradePlansMap", tradePlansMap);
+  console.log("journalEntries", journalEntries);
+
   journalEntries = journalEntries.map((entry) => {
-    const { journalEntryId, journalTagId } = entry;
+    const { id: journalEntryId, journalTagId } = entry;
     switch (journalTagId) {
       case 1:
         return { ...entry, tradePlan: tradePlansMap.get(journalEntryId) };
@@ -551,18 +561,20 @@ export async function readJournalEntries(accountId, options = {}) {
     }
   });
 
-  return journalEntries.sort((a, b) => new Date(a) - new Date(b));
+  console.log("journalEntries return", journalEntries);
+
+  return journalEntries.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
 }
 
 export async function deleteJournalEntry(accountId, journalEntryId) {
-  const journalEntries = readJournalEntries(accountId, { journalEntryId });
+  const journalEntries = await readJournalEntries(accountId, { journalEntryId });
 
   if (!journalEntries.length) {
     throw new Error(`Journal Entry not found for account ID: ${accountId}`);
   }
 
   await db("journalEntries")
-    .where({ journalEntryId })
+    .where({ id: journalEntryId })
     .update({ deletedAt: new Date() });
 
   return { journalEntryId, deleted: true };
@@ -573,12 +585,18 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
 
   const updateInfo = { journalEntryId };
 
+  const {id: tradePlanId } = await db
+  .select(
+    "id",
+  )
+  .from("tradePlans")
+  .where({ journalEntryId }).first();
+
   const {
     newsCatalyst,
     confirmations,
-    id: _planId,
-    createdAt: _planCreatedAt,
-    deletedAt: _planDeletedAt,
+    // createdAt: _planCreatedAt,
+    // deletedAt: _planDeletedAt,
     ...tradePlanFields
   } = formFields;
   await db("tradePlans")
@@ -590,17 +608,34 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
   if (newsCatalyst) {
     const {
       id,
-      tradePlanId,
       accountId: _accountId,
       createdAt: _catalystCreatedAt,
       deletedAt: _catalystDeletedAt,
       ...newsCatalystFields
     } = newsCatalyst;
 
-    await db("tradePlans")
-      .where({ tradePlanId })
-      .update({ ...newsCatalystFields, updatedAt: now });
+    const dbNewsCatalyst = await db
+    .select(
+      "id",
+    )
+    .from("newsCatalysts")
+    .where({ tradePlanId }).first();
 
+    if (dbNewsCatalyst) {
+        await db("newsCatalysts")
+        .where({ tradePlanId })
+        .update({ ...newsCatalystFields, updatedAt: now });
+    } else {
+        await db("newsCatalysts")
+        .insert([
+          {
+            tradePlanId,
+            ...newsCatalystFields,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ]);
+    }
     updateInfo.newsCatalystUpdated = true;
   }
 
@@ -608,7 +643,19 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
     const confirmationsUpdateInfo = await confirmations.reduce(
       async (acc, confirmation) => {
         const { id, confirmationText } = confirmation;
-        await db("confirmations").update({ confirmationText }).where({ id });
+        if (id) {
+        await db("confirmations").where({ id }).update({ confirmationText });
+        } else {
+            await db("confirmations")
+            .insert([
+              {
+                tradePlanId,
+                confirmationText,
+                createdAt: now,
+                updatedAt: now,
+              },
+            ]);
+        }
         acc.numUpdated++;
 
         return acc;
@@ -675,10 +722,10 @@ export async function updateJournalEntry(
   journalEntryId,
   formFields
 ) {
-  const journalEntries = readJournalEntries(accountId, { journalEntryId });
+  const journalEntries = await readJournalEntries(accountId, { journalEntryId });
 
   if (!journalEntries.length) {
-    throw new Error(`Journal Entry not found for account ID: ${accountId}`);
+    throw new Error(`Journal Entry ${journalEntryId} not found for account ID: ${accountId}`);
   }
 
   const now = new Date();
@@ -698,7 +745,9 @@ export async function updateJournalEntry(
         .where({ id: journalEntryId })
         .update({ updatedAt: now });
 
-      return readJournalEntries(accountId, { journalEntryId });
+      const [journalEntry] = await readJournalEntries(accountId, { journalEntryId });
+
+      return journalEntry;
     } else {
       console.log(
         `Error updating journal entry: ${JSON.stringify(updateInfo)}`
