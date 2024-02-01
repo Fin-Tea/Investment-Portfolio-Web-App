@@ -1,37 +1,235 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
 import BaseForm from "./base-form";
 import Autocomplete from "../autocomplete";
 import Select from "react-select";
 import { Switch } from "@chakra-ui/react";
 import Tooltip from "../tooltip";
+import Pill from "../pill";
+
+const symbolFixtures = [{ label: "ES" }, { label: "NQ" }];
 
 const tradeDirections = [
   { label: "Long", value: 0 },
   { label: "Short", value: 1 },
 ];
 
-const confirmationFixtures = [{ label: "Order Absorption" }, { label: "RSI Oversold" }, { label: "RSI Overbought" }, { label: "Break of Trend Line" }, { label: "200 SMA crossover" }];
+const setupFixtures = [
+  { label: "Supply & Demand" },
+  { label: "Gap Up/Down" },
+  { label: "RSI Reversal" },
+  { label: "Head & Shoulders" },
+  { label: "Double Top/Bottom" },
+  { label: "Bull/Bear Flag" },
+  { label: "Bull/Bear Engulfing Candle" },
+  { label: "Value Investing" },
+];
 
-export default function TradePlan({ id, onSubmit }) {
-  const [symbol, setSymbol] = useState("");
-  const [strategy, setStrategy] = useState("");
-  const [catalyst, setCatalyst] = useState("");
-  const [tradeDirection, setTradeDirection] = useState(null);
-  const [entry, setEntry] = useState(null);
-  const [exit, setExit] = useState(null);
-  const [priceTarget1, setPriceTarget1] = useState(null);
-  const [percentPosSize1, setPercentPosSize1] = useState(null);
-  const [priceTarget2, setPriceTarget2] = useState(null);
-  const [percentPosSize2, setPercentPosSize2] = useState(null);
-  const [priceTarget3, setPriceTarget3] = useState(null);
-  const [percentPosSize3, setPercentPosSize3] = useState(null);
-  const [stopLoss, setStopLoss] = useState(null);
-  const [isAdvancedExit, setIsAdvancedExit] = useState(false);
-  const [showConfirmations, setShowConfirmations] = useState(false);
-  const [confirmation1, setConfirmation1] = useState("");
-  const [confirmation2, setConfirmation2] = useState("");
-  const [confirmation3, setConfirmation3] = useState("");
-  console.log("symbol", symbol);
+const catalystFixtures = [{ label: "Catalyst 1" }, { label: "Catalyst 2" }];
+
+const confirmationFixtures = [
+  { label: "Order Absorption" },
+  { label: "RSI Oversold" },
+  { label: "RSI Overbought" },
+  { label: "Break of Trend Line" },
+  { label: "200 SMA crossover" },
+];
+
+export default function TradePlan({ data, onSubmit, onDelete }) {
+  const validationSchema = Yup.object().shape({
+    securitySymbol: Yup.object().required("Symbol is required"),
+    tradeDirectionType: Yup.object().required("Trade direction is required"),
+    setup: Yup.object().required("Trade setup/strategy is required"),
+    hypothesis: Yup.string().required("Hypothesis direction is required"),
+    invalidationPoint: Yup.string().required(
+      "Invalidation Point direction is required"
+    ),
+    entry: Yup.number()
+      .transform((value) => (Number.isNaN(value) ? null : value))
+      .nullable()
+      .required("Entry required"),
+    stopLoss: Yup.number()
+      .transform((value) => (Number.isNaN(value) ? null : value))
+      .nullable()
+      .required("Stop Loss required"),
+
+    isAdvancedExit: Yup.boolean(),
+    exit: Yup.number()
+      .transform((value) => (Number.isNaN(value) ? null : value))
+      .nullable()
+      .when("isAdvancedExit", {
+        is: false,
+        then: Yup.number().required("Exit is required"),
+      }),
+    priceTarget1: Yup.number()
+      .transform((value) => (Number.isNaN(value) ? null : value))
+      .nullable()
+      .when("isAdvancedExit", {
+        is: true,
+        then: Yup.number().required("Price Target 1 is required"),
+      }),
+    positionSizePercent1: Yup.number()
+      .transform((value) => (Number.isNaN(value) ? null : value))
+      .nullable()
+      .when("isAdvancedExit", {
+        is: true,
+        then: Yup.number().required("Position Size % 1 is required"),
+      }),
+    priceTarget2: Yup.number()
+      .transform((value) => (Number.isNaN(value) ? null : value))
+      .nullable()
+      .when("isAdvancedExit", {
+        is: true,
+        then: Yup.number("Price Target 2 is required"),
+      }),
+    positionSizePercent2: Yup.number()
+      .transform((value) => (Number.isNaN(value) ? null : value))
+      .nullable()
+      .when("isAdvancedExit", {
+        is: true,
+        then: Yup.number().required("Position Size % 2 is required"),
+      }),
+    catalystLabel: Yup.object(),
+    catalystDescription: Yup.string().when("catalystLabel", {
+      is: (val) => !!val,
+      then: Yup.string().required("Description is required"),
+    }),
+    catalystSentimentType: Yup.string().when("catalystLabel", {
+      is: (val) => !!val,
+      then: Yup.string().required("Sentiment is required"),
+    }),
+  });
+
+  if (
+    data?.tradePlan.securitySymbol &&
+    !symbolFixtures.find(({ label }) => label === data.tradePlan.securitySymbol)
+  ) {
+    symbolFixtures.push({ label: data.tradePlan.securitySymbol });
+  }
+
+  if (
+    data?.tradePlan.newsCatalyst?.label &&
+    !catalystFixtures.find(
+      ({ label }) => label === data.tradePlan.newsCatalyst.label
+    )
+  ) {
+    catalystFixtures.push({ label: data.tradePlan.newsCatalyst.label });
+  }
+
+  if (data?.tradePlan.confirmations) {
+    data.tradePlan.confirmations.forEach((confirmation) => {
+      confirmationFixtures.push({ label: confirmation.confirmationText });
+    });
+  }
+
+  const formOptions = {
+    defaultValues: {
+      securitySymbol: symbolFixtures.find(
+        ({ label }) => label === data?.tradePlan.securitySymbol
+      ),
+      catalystLabel: catalystFixtures.find(
+        ({ label }) => label === data?.tradePlan.newsCatalyst?.label
+      ),
+      catalystSentimentType: data?.tradePlan.newsCatalyst?.sentimentType,
+      catalystURL: data?.tradePlan.newsCatalyst?.url,
+      catalystDescription: data?.tradePlan.newsCatalyst?.newsText,
+      setup: setupFixtures.find(({ label }) => label === data?.tradePlan.setup),
+      tradeDirectionType: tradeDirections.find(
+        ({ label }) => label === data?.tradePlan.tradeDirectionType
+      ),
+      hypothesis: data?.tradePlan.hypothesis,
+      invalidationPoint: data?.tradePlan.invalidationPoint,
+      entry: data?.tradePlan.entry,
+      exit: data?.tradePlan.exit,
+      stopLoss: data?.tradePlan.stopLoss,
+      isAdvancedExit: data?.tradePlan.planType === "Advanced",
+      priceTarget1: data?.tradePlan.priceTarget1,
+      positionSizePercent1: data?.tradePlan.positionSizePercent1,
+      priceTarget2: data?.tradePlan.priceTarget2,
+      positionSizePercent2: data?.tradePlan.positionSizePercent2,
+      priceTarget3: data?.tradePlan.priceTarget3,
+      positionSizePercent3: data?.tradePlan.positionSizePercent3,
+      confirmation1Id:
+        data?.tradePlan.confirmations && data.tradePlan.confirmations[0]
+          ? data.tradePlan.confirmations[0].id
+          : 0,
+      confirmation1:
+        data?.tradePlan.confirmations && data.tradePlan.confirmations[0]
+          ? confirmationFixtures.find(
+              ({ label }) =>
+                label === data.tradePlan.confirmations[0].confirmationText
+            )
+          : "",
+      confirmation2Id:
+        data?.tradePlan.confirmations && data.tradePlan.confirmations[1]
+          ? data.tradePlan.confirmations[1].id
+          : 0,
+      confirmation2:
+        data?.tradePlan.confirmations && data.tradePlan.confirmations[1]
+          ? confirmationFixtures.find(
+              ({ label }) =>
+                label === data.tradePlan.confirmations[1].confirmationText
+            )
+          : "",
+      confirmation3Id:
+        data?.tradePlan.confirmations && data.tradePlan.confirmations[2]
+          ? data.tradePlan.confirmations[2].id
+          : 0,
+      confirmation3:
+        data?.tradePlan.confirmations && data.tradePlan.confirmations[2]
+          ? confirmationFixtures.find(
+              ({ label }) =>
+                label === data.tradePlan.confirmations[2].confirmationText
+            )
+          : "",
+    },
+    resolver: yupResolver(validationSchema),
+  };
+
+  const { register, handleSubmit, formState, getValues, setValue, watch } =
+    useForm(formOptions);
+  const { errors } = formState;
+
+  console.log("TradePlan form values", getValues());
+
+  //const [symbol, setSymbol] = useState("");
+  const securitySymbol = watch("securitySymbol");
+  const catalystLabel = watch("catalystLabel");
+  const catalystSentimentType = watch("catalystSentimentType");
+  const catalystURL = watch("catalystURL");
+  const catalystDescription = watch("catalystDescription");
+  const setup = watch("setup");
+  const [showNewsCatalyst, setShowNewsCatalyst] = useState(
+    !!data?.tradePlan.newsCatalyst
+  );
+  //   const [sentimentTypeId, setSentimentTypeId] = useState("Bullish");
+  const tradeDirectionType = watch("tradeDirectionType");
+  const entry = watch("entry");
+  const exit = watch("exit");
+  const priceTarget1 = watch("priceTarget1");
+  const percentPosSize1 = watch("positionSizePercent1");
+  const priceTarget2 = watch("priceTarget2");
+  const percentPosSize2 = watch("positionSizePercent2");
+  const priceTarget3 = watch("priceTarget3");
+  const percentPosSize3 = watch("positionSizePercent3");
+
+  const stopLoss = watch("stopLoss");
+  const isAdvancedExit = watch("isAdvancedExit");
+  //   const [isAdvancedExit, setIsAdvancedExit] = useState(false);
+  const [showConfirmations, setShowConfirmations] = useState(
+    !!data?.tradePlan.confirmations
+  );
+  const confirmation1 = watch("confirmation1");
+  const confirmation2 = watch("confirmation2");
+  const confirmation3 = watch("confirmation3");
+
+  console.log("errors", errors);
+
+  function handlePillClick({ id }) {
+    setValue("catalystSentimentType", id);
+  }
 
   let rewardRisk = null;
   let rewardRiskColor = "text-black";
@@ -66,37 +264,117 @@ export default function TradePlan({ id, onSubmit }) {
   }
 
   const hasConfirmation = confirmation1 || confirmation2 || confirmation3;
+  const hasNewsCatalyst = catalystLabel || catalystURL || catalystDescription;
 
   return (
-    <BaseForm header="Trade Plan">
+    <BaseForm header="Trade Plan" edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
       <div>
         <label className="text-sm ml">Symbol*</label>
         <Autocomplete
+          value={securitySymbol}
           items={[{ label: "ES" }, { label: "NQ" }]}
-          onSearch={(value) => setSymbol(value)}
-          onSelect={({ label }) => setSymbol(label)}
+          onSelect={(val) => setValue("securitySymbol", val)}
           tooltip="The symbol of the financial instrument being invested in or traded (e.g. AAPL for Apple)"
         />
+        <div className="text-red-600 text-xs">{errors.symbol?.message}</div>
       </div>
 
+      <div className="mt-4 flex items-center">
+        <button
+          className="rounded-md bg-purple-800 text-white px-4"
+          onClick={() => setShowNewsCatalyst(!showNewsCatalyst)}
+        >
+          {`${
+            showNewsCatalyst ? "Hide" : hasNewsCatalyst ? "Show" : "Add"
+          }  News Catalyst`}
+        </button>
+        <Tooltip text="A macro economic event such as the pandemic, inflation, or FOMC interest rate announcements that cause market prices to move" />
+      </div>
+
+      {showNewsCatalyst && (
+        <div className="mt-4">
+          <h4 className="text-sm font-bold">News Catalyst</h4>
+          <label className="text-sm ml">Label*</label>
+          <Autocomplete
+            items={[{ label: "Catalyst 1" }, { label: "Catalyst 2" }]}
+            onSelect={(val) => setValue("catalystLabel", val)}
+            tooltip="Label your news catalysts so it's easy to know what news drives your profits (e.g. 'Fed Interest Rates' or 'Consumer Price Index (CPI) Report')"
+            value={catalystLabel}
+          />
+          <div className="mt-2">
+            <label className="text-sm ml">Sentiment*</label>
+            <div className="flex flex-wrap">
+              <Pill
+                className="mr-2 mb-2"
+                id={"Bullish"}
+                controlled
+                onClick={handlePillClick}
+                isActive={catalystSentimentType === "Bullish"}
+              >
+                Bullish
+              </Pill>
+              <Pill
+                className="mr-2 mb-2"
+                id={"Bearish"}
+                controlled
+                onClick={handlePillClick}
+                isActive={catalystSentimentType === "Bearish"}
+              >
+                Bearish
+              </Pill>
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <label className="text-sm ml">URL</label>
+            <div className="flex items-center">
+              <input
+                type="url"
+                {...register("catalystURL")}
+                className="border w-full rounded-md p-2"
+              />
+              <Tooltip text="The link to the web page where you found the news (optional)" />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="text-sm ml">Description*</label>
+            <div className="flex items-top">
+              <textarea
+                className="border w-full rounded-md p-2"
+                {...register("catalystDescription")}
+              />
+            </div>
+            <div className="text-red-600 text-xs">
+              {errors.catalystDescription?.message}
+            </div>
+          </div>
+          {/* TODO: fix styling (need to override bootstrap) */}
+          <hr
+            style={{ borderTop: "1px solid rgb(209 213 219)" }}
+            className="w-full mx-auto bg-transparent"
+          />
+        </div>
+      )}
+
       <div className="mt-4">
-        <label className="text-sm ml">Strategy*</label>
+        <label className="text-sm ml">Trade Setup/Strategy*</label>
         <Autocomplete
-          items={[{ label: "Supply & Demand" }, { label: "Gap Up/Down" }, { label: "RSI Reversal" }, { label: "Head & Shoulders" }, { label: "Double Top/Bottom" }, { label: "Bull/Bear Flag" }, { label: "Bull/Bear Engulfing Candle" }, { label: "Value Investing" }]}
-          onSearch={(value) => setStrategy(value)}
-          onSelect={({ label }) => setStrategy(label)}
+          value={setup}
+          items={[
+            { label: "Supply & Demand" },
+            { label: "Gap Up/Down" },
+            { label: "RSI Reversal" },
+            { label: "Head & Shoulders" },
+            { label: "Double Top/Bottom" },
+            { label: "Bull/Bear Flag" },
+            { label: "Bull/Bear Engulfing Candle" },
+            { label: "Value Investing" },
+          ]}
+          onSelect={(val) => setValue("setup", val)}
           tooltip="The repeatable trading/investing pattern/setup you are putting into action"
         />
-      </div>
-
-      <div className="mt-4">
-        <label className="text-sm ml">News Catalyst</label>
-        <Autocomplete
-          items={[{ label: "Catalyst 1" }, { label: "Catalyst 2" }]}
-          onSearch={(value) => setCatalyst(value)}
-          onSelect={({ label }) => setCatalyst(label)}
-          tooltip="A macro economic event such as the pandemic, inflation, or FOMC interest rate announcements that cause market prices to move"
-        />
+        <div className="text-red-600 text-xs">{errors.setup?.message}</div>
       </div>
 
       <div className="mt-4">
@@ -106,9 +384,13 @@ export default function TradePlan({ id, onSubmit }) {
             <Select
               className="w-full"
               options={tradeDirections}
-              onChange={(direction) => setTradeDirection(direction)}
+              value={tradeDirectionType}
+              onChange={(val) => setValue("tradeDirectionType", val)}
             />
             <Tooltip text="Long if you believe price will go up (bullish) or Short if you believe price will go down (bearish)" />
+          </div>
+          <div className="text-red-600 text-xs">
+            {errors.tradeDirection?.message}
           </div>
         </div>
       </div>
@@ -116,16 +398,26 @@ export default function TradePlan({ id, onSubmit }) {
       <div className="mt-4">
         <label className="text-sm ml">Hypothesis*</label>
         <div className="flex items-top">
-          <textarea className="border w-full rounded-md p-2" />
+          <textarea
+            className="border w-full rounded-md p-2"
+            {...register("hypothesis")}
+          />
           <Tooltip text="Why you believe the trade will be profitable (e.g. Key Levels of Interest like Support & Resistance, Trend Line breaks, price is overbought/oversold, etc." />
         </div>
+        <div className="text-red-600 text-xs">{errors.hypothesis?.message}</div>
       </div>
 
       <div className="mt-4">
         <label className="text-sm ml">Invalidation Point*</label>
         <div className="flex items-top">
-          <textarea className="border w-full rounded-md p-2" />
+          <textarea
+            className="border w-full rounded-md p-2"
+            {...register("invalidationPoint")}
+          />
           <Tooltip text="Where your hypothesis would be proven wrong (important for Risk Management)" />
+        </div>
+        <div className="text-red-600 text-xs">
+          {errors.invalidationPoint?.message}
         </div>
       </div>
 
@@ -135,13 +427,13 @@ export default function TradePlan({ id, onSubmit }) {
           <input
             type="number"
             min={0}
-            value={entry}
-            onChange={(e) => setEntry(e.target.value)}
+            {...register("entry")}
             onWheel={(e) => e.target.blur()}
             className="border w-full rounded-md p-2"
           />
           <Tooltip text="The price where you want to enter the trade or investment" />
         </div>
+        <div className="text-red-600 text-xs">{errors.entry?.message}</div>
       </div>
 
       <div className="mt-4">
@@ -150,22 +442,28 @@ export default function TradePlan({ id, onSubmit }) {
           <input
             type="number"
             min={0}
-            value={stopLoss}
-            onChange={(e) => setStopLoss(e.target.value)}
+            {...register("stopLoss")}
             onWheel={(e) => e.target.blur()}
             className="border w-full rounded-md p-2"
           />
           <Tooltip text="The price where you want to close the trade or investment at a minimal loss to protect your capital (important for Risk Management)" />
         </div>
+        <div className="text-red-600 text-xs">{errors.stopLoss?.message}</div>
       </div>
 
       <div className="mt-4">
         <div className="flex">
           <span className="text-base">Simple</span>
           <Switch
+            sx={{
+              "span.chakra-switch__track:not([data-checked])": {
+                backgroundColor: "green.300",
+              },
+            }}
             colorScheme="purple"
             className="mx-2"
-            onChange={(e) => setIsAdvancedExit(e.target.checked)}
+            // onChange={(e) => setIsAdvancedExit(e.target.checked)}
+            {...register("isAdvancedExit")}
           />
           <span className="text-base">Advanced</span>
         </div>
@@ -176,13 +474,13 @@ export default function TradePlan({ id, onSubmit }) {
               <input
                 type="number"
                 min={0}
-                value={exit}
-                onChange={(e) => setExit(e.target.value)}
+                {...register("exit")}
                 onWheel={(e) => e.target.blur()}
                 className="border w-full rounded-md p-2"
               />
               <Tooltip text="The price where you want to exit the trade or investment at a profit" />
             </div>
+            <div className="text-red-600 text-xs">{errors.exit?.message}</div>
           </div>
         ) : (
           <div>
@@ -192,12 +490,14 @@ export default function TradePlan({ id, onSubmit }) {
                 <input
                   type="number"
                   min={0}
-                  value={priceTarget1}
-                  onChange={(e) => setPriceTarget1(e.target.value)}
+                  {...register("priceTarget1")}
                   onWheel={(e) => e.target.blur()}
                   className="border w-full rounded-md p-2"
                 />
                 <Tooltip text="The first price where you want to partially exit the trade or investment at a profit" />
+              </div>
+              <div className="text-red-600 text-xs">
+                {errors.priceTarget1?.message}
               </div>
             </div>
             <div className="mt-2">
@@ -207,12 +507,14 @@ export default function TradePlan({ id, onSubmit }) {
                   type="number"
                   min={0}
                   max={100}
-                  value={percentPosSize1}
-                  onChange={(e) => setPercentPosSize1(e.target.value)}
+                  {...register("positionSizePercent1")}
                   onWheel={(e) => e.target.blur()}
                   className="border w-full rounded-md p-2"
                 />
                 <Tooltip text="The percent of your postion size you plan to exit with at Price Target 1" />
+              </div>
+              <div className="text-red-600 text-xs">
+                {errors.positionSizePercent1?.message}
               </div>
             </div>
 
@@ -222,12 +524,14 @@ export default function TradePlan({ id, onSubmit }) {
                 <input
                   type="number"
                   min={0}
-                  value={priceTarget2}
-                  onChange={(e) => setPriceTarget2(e.target.value)}
+                  {...register("priceTarget2")}
                   onWheel={(e) => e.target.blur()}
                   className="border w-full rounded-md p-2"
                 />
                 <Tooltip text="The second price where you want to partially exit the trade or investment at a profit" />
+              </div>
+              <div className="text-red-600 text-xs">
+                {errors.priceTarget2?.message}
               </div>
             </div>
 
@@ -238,12 +542,14 @@ export default function TradePlan({ id, onSubmit }) {
                   type="number"
                   min={0}
                   max={100}
-                  value={percentPosSize2}
-                  onChange={(e) => setPercentPosSize2(e.target.value)}
+                  {...register("positionSizePercent2")}
                   onWheel={(e) => e.target.blur()}
                   className="border w-full rounded-md p-2"
                 />
                 <Tooltip text="The percent of your postion size you plan to exit with at Price Target 2" />
+              </div>
+              <div className="text-red-600 text-xs">
+                {errors.positionSizePercent2?.message}
               </div>
             </div>
 
@@ -253,8 +559,7 @@ export default function TradePlan({ id, onSubmit }) {
                 <input
                   type="number"
                   min={0}
-                  value={priceTarget3}
-                  onChange={(e) => setPriceTarget3(e.target.value)}
+                  {...register("priceTarget3")}
                   onWheel={(e) => e.target.blur()}
                   className="border w-full rounded-md p-2"
                 />
@@ -269,12 +574,11 @@ export default function TradePlan({ id, onSubmit }) {
                   type="number"
                   min={0}
                   max={100}
-                  value={percentPosSize3}
-                  onChange={(e) => setPercentPosSize3(e.target.value)}
+                  {...register("positionSizePercent3")}
                   onWheel={(e) => e.target.blur()}
                   className="border w-full rounded-md p-2"
                 />
-                <Tooltip text="The percent of your postion size you plan to exit with at Price Target 2" />
+                <Tooltip text="The percent of your postion size you plan to exit with at Price Target 3" />
               </div>
             </div>
           </div>
@@ -295,7 +599,9 @@ export default function TradePlan({ id, onSubmit }) {
           className="rounded-md bg-purple-800 text-white px-4"
           onClick={() => setShowConfirmations(!showConfirmations)}
         >
-          {`${showConfirmations ? "Hide" : hasConfirmation ? "Show" : "Add"}  Confirmations`}
+          {`${
+            showConfirmations ? "Hide" : hasConfirmation ? "Show" : "Add"
+          }  Confirmations`}
         </button>
         <Tooltip text="Confirmations are pieces of information that increase the probability of success of your trade plan (e.g. a momentum indicator such as RSI showing a financial instrument is currently overbought or oversold)" />
       </div>
@@ -307,8 +613,7 @@ export default function TradePlan({ id, onSubmit }) {
             <Autocomplete
               items={confirmationFixtures}
               value={confirmation1}
-              onSearch={(value) => setConfirmation1(value)}
-              onSelect={({ label }) => setConfirmation1(label)}
+              onSelect={(val) => setValue("confirmation1", val)}
             />
           </div>
 
@@ -317,8 +622,7 @@ export default function TradePlan({ id, onSubmit }) {
             <Autocomplete
               items={confirmationFixtures}
               value={confirmation2}
-              onSearch={(value) => setConfirmation2(value)}
-              onSelect={({ label }) => setConfirmation2(label)}
+              onSelect={(val) => setValue("confirmation2", val)}
             />
           </div>
 
@@ -327,15 +631,17 @@ export default function TradePlan({ id, onSubmit }) {
             <Autocomplete
               items={confirmationFixtures}
               value={confirmation3}
-              onSearch={(value) => setConfirmation3(value)}
-              onSelect={({ label }) => setConfirmation3(label)}
+              onSelect={(val) => setValue("confirmation3", val)}
             />
           </div>
         </div>
       )}
 
       <div className="mt-4 flex items-center">
-        <button disabled={!id} className="rounded-md bg-gray-400 text-white px-4">
+        <button
+          disabled={!data}
+          className="rounded-md bg-gray-400 text-white px-4"
+        >
           Link Trade
         </button>
         <Tooltip text="In edit mode, you can link your trade plan to the actual trade that happened so our tools can help you improve your trading & investing decisions" />
