@@ -1,7 +1,7 @@
 {
-  "name": "growth_track",
+  "name": "Fin Tea",
   "version": "1.0.0",
-  "description": "To give people an easy way to find their unique trading style and strengths through simple P&L Visualization and Insights",
+  "description": "To give people an easy way to find their unique trading/investing style and strengths through simple P&L Visualizations and Insights",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
