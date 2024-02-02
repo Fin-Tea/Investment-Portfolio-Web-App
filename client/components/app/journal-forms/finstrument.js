@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -28,7 +29,7 @@ export default function Finstrument({ data, items, onSubmit, onDelete }) {
     resolver: yupResolver(validationSchema),
   };
 
-  const { register, handleSubmit, formState, setValue, watch } =
+  const { register, handleSubmit, formState, setValue, watch, reset } =
     useForm(formOptions);
   const { errors } = formState;
 
@@ -38,6 +39,10 @@ export default function Finstrument({ data, items, onSubmit, onDelete }) {
   function handlePillClick({ id }) {
     setValue("securityTypeId", id);
   }
+
+  useEffect(() => {
+    reset(formOptions.defaultValues);
+  }, [data]);
 
   return (
     <BaseForm

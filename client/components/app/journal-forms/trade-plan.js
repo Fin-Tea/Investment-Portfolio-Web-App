@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
@@ -169,11 +169,9 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
     resolver: yupResolver(validationSchema),
   };
 
-  const { register, handleSubmit, formState, getValues, setValue, watch } =
+  const { register, handleSubmit, formState, getValues, setValue, watch, reset } =
     useForm(formOptions);
   const { errors } = formState;
-
-  console.log("TradePlan form values", getValues());
 
   //const [symbol, setSymbol] = useState("");
   const securitySymbol = watch("securitySymbol");
@@ -246,6 +244,10 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
 
   const hasConfirmation = confirmation1 || confirmation2 || confirmation3;
   const hasNewsCatalyst = catalystLabel || catalystURL || catalystDescription;
+
+  useEffect(() => {
+    reset(formOptions.defaultValues);
+  }, [data]);
 
   return (
     <BaseForm header="Trade Plan" edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
