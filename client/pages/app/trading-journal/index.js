@@ -67,27 +67,35 @@ const journalEntryFixtures = [
 ];
 
 export default function TradingJournal() {
-  const [activeFilterIds, setActiveFilterIds] = useState(new Set());
+  const [activeFilterIds, setActiveFilterIds] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentFormName, setCurrentFormName] = useState("");
   const [journalEntries, setJournalEntries] = useState([]);
+  const [journalItems, setJournalItems] = useState([]);
   const [currentJournalEntry, setCurrentJournalEntry] = useState(null);
   const [isSideViewExpanded, setSideViewExpanded] = useState(true);
+  const [searchString, setSearchString] = useState("");
+  const [debouncedSearchString, setDebouncedSearchString] = useState("");
 
   const {
     createJournalEntry,
     fetchJournalEntries,
+    fetchJournalItems,
     updateJournalEntry,
     deleteJournalEntry,
   } = useJournal();
 
   function updateFilterIds({ id, isActive }) {
+    console.log("updateFilterIds", id, isActive);
+    let newFilterIds = null;
     if (isActive) {
-      activeFilterIds.add(id);
+        newFilterIds = [...activeFilterIds, id];
     } else {
-      activeFilterIds.delete(id);
+        const idx = activeFilterIds.findIndex(val => val === id);
+        newFilterIds = [...activeFilterIds.slice(0,idx), ...activeFilterIds.slice(idx + 1)];
     }
-    setActiveFilterIds(activeFilterIds);
+    console.log("newFilterIds",newFilterIds);
+    setActiveFilterIds(newFilterIds);
   }
 
   function handleSideViewToggle(isExpanded) {
@@ -166,6 +174,14 @@ export default function TradingJournal() {
       }
     }
 
+    if (currentFormName === "Finstruments") {
+      const { securitySymbol, ...finstrumentFields } = data;
+      data = {
+        ...finstrumentFields,
+        securitySymbol: securitySymbol.label,
+      };
+    }
+
     try {
       console.log("data", data);
       let resp = null;
@@ -183,7 +199,10 @@ export default function TradingJournal() {
           setJournalEntries(updatedJournalEntries);
         }
       } else {
-        resp = await createJournalEntry(data);
+        const tagId = filterPills.find(
+          ({ label }) => label === currentFormName
+        ).value;
+        resp = await createJournalEntry({ ...data, tagId });
 
         if (!resp?.error) {
           journalEntries.unshift(resp.journalEntry);
@@ -192,8 +211,6 @@ export default function TradingJournal() {
         }
       }
       console.log("journalEntry", resp);
-      // add journalEntry to list of journalEntries
-      // close form (set current form name to "")
       // toast/alert that journal entry was created or an error happened
     } catch (e) {
       // show error
@@ -243,17 +260,35 @@ export default function TradingJournal() {
     }
   }
 
+  async function loadJournalItems() {
+    try {
+      const resp = await fetchJournalItems();
+      console.log("journalItems resp", resp);
+      setJournalItems(resp.journalItems);
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
   useEffect(() => {
     // read journalEntries, map them to include entryText, tag, etc.  and store in state
     loadJournalEntries();
+    loadJournalItems();
   }, []);
+
+  useEffect(() => {
+    const delayInputTimeoutId = setTimeout(() => {
+      setDebouncedSearchString(searchString);
+    }, 500);
+    return () => clearTimeout(delayInputTimeoutId);
+  }, [searchString, 500]);
 
   const CurrentForm = currentFormName ? formMap[currentFormName] : null;
 
-  const journalEntrySummaries = journalEntries.map((entry) => {
+  let journalEntrySummaries = journalEntries.map((entry) => {
     const { id, journalTagId, updatedAt } = entry;
     const tag = filterPills.find(({ value }) => value === journalTagId).label;
-    const summary = { id, tag, updatedAt };
+    const summary = { id, journalTagId, tag, updatedAt };
 
     switch (journalTagId) {
       case 1:
@@ -277,6 +312,17 @@ export default function TradingJournal() {
     return summary;
   });
 
+  console.log("activeFilterIds", activeFilterIds);
+
+  if (activeFilterIds.length) {
+    journalEntrySummaries = journalEntrySummaries.filter(({ journalTagId }) => activeFilterIds.includes(journalTagId));
+  }
+
+  if (debouncedSearchString) {
+    console.log("debouncedSearchString", debouncedSearchString);
+    journalEntrySummaries = journalEntrySummaries.filter(({ symbol, entryText }) => entryText.toLowerCase().includes(debouncedSearchString.toLowerCase()) || (symbol && debouncedSearchString.includes(symbol)));
+  }
+
   return (
     <Layout>
       <div className="h-full">
@@ -286,7 +332,7 @@ export default function TradingJournal() {
             header="Journal Entries"
             onToggle={handleSideViewToggle}
           >
-            <SearchBox />
+            <SearchBox className="w-full" placeholder="Search symbol or text"  onSearch={setSearchString} />
             <div className="flex mt-4 w-full flex-wrap">
               {filterPills.map(({ label, value }) => (
                 <Pill
@@ -300,7 +346,7 @@ export default function TradingJournal() {
               ))}
             </div>
             <div className="mt-4 max-h-60 overflow-auto px-2">
-              {!journalEntrySummaries.length && (
+              {!journalEntries.length && !searchString && (
                 <div>
                   <p>No journal entries yet...</p>{" "}
                   <button
@@ -311,6 +357,11 @@ export default function TradingJournal() {
                   </button>
                 </div>
               )}
+              {!journalEntrySummaries.length && searchString && (
+                <div>
+                  <p>No search results</p>
+                </div>
+              )}
               {journalEntrySummaries.map(
                 ({ id, tag, symbol, updatedAt, entryText }) => (
                   <div>
@@ -318,6 +369,7 @@ export default function TradingJournal() {
                       id={id}
                       tag={tag}
                       symbol={symbol}
+                      isActive={id === currentJournalEntry?.id}
                       date={formatJournalDate(updatedAt)}
                       entryText={entryText}
                       onClick={handleJournalEntryClick}
@@ -366,6 +418,7 @@ export default function TradingJournal() {
               {CurrentForm && (
                 <CurrentForm
                   data={currentJournalEntry}
+                  items={journalItems}
                   onSubmit={handleSubmit}
                   onDelete={handleDelete}
                 />

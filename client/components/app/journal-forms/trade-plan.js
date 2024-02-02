@@ -37,7 +37,10 @@ const confirmationFixtures = [
   { label: "200 SMA crossover" },
 ];
 
-export default function TradePlan({ data, onSubmit, onDelete }) {
+export default function TradePlan({ data, items, onSubmit, onDelete }) {
+    const { securitySymbols, newsCatalysts, setups, confirmations } = items;
+
+
   const validationSchema = Yup.object().shape({
     securitySymbol: Yup.object().required("Symbol is required"),
     tradeDirectionType: Yup.object().required("Trade direction is required"),
@@ -102,40 +105,18 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
     }),
   });
 
-  if (
-    data?.tradePlan.securitySymbol &&
-    !symbolFixtures.find(({ label }) => label === data.tradePlan.securitySymbol)
-  ) {
-    symbolFixtures.push({ label: data.tradePlan.securitySymbol });
-  }
-
-  if (
-    data?.tradePlan.newsCatalyst?.label &&
-    !catalystFixtures.find(
-      ({ label }) => label === data.tradePlan.newsCatalyst.label
-    )
-  ) {
-    catalystFixtures.push({ label: data.tradePlan.newsCatalyst.label });
-  }
-
-  if (data?.tradePlan.confirmations) {
-    data.tradePlan.confirmations.forEach((confirmation) => {
-      confirmationFixtures.push({ label: confirmation.confirmationText });
-    });
-  }
-
   const formOptions = {
     defaultValues: {
-      securitySymbol: symbolFixtures.find(
+      securitySymbol: securitySymbols.find(
         ({ label }) => label === data?.tradePlan.securitySymbol
       ),
-      catalystLabel: catalystFixtures.find(
+      catalystLabel: newsCatalysts.find(
         ({ label }) => label === data?.tradePlan.newsCatalyst?.label
       ),
       catalystSentimentType: data?.tradePlan.newsCatalyst?.sentimentType,
       catalystURL: data?.tradePlan.newsCatalyst?.url,
       catalystDescription: data?.tradePlan.newsCatalyst?.newsText,
-      setup: setupFixtures.find(({ label }) => label === data?.tradePlan.setup),
+      setup: setups.find(({ label }) => label === data?.tradePlan.setup),
       tradeDirectionType: tradeDirections.find(
         ({ label }) => label === data?.tradePlan.tradeDirectionType
       ),
@@ -157,7 +138,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
           : 0,
       confirmation1:
         data?.tradePlan.confirmations && data.tradePlan.confirmations[0]
-          ? confirmationFixtures.find(
+          ? confirmations.find(
               ({ label }) =>
                 label === data.tradePlan.confirmations[0].confirmationText
             )
@@ -168,7 +149,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
           : 0,
       confirmation2:
         data?.tradePlan.confirmations && data.tradePlan.confirmations[1]
-          ? confirmationFixtures.find(
+          ? confirmations.find(
               ({ label }) =>
                 label === data.tradePlan.confirmations[1].confirmationText
             )
@@ -179,7 +160,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
           : 0,
       confirmation3:
         data?.tradePlan.confirmations && data.tradePlan.confirmations[2]
-          ? confirmationFixtures.find(
+          ? confirmations.find(
               ({ label }) =>
                 label === data.tradePlan.confirmations[2].confirmationText
             )
@@ -272,7 +253,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
         <label className="text-sm ml">Symbol*</label>
         <Autocomplete
           value={securitySymbol}
-          items={[{ label: "ES" }, { label: "NQ" }]}
+          items={securitySymbols}
           onSelect={(val) => setValue("securitySymbol", val)}
           tooltip="The symbol of the financial instrument being invested in or traded (e.g. AAPL for Apple)"
         />
@@ -296,7 +277,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
           <h4 className="text-sm font-bold">News Catalyst</h4>
           <label className="text-sm ml">Label*</label>
           <Autocomplete
-            items={[{ label: "Catalyst 1" }, { label: "Catalyst 2" }]}
+            items={newsCatalysts}
             onSelect={(val) => setValue("catalystLabel", val)}
             tooltip="Label your news catalysts so it's easy to know what news drives your profits (e.g. 'Fed Interest Rates' or 'Consumer Price Index (CPI) Report')"
             value={catalystLabel}
@@ -361,16 +342,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
         <label className="text-sm ml">Trade Setup/Strategy*</label>
         <Autocomplete
           value={setup}
-          items={[
-            { label: "Supply & Demand" },
-            { label: "Gap Up/Down" },
-            { label: "RSI Reversal" },
-            { label: "Head & Shoulders" },
-            { label: "Double Top/Bottom" },
-            { label: "Bull/Bear Flag" },
-            { label: "Bull/Bear Engulfing Candle" },
-            { label: "Value Investing" },
-          ]}
+          items={setups}
           onSelect={(val) => setValue("setup", val)}
           tooltip="The repeatable trading/investing pattern/setup you are putting into action"
         />
@@ -611,7 +583,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
           <div className="w-full">
             <label className="text-sm ml">Confirmation 1</label>
             <Autocomplete
-              items={confirmationFixtures}
+              items={confirmations}
               value={confirmation1}
               onSelect={(val) => setValue("confirmation1", val)}
             />
@@ -620,7 +592,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
           <div className="w-full mt-2">
             <label className="text-sm ml">Confirmation 2</label>
             <Autocomplete
-              items={confirmationFixtures}
+              items={confirmations}
               value={confirmation2}
               onSelect={(val) => setValue("confirmation2", val)}
             />
@@ -629,7 +601,7 @@ export default function TradePlan({ data, onSubmit, onDelete }) {
           <div className="w-full mt-2">
             <label className="text-sm ml">Confirmation 3</label>
             <Autocomplete
-              items={confirmationFixtures}
+              items={confirmations}
               value={confirmation3}
               onSelect={(val) => setValue("confirmation3", val)}
             />
