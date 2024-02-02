@@ -345,7 +345,7 @@ export default function TradingJournal() {
                 </Pill>
               ))}
             </div>
-            <div className="mt-4 max-h-60 overflow-auto px-2">
+            <div className="mt-4 mb-8 overflow-auto px-2">
               {!journalEntries.length && !searchString && (
                 <div>
                   <p>No journal entries yet...</p>{" "}
