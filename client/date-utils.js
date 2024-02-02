@@ -24,7 +24,7 @@ export function formatJournalDate(date) {
   let m = d.getMinutes();
 
   const amPM = h >= 12 ? "PM" : "AM";
-  h = h % 12;
+  h = h % 12 || 12;
   if (m < 10) {
     m = `0${m}`;
   }
