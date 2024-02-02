@@ -398,6 +398,21 @@ app.get(
 );
 
 app.get(
+  "/api/account/:accountId/journalItems",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+
+    const journalItems = await journalService.readJournalItems(
+      accountId
+    );
+
+    res.json({ journalItems });
+  }
+);
+
+
+app.get(
   "/api/account/:accountId/tradeInsights",
   authMiddleware,
   async (req, res) => {

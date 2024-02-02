@@ -1,5 +1,35 @@
 import db from "../db";
 
+const JOURNAL_TAGS = {
+  TRADE_PLANS: 1,
+  MILESTONES: 2,
+  IMPROVEMENT_AREAS: 3,
+  FINSTRUMENTS: 4,
+  REFLECTIONS: 5,
+};
+
+const setupPrefills = [
+  "Supply & Demand",
+  "Gap Up/Down",
+  "RSI Reversal",
+  "Head & Shoulders",
+  "Double Top/Bottom",
+  "Bull/Bear Flag",
+  "Bull/Bear Engulfing Candle",
+  "Value Investing",
+];
+
+const newsCatalystPrefills = ["Fed Interest Rates Announcement", "CPI Report"];
+
+const confirmationPrefills = [
+  "Huge Volume",
+  "Order Absorption",
+  "RSI Oversold",
+  "RSI Overbought",
+  "Break of Trend Line",
+  "200 SMA crossover",
+];
+
 const createMap = {
   1: createTradePlanEntry,
   2: createMilestoneEntry,
@@ -183,7 +213,7 @@ async function createMilestoneEntry(journalEntry, formFields) {
         journalEntryId,
         growthTypeId,
         milestoneText,
-        reachedOn,
+        reachedOn: reachedOn ? new Date(reachedOn) : null,
       },
     ])
     .returning("id");
@@ -197,7 +227,8 @@ async function createMilestoneEntry(journalEntry, formFields) {
       "reachedOn"
     )
     .from("milestones")
-    .where({ id });
+    .where({ id })
+    .first();
 
   return { ...journalEntry, milestone };
 }
@@ -222,8 +253,8 @@ async function createImprovementAreaEntry(journalEntry, formFields) {
         action,
         expectedResult,
         actualResult,
-        startDate,
-        endDate,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
       },
     ])
     .returning("id");
@@ -240,7 +271,8 @@ async function createImprovementAreaEntry(journalEntry, formFields) {
       "endDate"
     )
     .from("improvementAreas")
-    .where({ id });
+    .where({ id })
+    .first();
 
   return { ...journalEntry, improvementArea };
 }
@@ -270,7 +302,8 @@ async function createFinstrumentEntry(journalEntry, formFields) {
       "observations"
     )
     .from("finstruments")
-    .where({ id });
+    .where({ id })
+    .first();
 
   return { ...journalEntry, finstrument };
 }
@@ -302,7 +335,8 @@ async function createReflectionEntry(journalEntry, formFields) {
       "thoughts"
     )
     .from("reflections")
-    .where({ id });
+    .where({ id })
+    .first();
 
   return { ...journalEntry, reflection };
 }
@@ -563,11 +597,109 @@ export async function readJournalEntries(accountId, options = {}) {
 
   console.log("journalEntries return", journalEntries);
 
-  return journalEntries.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+  return journalEntries.sort(
+    (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+  );
+}
+
+export async function readJournalItems(accountId) {
+  const tradePlanJournalEntries = await readJournalEntries(accountId, {
+    journalTagId: JOURNAL_TAGS.TRADE_PLANS,
+  });
+  const finstrumentJournalEntries = await readJournalEntries(accountId, {
+    journalTagId: JOURNAL_TAGS.FINSTRUMENTS,
+  });
+
+  const { tradePlanSymbolsSet, newsCatalystsSet, setupsSet, confirmationsSet } =
+    tradePlanJournalEntries.reduce(
+      (acc, entry) => {
+        console.log("tradePlan with confirmations", JSON.stringify(entry));
+        const {
+          tradePlan: { securitySymbol, newsCatalyst, setup, confirmations },
+        } = entry;
+
+        console.log("confirmations", JSON.stringify(confirmations));
+        acc.tradePlanSymbolsSet.add(securitySymbol);
+
+        if (newsCatalyst) {
+          acc.newsCatalystsSet.add(newsCatalyst.label);
+        }
+
+        acc.setupsSet.add(setup);
+
+        if (confirmations && confirmations.length) {
+          confirmations.forEach(({ confirmationText }) => {
+            console.log("confirmationText", confirmationText);
+            acc.confirmationsSet.add(confirmationText);
+          });
+        }
+
+        return acc;
+      },
+      {
+        tradePlanSymbolsSet: new Set(),
+        newsCatalystsSet: new Set(),
+        setupsSet: new Set(),
+        confirmationsSet: new Set(),
+      }
+    );
+
+  const { finstrumentSymbolsSet } = finstrumentJournalEntries.reduce(
+    (acc, entry) => {
+      const {
+        finstrument: { securitySymbol },
+      } = entry;
+      acc.finstrumentSymbolsSet.add(securitySymbol);
+
+      return acc;
+    },
+    { finstrumentSymbolsSet: new Set() }
+  );
+
+  const symbolsSet = new Set([
+    ...tradePlanSymbolsSet,
+    ...finstrumentSymbolsSet,
+  ]);
+
+  const securitySymbols = [...symbolsSet].map((item) => ({ label: item }));
+
+  let newsCatalysts = new Set([
+    ...newsCatalystsSet,
+    ...newsCatalystPrefills,
+  ]);
+
+  newsCatalysts = [...newsCatalysts].map((item) => ({ label: item }));
+
+  let setups = new Set([
+    ...setupsSet,
+    ...setupPrefills,
+  ]);
+
+   setups = [...setups].map((item) => ({ label: item }));
+
+   console.log("confirmations set", JSON.stringify([...confirmationsSet]));
+
+   let confirmations = new Set([
+    ...confirmationsSet,
+    ...confirmationPrefills,
+  ]);
+
+  console.log("confirmations set", JSON.stringify([...confirmations]));
+
+   confirmations = [...confirmations].map((item) => ({ label: item }));
+
+  return {
+    securitySymbols,
+    newsCatalysts,
+    setups,
+    confirmations,
+  };
 }
 
 export async function deleteJournalEntry(accountId, journalEntryId) {
-  const journalEntries = await readJournalEntries(accountId, { journalEntryId });
+  const journalEntries = await readJournalEntries(accountId, {
+    journalEntryId,
+  });
 
   if (!journalEntries.length) {
     throw new Error(`Journal Entry not found for account ID: ${accountId}`);
@@ -585,12 +717,11 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
 
   const updateInfo = { journalEntryId };
 
-  const {id: tradePlanId } = await db
-  .select(
-    "id",
-  )
-  .from("tradePlans")
-  .where({ journalEntryId }).first();
+  const { id: tradePlanId } = await db
+    .select("id")
+    .from("tradePlans")
+    .where({ journalEntryId })
+    .first();
 
   const {
     newsCatalyst,
@@ -615,26 +746,24 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
     } = newsCatalyst;
 
     const dbNewsCatalyst = await db
-    .select(
-      "id",
-    )
-    .from("newsCatalysts")
-    .where({ tradePlanId }).first();
+      .select("id")
+      .from("newsCatalysts")
+      .where({ tradePlanId })
+      .first();
 
     if (dbNewsCatalyst) {
-        await db("newsCatalysts")
+      await db("newsCatalysts")
         .where({ tradePlanId })
         .update({ ...newsCatalystFields, updatedAt: now });
     } else {
-        await db("newsCatalysts")
-        .insert([
-          {
-            tradePlanId,
-            ...newsCatalystFields,
-            createdAt: now,
-            updatedAt: now,
-          },
-        ]);
+      await db("newsCatalysts").insert([
+        {
+          tradePlanId,
+          ...newsCatalystFields,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ]);
     }
     updateInfo.newsCatalystUpdated = true;
   }
@@ -644,17 +773,16 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
       async (acc, confirmation) => {
         const { id, confirmationText } = confirmation;
         if (id) {
-        await db("confirmations").where({ id }).update({ confirmationText });
+          await db("confirmations").where({ id }).update({ confirmationText });
         } else {
-            await db("confirmations")
-            .insert([
-              {
-                tradePlanId,
-                confirmationText,
-                createdAt: now,
-                updatedAt: now,
-              },
-            ]);
+          await db("confirmations").insert([
+            {
+              tradePlanId,
+              confirmationText,
+              createdAt: now,
+              updatedAt: now,
+            },
+          ]);
         }
         acc.numUpdated++;
 
@@ -675,7 +803,11 @@ async function updateMilestoneEntry(journalEntryId, formFields) {
   const { growthTypeId, milestoneText, reachedOn } = formFields;
   await db("milestones")
     .where({ journalEntryId })
-    .update({ growthTypeId, milestoneText, reachedOn });
+    .update({
+      growthTypeId,
+      milestoneText,
+      reachedOn: reachedOn ? new Date(reachedOn) : null,
+    });
 
   return { journalEntryId, updated: true, milestoneUpdate: true };
 }
@@ -686,9 +818,15 @@ async function updateImprovementAreaEntry(journalEntryId, formFields) {
     journalEntryId: _journalEntryId,
     ...improvementAreaFields
   } = formFields;
+
+  const { startDate, endDate } = improvementAreaFields;
   await db("improvementAreas")
     .where({ journalEntryId })
-    .update(improvementAreaFields);
+    .update({
+      ...improvementAreaFields,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
+    });
 
   return { journalEntryId, updated: true, improvementAreaUpdated: true };
 }
@@ -722,10 +860,14 @@ export async function updateJournalEntry(
   journalEntryId,
   formFields
 ) {
-  const journalEntries = await readJournalEntries(accountId, { journalEntryId });
+  const journalEntries = await readJournalEntries(accountId, {
+    journalEntryId,
+  });
 
   if (!journalEntries.length) {
-    throw new Error(`Journal Entry ${journalEntryId} not found for account ID: ${accountId}`);
+    throw new Error(
+      `Journal Entry ${journalEntryId} not found for account ID: ${accountId}`
+    );
   }
 
   const now = new Date();
@@ -745,7 +887,9 @@ export async function updateJournalEntry(
         .where({ id: journalEntryId })
         .update({ updatedAt: now });
 
-      const [journalEntry] = await readJournalEntries(accountId, { journalEntryId });
+      const [journalEntry] = await readJournalEntries(accountId, {
+        journalEntryId,
+      });
 
       return journalEntry;
     } else {
