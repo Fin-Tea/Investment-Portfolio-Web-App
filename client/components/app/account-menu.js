@@ -1,9 +1,14 @@
 import React, { useState } from "react";
+import Link from "next/link";
 import Popup from "reactjs-popup";
 import useAuth from "../../hooks/auth";
 import classNames from "classnames";
 
 import styles from "../account-menu/account-menu.module.css";
+
+const ROUTES = {
+  ACCOUNTS: "/app/accounts",
+};
 
 export default function AccountMenu() {
   const { user, logout } = useAuth();
@@ -26,9 +31,11 @@ export default function AccountMenu() {
             <span>
               {user.firstName}{" "}
               <i
-                style={{ transform: isMenuOpen ? "rotate(-135deg)" : "rotate(45deg)"  }}
+                style={{
+                  transform: isMenuOpen ? "rotate(-135deg)" : "rotate(45deg)",
+                }}
                 className={classNames(
-                  "border-solid-white border-b-2 border-r-2 p-1 mb-1 ml-1 inline-block",
+                  "border-solid-white border-b-2 border-r-2 p-1 mb-1 ml-1 inline-block"
                 )}
               />
             </span>
@@ -37,6 +44,12 @@ export default function AccountMenu() {
       }
     >
       <ul className="list-none bg-white rounded-md p-1">
+        <li>
+          {" "}
+          <Link href={ROUTES.ACCOUNTS}>
+            <a className="no-underline outline-none">Accounts</a>
+          </Link>
+        </li>
         <li>
           <a className="no-underline outline-none" href="#" onClick={logout}>
             Log out

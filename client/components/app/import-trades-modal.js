@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -9,12 +8,15 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 import Select from "react-select";
-import { useForm, Controller } from "react-hook-form";
+import DragDropUpload from "./drag-drop-upload";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
-const UPLOAD_KEY = "csv";
-const PLATFORM_KEY = "platformId";
+const FILE_UPLOAD_KEY = "file";
+const PLATFORM_ACCOUNT_KEY = "platformAccountId";
 const CONNECT_PLATFORM_KEY = "connectPlatformId";
 
 const platformOptions = [
@@ -32,8 +34,43 @@ const ACTIONS = {
   NAV_BACK: "NAV_BACK",
 };
 
-function MainForm({ platforms, connectedPlatforms, onClick }) {
+function BaseForm({ children, formId, onSubmit, onClose }) {
+
   return (
+    <div>
+      <ModalBody>{children}</ModalBody>
+      <ModalFooter>
+          {formId === 1 && (
+            <button
+              className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
+              onClick={onSubmit}
+            >
+              Upload
+            </button>
+          )}
+
+          {formId === 2 && (
+            <button
+              className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
+              onClick={onSubmit}
+            >
+              Connect
+            </button>
+          )}
+          <button
+            className="rounded-md border p-2 px-4 mr-4"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </ModalFooter>
+    </div>
+  );
+}
+
+function MainForm({ platforms, connectedPlatforms, onClose, formId, onClick }) {
+  return (
+    <BaseForm formId={formId} onClose={onClose}>
     <div>
       <div className="flex flex-col mb-4">
         <button
@@ -42,16 +79,17 @@ function MainForm({ platforms, connectedPlatforms, onClick }) {
         >
           Upload CSV
         </button>
-        <button
+        {/* TODO: Connecting accounts not in scope for MVP */}
+        {/* <button
           className="rounded-full border-x border-y border-purple-800 text-sm text-purple-800 hover:bg-purple-800 hover:text-white px-2 py-2 mt-4"
           onClick={() =>
             onClick && onClick({ action: ACTIONS.NAV_TO_CONNECT_PLATFORM })
           }
         >
           Connect Platform
-        </button>
+        </button> */}
       </div>
-      <h4 className="text-lg">Connected Platforms</h4>
+      {/* <h4 className="text-lg">Connected Platforms</h4>
       <hr className="w-full border-t border-gray-300 mx-auto mt-0" />
       <div>
         {connectedPlatforms ? (
@@ -61,79 +99,90 @@ function MainForm({ platforms, connectedPlatforms, onClick }) {
         ) : (
           <span>No platforms connected yet</span>
         )}
-      </div>
+      </div> */}
     </div>
+    </BaseForm>
   );
 }
 
-function UploadForm({
-  platforms,
-  connectedPlatforms,
-  register,
-  control,
-  onSubmit,
-}) {
+ function UploadForm({ items, formId, onSubmit, onClose}) {
+  const validationSchema = Yup.object().shape({
+    [PLATFORM_ACCOUNT_KEY]: Yup.object().nullable().required(
+      "Trading/Investing account is required"
+    ),
+    [FILE_UPLOAD_KEY]: Yup.mixed().nullable().required("Csv is required"),
+  });
+
+  const formOptions = {
+    defaultValues: {
+        [PLATFORM_ACCOUNT_KEY]: null,
+        [FILE_UPLOAD_KEY]: null
+    },
+    resolver: yupResolver(validationSchema),
+  };
+
+  const { setValue, value, handleSubmit, formState, getValues } = useForm(formOptions);
+
+//   console.log("handleSubmit", await handleSubmit(onSubmit)());
+
+const { errors } = formState;
+  console.log("errors", errors);
+  console.log('values' , getValues());
   return (
+    <BaseForm formId={formId} onSubmit={handleSubmit(onSubmit)} onClose={onClose}>
     <div>
       <form>
         <div>
-          {/* <Select
-            placeholder="Choose Trading/Investing Platform..."
-            options={platformOptions}
-            {...register(PLATFORM_KEY)}
-          /> */}
-
-          <Controller
-            name={PLATFORM_KEY}
-            control={control}
-            render={ ({ field: { onChange, value, ref }}) => (
-              <Select
-                name={PLATFORM_KEY}
-                placeholder="Choose Trading/Investing Platform..."
-                options={platformOptions}
-                value={platformOptions.find((p) => p.value === value)}
-                onChange={(val) => onChange(val.value)}
-              />
-            )}
+          <Select
+            placeholder="Choose Trading/Investing Account..."
+            options={items}
+            value={value}
+            onChange={(val) => setValue(PLATFORM_ACCOUNT_KEY, val)}
           />
+          <div className="text-red-600 text-xs">
+            {errors && errors[PLATFORM_ACCOUNT_KEY] ? errors[PLATFORM_ACCOUNT_KEY].message : ""}
+          </div>
         </div>
-        <input className="w-full mt-4" type="file" {...register(UPLOAD_KEY)} />
+        <DragDropUpload
+          onFileDrop={(file) => setValue(FILE_UPLOAD_KEY, file)}
+        />
+        <div className="text-red-600 text-xs">
+          {errors && errors[FILE_UPLOAD_KEY]?.message}
+        </div>
       </form>
     </div>
+    </BaseForm>
   );
 }
 
 function ConnectPlatformForm({
-  platforms,
-  connectedPlatforms,
-  register,
-  control,
+  formId,
   onSubmit,
+  onClose
 }) {
   return (
+    <BaseForm formId={formId} onSubmit={onSubmit} onClose={onClose}>
     <div>
       <form>
         <div>
           <Select
             placeholder="Choose Trading/Investing Platform..."
             options={connectPlatformOptions}
-            {...register(CONNECT_PLATFORM_KEY)}
           />
         </div>
       </form>
     </div>
+    </BaseForm>
   );
 }
 
 export default function ImportTradesModal({
   isOpen,
   onClose,
-  platforms,
-  connectedPlatforms,
+  platformAccountItems,
   onUpload,
-  onRefresh,
 }) {
-  const { register, control, handleSubmit } = useForm();
+  const { setValue, value, handleSubmit, errors } = useForm();
   const [formId, setFormId] = useState(0);
 
   const formMap = {
@@ -159,11 +208,11 @@ export default function ImportTradesModal({
 
   function processSubmit(data) {
     console.log(data);
-    const formData = new FormData();
-    console.log(data[UPLOAD_KEY][0]);
-    formData.append(UPLOAD_KEY, data[UPLOAD_KEY][0]);
-    console.log("form data", formData.get(UPLOAD_KEY));
-    onUpload && onUpload(formData);
+    // const formData = new FormData();
+    // console.log(data[UPLOAD_KEY][0]);
+    // formData.append(UPLOAD_KEY, data[UPLOAD_KEY][0]);
+    // console.log("form data", formData.get(UPLOAD_KEY));
+    // onUpload && onUpload(formData);
   }
 
   return (
@@ -184,38 +233,15 @@ export default function ImportTradesModal({
           </div>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        
           <CurrentForm
-            register={register}
-            control={control}
+            formId={formId}
+            items={platformAccountItems}
             onClick={handleClick}
+            onClose={handleClose}
+            onSubmit={processSubmit}
           />
-        </ModalBody>
 
-        <ModalFooter>
-          {formId === 1 && (
-            <button
-              className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
-              onClick={handleSubmit(processSubmit)}
-            >
-              Upload
-            </button>
-          )}
-          {formId === 2 && (
-            <button
-              className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
-              onClick={handleSubmit(processSubmit)}
-            >
-              Connect
-            </button>
-          )}
-          <button
-            className="rounded-md border p-2 px-4 mr-4"
-            onClick={handleClose}
-          >
-            Close
-          </button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );

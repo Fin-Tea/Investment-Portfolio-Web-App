@@ -10,6 +10,7 @@ import {
 
 export default function DeleteConfirmationModal({
   header,
+  body,
   isOpen,
   onClose,
   onSubmit,
@@ -22,6 +23,7 @@ export default function DeleteConfirmationModal({
         <ModalCloseButton />
         <ModalBody>
           <p className="font-bold">Are you sure?</p>
+          {body && <p className="font-bold">{body}</p>}
         </ModalBody>
 
         <ModalFooter>
