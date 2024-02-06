@@ -155,3 +155,109 @@ export function updateTDATokens(accountId, tdaTokenRespJson = {}) {
 
   return db("account").update(updateParams).where({ id: accountId });
 }
+
+export function readPlatforms(options = {}) {
+
+  const {platformIds} = options;
+
+  let builder = db
+  .select("id", "name", "description", "url")
+  .from("platforms");
+ 
+  if (platformIds) {
+    if (platformIds.length) {
+      builder = builder.whereIn("id", platformIds);
+    } else {
+      return [];
+    }
+  }
+
+  return builder;
+}
+
+export async function readPlatformAccounts(accountId, options = {}) {
+  const { limit, offset, platformAccountId } = options;
+
+  let builder = db
+    .select(
+      "id",
+      "accountId",
+      "platformId",
+      "accountName",
+      "createdAt",
+      "updatedAt"
+    )
+    .from("platformAccounts")
+    .where({ accountId });
+
+  if (platformAccountId) {
+    builder = builder.andWhere({ id: platformAccountId });
+  }
+
+  builder = builder.andWhere({ deletedAt: null });
+
+  if (limit) {
+    builder = builder.limit(limit);
+    if (offset) {
+      builder = builder.offset(offset);
+    }
+  }
+
+  let platformAccounts = await builder;
+
+  const platformIds = platformAccounts.map(({ platformId }) => platformId);
+
+  console.log("platformIds", JSON.stringify(platformIds));
+  const platforms = await readPlatforms(platformIds);
+
+  const platformsMap = platforms.reduce((acc, platform) => {
+    acc.set(platform.id, platform);
+    return acc;
+  }, new Map());
+
+  platformAccounts = platformAccounts.map((platformAccount) => ({
+    ...platformAccount,
+    platform: platformsMap.get(platformAccount.platformId),
+  }));
+
+  return platformAccounts.sort(
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+  );
+}
+
+export async function createPlatformAccount(accountId, formFields) {
+  const now = new Date();
+  const { platformId, accountName } = formFields;
+
+  const [id] = await db("platformAccounts")
+    .insert([
+      {
+        accountId,
+        platformId,
+        accountName,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+    .returning("id");
+
+  const [platformAccount] = await readPlatformAccounts(accountId, { platformAccountId: id});
+ 
+  return platformAccount;
+}
+
+export async function deletePlatformAccount(accountId, platformAccountId) {
+  const platformAccounts = await readPlatformAccounts(accountId, {
+    platformAccountId,
+  });
+
+  if (!platformAccounts.length) {
+    throw new Error(`Platform Account not found for account ID: ${accountId}`);
+  }
+
+  await db("platformAccounts")
+    .where({ id: platformAccountId })
+    .update({ deletedAt: new Date() });
+
+  return { platformAccountId, deleted: true };
+}
