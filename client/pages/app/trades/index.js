@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../../../components/app/layout";
 import SearchBox from "../../../components/app/search-box";
 import BasicTable from "../../../components/app/basic-table";
 import ImportTradesModal from "../../../components/app/import-trades-modal";
+import usePlatformAccounts from "../../../hooks/platformAccounts";
 import { formatJournalDate } from "../../../date-utils";
 
 const columns = [
@@ -48,13 +49,14 @@ const columns = [
     accessor: "tradePlanId",
     sticky: "right",
     Cell: ({ cell }) => {
-        const { id, securitySymbol, tradePlanId } =
-          cell.row.values;
+      const { id, securitySymbol, tradePlanId } = cell.row.values;
 
-        return (
-            <button className="rounded-full bg-purple-800 text-sm text-white px-2 py-1">{tradePlanId ? "View" : "Add" }</button>
-        );
-      },
+      return (
+        <button className="rounded-full bg-purple-800 text-sm text-white px-2 py-1">
+          {tradePlanId ? "View" : "Add"}
+        </button>
+      );
+    },
   },
 ];
 
@@ -79,7 +81,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 2,
@@ -101,7 +103,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 3,
@@ -123,7 +125,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 4,
@@ -145,7 +147,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 5,
@@ -167,7 +169,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 6,
@@ -189,7 +191,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 7,
@@ -211,7 +213,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 8,
@@ -233,7 +235,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 9,
@@ -255,7 +257,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 10,
@@ -277,7 +279,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: "TD Ameritrade"
+    platform: "TD Ameritrade",
   },
   {
     id: 11,
@@ -299,7 +301,7 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: null
+    platform: null,
   },
   {
     id: 12,
@@ -321,13 +323,15 @@ const testData = [
     isScaledOut: 0,
     catalystId: null,
     setupId: null,
-    platform: null
+    platform: null,
   },
 ];
 
 export default function Trades() {
+  const [isImportModalOpen, setImportModalOpen] = useState(false);
+  const [platformAccounts, setPlatformAccounts] = useState([]);
 
-    const [isImportModalOpen, setImportModalOpen] = useState(false);
+  const { fetchPlatformAccounts } = usePlatformAccounts();
 
   const data = testData.map((trade) => ({
     ...trade,
@@ -339,48 +343,78 @@ export default function Trades() {
     tradePlanId: null,
   }));
 
+  async function loadPlatformAccounts() {
+    try {
+      const resp = await fetchPlatformAccounts();
+      console.log("platformAccounts resp", resp);
+      setPlatformAccounts(resp.platformAccounts);
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
+  useEffect(() => {
+    loadPlatformAccounts();
+  }, []);
+
   return (
     <div>
-    <Layout>
-      <div className="h-full">
-        <div className="py-4 h-full flex">
-          <div className="ml-5 w-11/12 h-full flex flex-col border-x border-y border-gray-300 bg-white pb-4 mx-auto overflow-auto">
-            <div>
-              <div className="pt-2 text-center relative">
-                <h2 className="mb-0 text-2xl self-center">Trades</h2>
-              </div>
-              <div className="flex justify-between w-[90%] mx-auto">
-                <div>
-                    <span className="text-sm">Last Updated<br /> <i>Dec. 30, 2021 @ 7:57 PM</i></span>
+      <Layout>
+        <div className="h-full">
+          <div className="py-4 h-full flex">
+            <div className="ml-5 w-11/12 h-full flex flex-col border-x border-y border-gray-300 bg-white pb-4 mx-auto overflow-auto">
+              <div>
+                <div className="pt-2 text-center relative">
+                  <h2 className="mb-0 text-2xl self-center">Trades</h2>
                 </div>
-                <div>
-                <button className="mr-5 rounded-full bg-purple-800 text-white px-4 py-1">
+                <div className="flex justify-between w-[90%] mx-auto">
+                  <div>
+                    <span className="text-sm">
+                      Last Updated
+                      <br /> <i>Dec. 30, 2021 @ 7:57 PM</i>
+                    </span>
+                  </div>
+                  <div>
+                    {/* TODO: Refresh not in scope for MVP */}
+                    {/* <button className="mr-5 rounded-full bg-purple-800 text-white px-4 py-1">
                   Refresh
-                </button>
-                <button className="rounded-full bg-purple-800 text-white px-4 py-1" onClick={() => setImportModalOpen(true)}>
-                  Import
-                </button>
+                </button> */}
+                    <button
+                      className="rounded-full bg-purple-800 text-white px-4 py-1"
+                      onClick={() => setImportModalOpen(true)}
+                    >
+                      Import
+                    </button>
+                  </div>
                 </div>
+                <hr className="w-[90%] border-t border-gray-300 mx-auto" />
               </div>
-              <hr className="w-[90%] border-t border-gray-300 mx-auto" />
-            </div>
-            <div className="w-full h-full">
-              <div className="flex justify-end">
-                <SearchBox className="mr-8" placeholder={"Search Symbol"} />
-              </div>
-              <div className="mx-auto mt-4 max-w-[90%]">
-                <BasicTable
-                  className="h-[50vh] border-b"
-                  columns={columns}
-                  data={data}
-                />
+              <div className="w-full h-full">
+                <div className="flex justify-end">
+                  <SearchBox className="mr-8" placeholder={"Search Symbol"} />
+                </div>
+                <div className="mx-auto mt-4 max-w-[90%]">
+                  <BasicTable
+                    className="h-[50vh] border-b"
+                    columns={columns}
+                    data={data}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div> 
-    </Layout>
-    <ImportTradesModal isOpen={isImportModalOpen} onClose={() => setImportModalOpen(false)} />
+      </Layout>
+      <ImportTradesModal
+        isOpen={isImportModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        platformAccountItems={platformAccounts.map(
+          ({ accountName, id, platform: { name } }) => ({
+            label: `${name} ${accountName}`,
+            value: id,
+          })
+        )}
+      />
     </div>
   );
 }
