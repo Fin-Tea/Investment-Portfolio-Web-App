@@ -35,7 +35,11 @@ app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", config.clientBaseUrl);
 
   // Request methods you wish to allow
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE", "OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE",
+    "OPTIONS"
+  );
 
   // Request headers you wish to allow
   res.setHeader(
@@ -403,14 +407,47 @@ app.get(
   async (req, res) => {
     const { accountId } = req.params;
 
-    const journalItems = await journalService.readJournalItems(
-      accountId
-    );
+    const journalItems = await journalService.readJournalItems(accountId);
 
     res.json({ journalItems });
   }
 );
 
+app.get(
+  "/api/account/:accountId/platformAccounts",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+    const { rowsPerPage, numPages, page, id } = req.query;
+
+    const options = {};
+
+    if (rowsPerPage && numPages) {
+      // TODO: rowsPerPage && numPage must be >= 1
+      const rowsPerPageNum = parseInt(rowsPerPage);
+
+      if (page) {
+        options.limit = rowsPerPageNum;
+        options.offset = rowsPerPageNum * (parseInt(page) - 1);
+      } else {
+        options.limit = parseInt(rowsPerPage) * parseInt(numPages);
+      }
+    }
+
+    const platformAccounts = await accountService.readPlatformAccounts(
+      accountId,
+      options
+    );
+
+    res.json({ platformAccounts });
+  }
+);
+
+app.get("/api/platforms", authMiddleware, async (req, res) => {
+  const platforms = await accountService.readPlatforms();
+
+  res.json({ platforms });
+});
 
 app.get(
   "/api/account/:accountId/tradeInsights",
@@ -563,6 +600,25 @@ app.delete(
   }
 );
 
+app.delete(
+  "/api/account/:accountId/platformAccount/:platformAccountId",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId, platformAccountId } = req.params;
+
+    try {
+      const result = await accountService.deletePlatformAccount(
+        accountId,
+        platformAccountId
+      );
+
+      res.json(result);
+    } catch (e) {
+      res.json({ error: e.message });
+    }
+  }
+);
+
 app.post(
   "/api/account/:accountId/improvementActions",
   authMiddleware,
@@ -684,40 +740,65 @@ app.post(
   }
 );
 
-app.post("/api/account/:accountId/uploadTradeHistory", async (req, res) => {
-  const { accountId } = req.params;
-  try {
-    if (!req.files) {
-      return res.send({
-        success: false,
-        message: "No file uploaded",
-      });
-    } else {
-      let respData = {
-        success: true,
-      };
-      if (req.files.csv) {
-        console.log("file name");
-        console.log(req.files.csv.name);
-        // console.log(req.files.csv.data.toString("utf8"));
-        const orders = tradingService.parseTDAOrdersFromCSV(req.files.csv);
-        console.log(JSON.stringify(orders));
-        const tradeInfo =
-          tradingService.mapUploadedTradeHistoryToTradeInfo(orders);
+app.post(
+  "/api/account/:accountId/platformAccount",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
 
-        console.log(JSON.stringify(tradeInfo));
-        const results = await tradingService.processUploadedTrades(
-          accountId,
-          tradeInfo
-        );
-        respData = { ...respData, ...results };
-      }
-      return res.json(respData);
+    const platformAccountFields = req.body; // TODO: add yup schema validation
+
+    try {
+      const platformAccount = await accountService.createPlatformAccount(
+        accountId,
+        platformAccountFields
+      );
+      res.json({ platformAccount });
+    } catch (e) {
+      res.json({ error: e.message });
     }
-  } catch (e) {
-    return res.json({ error: e.message });
   }
-});
+);
+
+app.post(
+  "/api/account/:accountId/uploadTradeHistory",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+    const { platformAccountId } = req.body;
+    try {
+      if (!req.files) {
+        return res.send({
+          success: false,
+          message: "No file uploaded",
+        });
+      } else {
+        let respData = {
+          success: true,
+        };
+        if (req.files.csv) {
+          console.log("file name");
+          console.log(req.files.csv.name);
+          // console.log(req.files.csv.data.toString("utf8"));
+          const orders = tradingService.parseTDAOrdersFromCSV(req.files.csv);
+          console.log(JSON.stringify(orders));
+          const tradeInfo =
+            tradingService.mapUploadedTradeHistoryToTradeInfo(orders);
+
+          console.log(JSON.stringify(tradeInfo));
+          const results = await tradingService.processUploadedTrades(
+            accountId,
+            tradeInfo
+          );
+          respData = { ...respData, ...results };
+        }
+        return res.json(respData);
+      }
+    } catch (e) {
+      return res.json({ success: false, error: e.message });
+    }
+  }
+);
 
 app.put(
   "/api/account/:accountId/journalEntry/:journalEntryId",
