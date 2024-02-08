@@ -4,6 +4,7 @@ import SearchBox from "../../../components/app/search-box";
 import BasicTable from "../../../components/app/basic-table";
 import ImportTradesModal from "../../../components/app/import-trades-modal";
 import usePlatformAccounts from "../../../hooks/platformAccounts";
+import useTrades from "../../../hooks/trades";
 import { formatJournalDate } from "../../../date-utils";
 
 const columns = [
@@ -41,8 +42,8 @@ const columns = [
     accessor: "closePrice",
   },
   {
-    Header: "Platform",
-    accessor: "platform",
+    Header: "Trading Account",
+    accessor: "platformAccount",
   },
   {
     Header: "Trade Plan",
@@ -330,18 +331,36 @@ const testData = [
 export default function Trades() {
   const [isImportModalOpen, setImportModalOpen] = useState(false);
   const [platformAccounts, setPlatformAccounts] = useState([]);
+  const [trades, setTrades] = useState([]);
+  const [importLogs, setImportLogs] = useState([]);
 
   const { fetchPlatformAccounts } = usePlatformAccounts();
+  const { uploadTradeHistoryCSV, fetchTradeHistory, fetchImportLogs } = useTrades();
 
-  const data = testData.map((trade) => ({
+//   const data = testData.map((trade) => ({
+//     ...trade,
+//     tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
+//     tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
+//     pnl: (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(
+//       2
+//     ),
+//     tradePlanId: null,
+//   }));
+
+  const data = trades.map((trade) => {
+    const platformAccount = platformAccounts.find(({id}) => id === trade.platformAccountId);
+    return({
     ...trade,
     tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
     tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
-    pnl: (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(
+    pnl: trade.pnl || (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(
       2
     ),
+    platformAccount: platformAccount ? `${platformAccount.platform.name} ${platformAccount.accountName}`: "",
     tradePlanId: null,
-  }));
+  })});
+
+  console.log("data", data);
 
   async function loadPlatformAccounts() {
     try {
@@ -353,8 +372,50 @@ export default function Trades() {
     }
   }
 
+  async function loadTradeHistory() {
+    try {
+      const resp = await fetchTradeHistory({ platformAccountsOnly : true});
+      console.log("tradeHistory resp", resp);
+      setTrades(resp.tradeHistory);
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
+  async function loadImportLogs() {
+    try {
+      const resp = await fetchImportLogs();
+      console.log("importLogs resp", resp);
+      setImportLogs(resp.importLogs);
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
+  async function handleImportTrades({ action, formData }) {
+    try {
+      if (action === "upload") {
+        console.log("uploading csv", formData);
+
+        const resp = await uploadTradeHistoryCSV(formData);
+        console.log("csvUpload response", resp);
+        console.log("csvUpload response success", resp.success);
+        // if successful, refetch tradeHistory data and populate store
+        if (resp.success) {
+            console.log("csvUpload success. loading tradehistory");
+            loadTradeHistory();
+        }
+      }
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+    setImportModalOpen(false);
+  }
+
   useEffect(() => {
+    loadTradeHistory();
     loadPlatformAccounts();
+    loadImportLogs();
   }, []);
 
   return (
@@ -369,10 +430,10 @@ export default function Trades() {
                 </div>
                 <div className="flex justify-between w-[90%] mx-auto">
                   <div>
-                    <span className="text-sm">
+                   {importLogs.length ? (<span className="text-sm">
                       Last Updated
-                      <br /> <i>Dec. 30, 2021 @ 7:57 PM</i>
-                    </span>
+                      <br /> <i> {formatJournalDate(importLogs[0].createdAt)}</i>
+                    </span>) : ""}
                   </div>
                   <div>
                     {/* TODO: Refresh not in scope for MVP */}
@@ -390,16 +451,17 @@ export default function Trades() {
                 <hr className="w-[90%] border-t border-gray-300 mx-auto" />
               </div>
               <div className="w-full h-full">
-                <div className="flex justify-end">
+                {data.length ? (<div><div className="flex justify-end">
                   <SearchBox className="mr-8" placeholder={"Search Symbol"} />
                 </div>
                 <div className="mx-auto mt-4 max-w-[90%]">
-                  <BasicTable
+                   <BasicTable
                     className="h-[50vh] border-b"
                     columns={columns}
                     data={data}
-                  />
+                  /> 
                 </div>
+              </div>) : (<div className="max-w-[90%] mx-auto"><p>No trades uploaded yet</p></div>)}
               </div>
             </div>
           </div>
@@ -414,6 +476,7 @@ export default function Trades() {
             value: id,
           })
         )}
+        onSubmit={handleImportTrades}
       />
     </div>
   );

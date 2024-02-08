@@ -33,6 +33,11 @@ export default function PlatformAccountModal({
 
   const platform = watch("platform");
 
+  function processSubmit(formData) {
+    onSubmit && onSubmit(formData);
+    !Object.values(errors).length && onClose();
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -70,10 +75,7 @@ export default function PlatformAccountModal({
           </button>
           <button
             className="rounded-md bg-purple-800 text-white p-2 px-4"
-            onClick={() => {
-              onSubmit && handleSubmit(onSubmit)();
-              onClose();
-            }}
+            onClick={handleSubmit(processSubmit)}
           >
             Create
           </button>

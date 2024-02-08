@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -15,7 +16,7 @@ import * as Yup from "yup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
-const FILE_UPLOAD_KEY = "file";
+const FILE_UPLOAD_KEY = "csv";
 const PLATFORM_ACCOUNT_KEY = "platformAccountId";
 const CONNECT_PLATFORM_KEY = "connectPlatformId";
 
@@ -180,7 +181,7 @@ export default function ImportTradesModal({
   isOpen,
   onClose,
   platformAccountItems,
-  onUpload,
+  onSubmit,
 }) {
   const { setValue, value, handleSubmit, errors } = useForm();
   const [formId, setFormId] = useState(0);
@@ -208,12 +209,15 @@ export default function ImportTradesModal({
 
   function processSubmit(data) {
     console.log(data);
-    // const formData = new FormData();
-    // console.log(data[UPLOAD_KEY][0]);
-    // formData.append(UPLOAD_KEY, data[UPLOAD_KEY][0]);
-    // console.log("form data", formData.get(UPLOAD_KEY));
-    // onUpload && onUpload(formData);
-  }
+    if (formId === 1) {
+        const formData = new FormData();
+        formData.append(FILE_UPLOAD_KEY, data[FILE_UPLOAD_KEY]);
+        formData.append(PLATFORM_ACCOUNT_KEY, data[PLATFORM_ACCOUNT_KEY].value);
+        console.log("formData", formData.get(PLATFORM_ACCOUNT_KEY), formData.get(FILE_UPLOAD_KEY));
+        onSubmit && onSubmit({action: "upload", formData});
+    }
+
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>

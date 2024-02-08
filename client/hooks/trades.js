@@ -1,4 +1,5 @@
 import useData from "./data";
+import { appendQueryParam } from "../data-utils";
 
 const ACCOUNT_BALANCE_HISTORY_ENDPOINT = "balanceHistory";
 const TRADE_HISTORY_ENDPOINT = "tradeHistory";
@@ -10,6 +11,7 @@ const TRADE_DIRECTIONS_ENDPOINT = "tradeDirections";
 const TRADE_PLANS_ENDPOINT = "tradePlans";
 const TRADE_LINK_ENDPOINT = "tradePlanLink";
 const UPLOAD_TRADE_HISTORY_ENDPOINT = "uploadTradeHistory";
+const IMPORT_LOGS_ENDPOINT = "importLogs";
 
 export default function useTrades() {
   const { fetchUserData, fetchLookupData } = useData();
@@ -23,8 +25,13 @@ export default function useTrades() {
     );
   }
 
-  function fetchTradeHistory() {
-    // TODO: Accept input for filters
+  function fetchTradeHistory(queryParams) {
+    let url = TRADE_HISTORY_ENDPOINT;
+
+    Object.entries(queryParams).forEach(([k, v]) => {
+      url = appendQueryParam(url, k, v);
+    });
+
     return fetchUserData(TRADE_HISTORY_ENDPOINT);
   }
 
@@ -82,6 +89,10 @@ export default function useTrades() {
     });
   }
 
+  function fetchImportLogs() {
+    return fetchUserData(IMPORT_LOGS_ENDPOINT);
+  }
+
   return {
     fetchCatalysts,
     fetchSetups,
@@ -96,5 +107,6 @@ export default function useTrades() {
     linkTradePlan,
     unlinkTradePlan,
     uploadTradeHistoryCSV,
+    fetchImportLogs
   };
 }
