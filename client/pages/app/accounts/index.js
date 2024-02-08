@@ -97,7 +97,7 @@ export default function Accounts() {
                 <div className="flex justify-center items-center w-[90%] mx-auto">
                   <button
                     className="rounded-full bg-purple-800 text-white px-4 py-1"
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => setIsCreateModalOpen(true)}
                   >
                     Create Trading/Investing Account
                   </button>
