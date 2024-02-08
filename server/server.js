@@ -244,6 +244,7 @@ app.get(
       securityName,
       milestonesOnly,
       allAccounts,
+      platformAccountsOnly
     } = req.query;
 
     const options = {
@@ -294,6 +295,10 @@ app.get(
 
     if (milestonesOnly && milestonesOnly.toLowerCase() === "true") {
       options.isMilestone = true;
+    }
+
+    if (platformAccountsOnly && platformAccountsOnly.toLowerCase() === "true") {
+      options.isPlatformAccounts = true;
     }
 
     const tradeHistory = await tradingService.getTradeHistory(
@@ -447,6 +452,13 @@ app.get("/api/platforms", authMiddleware, async (req, res) => {
   const platforms = await accountService.readPlatforms();
 
   res.json({ platforms });
+});
+
+app.get("/api/account/:accountId/importLogs", authMiddleware, async (req, res) => {
+  const { accountId } = req.params;
+  const importLogs = await tradingService.readImportLogs(accountId);
+
+  res.json({ importLogs });
 });
 
 app.get(
@@ -766,34 +778,64 @@ app.post(
   async (req, res) => {
     const { accountId } = req.params;
     const { platformAccountId } = req.body;
+
+    if (!req.files.csv || !platformAccountId) {
+      return res.send({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const file = req.files.csv;
+
     try {
-      if (!req.files) {
+      const [platformAccount] = await accountService.readPlatformAccounts(
+        accountId,
+        { platformAccountId }
+      );
+
+      if (!platformAccount) {
         return res.send({
           success: false,
-          message: "No file uploaded",
+          message: "Trading/Investing account not found",
         });
-      } else {
-        let respData = {
-          success: true,
-        };
-        if (req.files.csv) {
-          console.log("file name");
-          console.log(req.files.csv.name);
-          // console.log(req.files.csv.data.toString("utf8"));
-          const orders = tradingService.parseTDAOrdersFromCSV(req.files.csv);
-          console.log(JSON.stringify(orders));
-          const tradeInfo =
-            tradingService.mapUploadedTradeHistoryToTradeInfo(orders);
-
-          console.log(JSON.stringify(tradeInfo));
-          const results = await tradingService.processUploadedTrades(
-            accountId,
-            tradeInfo
-          );
-          respData = { ...respData, ...results };
-        }
-        return res.json(respData);
       }
+
+      const { platform } = platformAccount;
+
+      let respData = {
+        success: false,
+      };
+
+      let tradeInfo = null;
+
+      if (platform.id === tradingService.PLATFORMS.TD_AMERITRADE) {
+        // console.log(req.files.csv.data.toString("utf8"));
+        const orders = tradingService.parseTDAOrdersFromCSV(file);
+        console.log(JSON.stringify(orders));
+        tradeInfo =
+          tradingService.mapUploadedTDAOrdersToTradeInfo(orders);
+
+      } else if (platform.id === tradingService.PLATFORMS.NINJA_TRADER) {
+        const trades = tradingService.parseNinjaTradesFromCSV(file);
+
+        tradeInfo =
+        tradingService.mapUploadedNinjaTradesToTradeInfo(trades);
+      }
+
+      if (tradeInfo) {
+      console.log(JSON.stringify(tradeInfo));
+      const results = await tradingService.processUploadedTrades(
+        accountId,
+        platformAccountId,
+        "Upload",
+        tradeInfo
+      );
+
+      respData = { ...respData, success: true, ...results };
+      }
+
+      return res.json(respData);
     } catch (e) {
       return res.json({ success: false, error: e.message });
     }

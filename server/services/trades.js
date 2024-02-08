@@ -6,6 +6,23 @@ import { HOURS_MARKET_OPEN } from "../constants";
 
 const NUM_BALANCE_DAYS = 30;
 
+export const PLATFORMS = {
+  TD_AMERITRADE: 1,
+  NINJA_TRADER: 2,
+};
+
+const NINJA_TRADER_HEADERS = [
+  "symbol",
+  "qty",
+  "buyPrice",
+  "sellPrice",
+  "pnl",
+  "boughtTimestamp",
+  "soldTimestamp",
+];
+
+const PNL_REGEX = /[$()]/g;
+
 export function getTradeHistory(accountId, options = {}) {
   const {
     limit,
@@ -22,6 +39,7 @@ export function getTradeHistory(accountId, options = {}) {
     securityName,
     isMilestone,
     tradeOpenedAt,
+    isPlatformAccounts,
   } = options;
 
   let builder = db
@@ -48,7 +66,10 @@ export function getTradeHistory(accountId, options = {}) {
       "openUnderlyingPrice",
       "closeUnderlyingPrice",
       "underlyingSymbol",
-      "tradePlanId"
+      "tradePlanId",
+      "platformAccountId",
+      "importLogId",
+      "pnl"
     )
     .from("tradeHistory")
     .where({ accountId });
@@ -94,6 +115,10 @@ export function getTradeHistory(accountId, options = {}) {
 
   if (isMilestone) {
     builder = builder.andWhere({ isMilestone });
+  }
+
+  if (isPlatformAccounts) {
+    builder = builder.andWhereNotNull("platformAccountId");
   }
 
   if (tradeOpenedAt) {
@@ -551,6 +576,36 @@ export function parseTDAOrdersFromCSV(file) {
   return [];
 }
 
+export function parseNinjaTradesFromCSV(file) {
+  if (!file) {
+    throw new Error("File missing");
+  }
+
+  if (!file.name.endsWith(".csv")) {
+    throw new Error(
+      "Invalid file. Must be a Ninja Trader Performance.csv file"
+    );
+  }
+
+  const data = file.data.toString("utf8");
+
+  const ninjaCsv = csv.parse(data, { output: "objects" });
+
+  console.log("ninjaCsv", ninjaCsv);
+
+  if (ninjaCsv.length) {
+    const keySet = new Set(Object.keys(ninjaCsv[0]));
+
+    NINJA_TRADER_HEADERS.forEach((key) => {
+      if (!keySet.has(key)) {
+        throw new Error(`Ninja Trader trades CSV missing ${key} header`);
+      }
+    });
+  }
+
+  return ninjaCsv;
+}
+
 function groupOrdersBySymbol(uploadedOrders) {
   return uploadedOrders.reduce((acc, order) => {
     const {
@@ -678,7 +733,7 @@ function createTrades(symbol, description, orders) {
   return trades;
 }
 
-export function mapUploadedTradeHistoryToTradeInfo(uploadedOrders) {
+export function mapUploadedTDAOrdersToTradeInfo(uploadedOrders) {
   const groupedOrdersMap = groupOrdersBySymbol(uploadedOrders);
 
   return Array.from(groupedOrdersMap.values()).reduce(
@@ -699,16 +754,157 @@ export function mapUploadedTradeHistoryToTradeInfo(uploadedOrders) {
   );
 }
 
-export async function processUploadedTrades(accountId, tradeInfo = {}) {
+export function mapUploadedNinjaTradesToTradeInfo(uploadedTrades) {
+  console.log("uploadedTrades length", uploadedTrades.length);
+  console.log("uploadedTrades", JSON.stringify(uploadedTrades));
+
+  return uploadedTrades.reduce(
+    (acc, rawTrade) => {
+      const {
+        symbol,
+        qty,
+        buyPrice,
+        sellPrice,
+        pnl,
+        boughtTimestamp,
+        soldTimestamp,
+      } = rawTrade;
+
+      // const currentTrade = {
+      //   tradeClosedAt: null,
+      //   tradeOpenedAt: null,
+      //   securityType,
+      //   tradeDirectionType,
+      //   closeQty: 0,
+      //   openQty: 0,
+      //   securitySymbol: symbol,
+      //   securityName: description,
+      //   closePrices: [],
+      //   openPrices: [],
+      // };
+
+      const buyPriceF = parseFloat(buyPrice);
+      const sellPriceF = parseFloat(sellPrice);
+      let pnlF = parseFloat(pnl.replace(PNL_REGEX, ""));
+
+      let tradeDirectionType = "Long";
+      let tradeOpenedAt = boughtTimestamp;
+      let tradeClosedAt = soldTimestamp;
+      let openPrice = buyPriceF;
+      let closePrice = sellPriceF;
+
+      const isProfit = !pnl.includes("(");
+
+      if (isProfit) {
+        if (sellPriceF < buyPriceF) {
+          tradeDirectionType = "Short";
+          tradeOpenedAt = soldTimestamp;
+          tradeClosedAt = boughtTimestamp;
+          openPrice = sellPriceF;
+          closePrice = buyPriceF;
+        }
+      } else {
+        if (sellPrice > buyPriceF) {
+          tradeDirectionType = "Short";
+          tradeOpenedAt = soldTimestamp;
+          tradeClosedAt = boughtTimestamp;
+          openPrice = sellPriceF;
+          closePrice = buyPriceF;
+        }
+        pnlF *= -1;
+      }
+
+      const trade = {
+        securityType: "Future",
+        tradeDirectionType,
+        tradeOpenedAt: new Date(tradeOpenedAt),
+        tradeClosedAt: new Date(tradeClosedAt),
+        openQty: qty,
+        closeQty: qty,
+        securitySymbol: symbol,
+        securityName: symbol.substring(0, symbol.length - 2),
+        openPrices: [openPrice],
+        closePrices: [closePrice],
+        pnl: pnlF
+      };
+
+      acc.completedTrades.push(trade);
+
+      return acc;
+    },
+    { completedTrades: [], openTrades: [], incompleteClosedTrades: [] }
+  );
+}
+
+export async function readImportLogs(accountId, options = {}) {
+  const { limit, offset, importLogId } = options;
+
+  let builder = db
+    .select(
+      "id",
+      "accountId",
+      "platformAccountId",
+      "type",
+      "jobStatus",
+      "message",
+      "createdAt",
+      "updatedAt"
+    )
+    .from("importLog")
+    .where({ accountId });
+
+  if (importLogId) {
+    builder = builder.andWhere({ id: importLogId });
+  }
+
+  builder = builder.andWhere({ deletedAt: null });
+
+  if (limit) {
+    builder = builder.limit(limit);
+    if (offset) {
+      builder = builder.offset(offset);
+    }
+  }
+
+  builder = builder.orderBy('createdAt', 'desc')
+
+  return builder;
+}
+
+export async function processUploadedTrades(
+  accountId,
+  platformAccountId,
+  importLogType,
+  tradeInfo = {}
+) {
+  const now = new Date();
   const { completedTrades } = tradeInfo;
   const processedTradesInfo = { numTradesSaved: 0, numTradesAlreadyUpdated: 0 };
 
   console.log("processUploadedTrades");
 
+  let jobStatus = "In Progress";
+
   if (completedTrades && completedTrades.length) {
+    // create a new import log
+    const [id] = await db("importLog")
+      .insert([
+        {
+          accountId,
+          platformAccountId,
+          type: importLogType,
+          jobStatus,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ])
+      .returning("id");
+
     console.log("processing completed trades");
     const dbTradeInfo = await completedTrades.reduce(
       async (acc, trade) => {
+
+        const newAcc = await acc;
         const {
           tradeOpenedAt: rawTradeOpenedAt,
           tradeClosedAt: rawTradeClosedAt,
@@ -719,10 +915,11 @@ export async function processUploadedTrades(accountId, tradeInfo = {}) {
           openPrices,
           closePrices,
           closeQty,
+          pnl,
         } = trade;
 
-        const tradeOpenedAt = formatDate(new Date(rawTradeOpenedAt));
-        const tradeClosedAt = formatDate(new Date(rawTradeClosedAt));
+        const tradeOpenedAt = new Date(rawTradeOpenedAt);
+        const tradeClosedAt = new Date(rawTradeClosedAt);
 
         const alreadyInsertedTrade = await db
           .select(
@@ -746,9 +943,9 @@ export async function processUploadedTrades(accountId, tradeInfo = {}) {
           .first();
 
         if (alreadyInsertedTrade) {
-          acc.tradesAlreadyInserted.push(alreadyInsertedTrade);
+          newAcc.tradesAlreadyInserted.push(alreadyInsertedTrade);
         } else {
-          const todayFormatted = formatDate(new Date());
+          const todayFormatted = new Date();
           const timeRangeType =
             (new Date(tradeClosedAt) - new Date(tradeOpenedAt)) /
               (60 * 60 * 1000) <
@@ -782,11 +979,15 @@ export async function processUploadedTrades(accountId, tradeInfo = {}) {
             isScaledOut,
             createdAt: todayFormatted,
             updatedAt: todayFormatted,
+            platformAccountId,
+            importLogId: id,
+            pnl
           };
-          acc.tradesToInsert.push(dbTrade);
+
+          newAcc.tradesToInsert.push(dbTrade);
         }
 
-        return acc;
+        return newAcc;
       },
       {
         tradesToInsert: [],
@@ -796,12 +997,27 @@ export async function processUploadedTrades(accountId, tradeInfo = {}) {
 
     console.log(JSON.stringify(dbTradeInfo));
 
-    await db("tradeHistory").insert(dbTradeInfo.tradesToInsert);
+    try {
+      await db("tradeHistory").insert(dbTradeInfo.tradesToInsert);
+
+      // set jobStatus to complete
+      jobStatus = "Complete";
+    } catch (e) {
+      // set jobStatus to error
+      jobStatus = "Error";
+    }
+
+    await db("importLog").where({ id }).update({ jobStatus, updatedAt: now });
+
+    const [importLog] = await readImportLogs(accountId, { importLogId: id });
 
     processedTradesInfo.numTradesAlreadyUpdated =
       dbTradeInfo.tradesAlreadyInserted.length;
     processedTradesInfo.numTradesSaved = dbTradeInfo.tradesToInsert.length;
+    processedTradesInfo.importLog = importLog;
   }
+
+  // add the importLog to processedTradesInfo
 
   return processedTradesInfo;
 }
