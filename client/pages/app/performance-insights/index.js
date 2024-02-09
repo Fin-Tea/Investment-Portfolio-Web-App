@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
+import { DateTime } from "luxon";
 import Layout from "../../../components/app/layout";
 import MiniTable from "../../../components/app/mini-table";
 import LineChart from "../../../components/line-chart";
 import PieChart from "../../../components/app/pie-chart";
 import Pill from "../../../components/app/pill";
 import DatePicker from "react-datepicker";
+import usePlatformAccounts from "../../../hooks/platformAccounts";
+import useInsights from "../../../hooks/insights";
 import { formatJournalDate } from "../../../date-utils";
 
 const platformOptions = [
@@ -315,7 +318,7 @@ const improvementAreas = [
 
 const autogenWaysToImprove = [
   { id: 1, action: "Plan more probable exits" },
-  { id: 2, action: "Reduce risk amount per trade to max $3000" },
+  { id: 2, action: "Reduce risk amount per trade to a comfortable amount" },
   {
     id: 3,
     action: "Increase account size to reduce risk amount per trade to 2%",
@@ -326,14 +329,57 @@ const autogenWaysToImprove = [
   // { id: 7, action: "Increase your win/loss ratio to 3:1" },
 ];
 
+function getDateRange(timeframeId) {
+  let startDate = null;
+  let endDate = DateTime.now();
+
+  switch (timeframeId) {
+    case 1:
+      startDate = endDate.minus({ days: 1 }).startOf("day");
+      break;
+    case 2:
+      startDate = endDate.minus({ weeks: 1 }).startOf("day");
+      break;
+    case 3:
+      startDate = endDate.minus({ months: 1 }).startOf("day");
+      break;
+    case 4:
+      startDate = endDate.minus({ quarters: 1 }).startOf("day");
+      break;
+    case 5:
+      startDate = endDate.minus({ years: 1 }).startOf("day");
+      break;
+    default:
+      endDate = null;
+      break;
+  }
+
+  return { startDate, endDate };
+}
+
 export default function PerformanceInsights() {
-  const [platform, setPlatform] = useState(platformOptions[0]);
+  const [platformAccounts, setPlatformAccounts] = useState([]);
+  const [platformAccountItems, setPlatformAccountItems] = useState([]);
+  const [selectedPlatformItem, setSelectedPlatformItem] = useState(null);
+  const [insights, setInsights] = useState(null);
   const [timeframeId, setTimeframeId] = useState(1);
-  const [dateFrom, setDateFrom] = useState(null);
-  const [dateTo, setDateTo] = useState(null);
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
+
+  const { fetchPlatformAccounts } = usePlatformAccounts();
+  const { fetchPlatformInsights } = useInsights();
 
   function handlePillClick({ id }) {
     setTimeframeId(id);
+    const { startDate, endDate } = getDateRange(timeframeId);
+    const params = { fromDate: startDate?.toFormat("yyyy-MM-dd"), toDate: endDate?.toFormat("yyyy-MM-dd"),  };
+
+    if (!selectedPlatformItem.value) {
+      params.allAccounts = "true";
+    } else {
+      params.platformAccountId = selectedPlatformItem.value;
+    }
+    loadInsights(params);
   }
 
   topWinningTrades = topWinningTrades.map((t) => ({
@@ -349,6 +395,72 @@ export default function PerformanceInsights() {
     tradeClosedAt: formatJournalDate(t.tradeClosedAt),
     pnl: (parseFloat(t.closePrice) - parseFloat(t.openPrice)).toFixed(2),
   }));
+
+  async function loadPlatformAccounts() {
+    try {
+      const resp = await fetchPlatformAccounts();
+      console.log("platformAccounts resp", resp);
+      setPlatformAccounts(resp.platformAccounts);
+      const items = resp.platformAccounts.map(
+        ({ accountName, id, platform: { name } }) => ({
+          label: `${name} ${accountName}`,
+          value: id,
+        })
+      );
+
+      setPlatformAccountItems([...items, { label: "All", value: null }]);
+      setSelectedPlatformItem(items[0]);
+
+      // TODO: call loadInsights()
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
+  async function loadInsights(params) {
+    try {
+      const resp = await fetchPlatformInsights(params);
+
+      console.log("insights resp", resp);
+
+      setInsights(resp.insights);
+
+      // TODO: call loadInsights()
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
+  useEffect(() => {
+    loadPlatformAccounts();
+  }, []);
+
+  useEffect(() => {
+    const { startDate, endDate } = getDateRange(timeframeId);
+
+    setFromDate(startDate?.toJSDate());
+    setToDate(endDate?.toJSDate());
+  }, [timeframeId]);
+
+  useEffect(() => {
+    if (!insights && selectedPlatformItem) {
+      const { startDate, endDate } = getDateRange(timeframeId);
+      const params = { fromDate: startDate?.toFormat("yyyy-MM-dd"), toDate: endDate?.toFormat("yyyy-MM-dd"),  };
+      console.log("loading insights");
+
+      if (!selectedPlatformItem.value) {
+        params.allAccounts = "true";
+      } else {
+        params.platformAccountId = selectedPlatformItem.value;
+      }
+      loadInsights(params);
+    }
+  }, [selectedPlatformItem, insights]);
+
+  console.log("selectedPlatformItem", selectedPlatformItem);
+  console.log("insights", insights);
+
+  const netTradePnL = insights?.dailyPnL?.map(({ date, pnl }) => ({ x: date, y: pnl }));
 
   return (
     <div>
@@ -369,14 +481,12 @@ export default function PerformanceInsights() {
                   <div className="basis-full">
                     <div>
                       <label className="text-base mb-1">
-                        Trading/Investing Platform
+                        Trading/Investing Account
                       </label>
                       <Select
-                        options={platformOptions}
-                        value={platformOptions.find(
-                          (p) => p.value === platform.value
-                        )}
-                        onChange={(val) => setPlatform(val)}
+                        options={platformAccountItems}
+                        value={selectedPlatformItem}
+                        onChange={(val) => setSelectedPlatformItem(val)}
                       />
                     </div>
                     <div className="mt-4">
@@ -454,14 +564,14 @@ export default function PerformanceInsights() {
                         <div className="flex items-center">
                           <DatePicker
                             className="border rounded-md text-sm p-2"
-                            selected={dateFrom}
-                            onChange={(date) => setDateFrom(date)}
+                            selected={fromDate}
+                            onChange={(date) => setFromDate(date)}
                           />
                           <span className="inline-block mx-2">To</span>
                           <DatePicker
                             className="border rounded-md text-sm p-2"
-                            selected={dateTo}
-                            onChange={(date) => setDateTo(date)}
+                            selected={toDate}
+                            onChange={(date) => setToDate(date)}
                           />
                           <button className="ml-5 rounded-full bg-purple-800 text-white px-4 py-1">
                             Apply
@@ -493,8 +603,8 @@ export default function PerformanceInsights() {
                   <div className="flex h-72">
                     <div className="basis-full border-r">
                       <LineChart
-                        title="Trade/Investment Balance"
-                        data={tradeBalanceData}
+                        title="Net Trade/Investment PnL"
+                        data={netTradePnL}
                         prefix="$"
                       />
                     </div>

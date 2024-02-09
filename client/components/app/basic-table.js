@@ -102,7 +102,7 @@ export default function BasicTable({
       data,
       initialState: {
         pageIndex: 0,
-        pageSize: 5,
+        pageSize: 30,
         hiddenColumns: ["id"].concat(hiddenColumns),
       }, // hidden columns don't call cell.render()
     },
