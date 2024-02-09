@@ -466,7 +466,7 @@ app.get(
   authMiddleware,
   async (req, res) => {
     const { accountId } = req.params;
-    const { fromDate, toDate, allAccounts } = req.query;
+    const { fromDate, toDate, allAccounts, platformAccountId, allPlatformAccounts } = req.query;
 
     const options = {
       fromDate,
@@ -484,6 +484,40 @@ app.get(
     }
 
     const insights = await insightsService.getInsights([accountId], options);
+
+    res.json({ insights });
+  }
+);
+
+app.get(
+  "/api/account/:accountId/platformAccountInsights",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+    const { fromDate, toDate, allAccounts, platformAccountId } = req.query;
+
+    const options = {
+      fromDate,
+      toDate,
+      allAccounts,
+    };
+
+    const platformAccountIds = [];
+
+    if (platformAccountId) {
+      platformAccountIds.push(platformAccountId)
+    }
+
+    if (allAccounts && allAccounts === "true") {
+      const platformAccounts = await tradingService.readPlatformAccounts(accountId);
+      platformAccountIds.concat(
+        platformAccounts.map(({ id }) => id)
+      );
+    }
+
+    const insights = await insightsService.getPlatformInsights(platformAccountIds, options);
+
+    console.log("insights", JSON.stringify(insights));
 
     res.json({ insights });
   }
