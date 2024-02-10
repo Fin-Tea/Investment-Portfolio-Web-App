@@ -12,6 +12,7 @@ import useInsights from "../../../hooks/insights";
 import { formatJournalDate } from "../../../date-utils";
 
 const MAX_FINSTRUMENTS = 3;
+const MAX_STRATEGIES = 3;
 
 const platformOptions = [
   { label: "TD Ameritrade", value: 0 },
@@ -105,14 +106,14 @@ const topLosingFinstruments = [
   { x: "FCEL", y: 2 },
 ];
 
-const topWinningStrategies = [
+const topWinningStrategiesData = [
   // clock-wise
   { x: "Bullish Engulfing Candle", y: 1 },
   { x: "Gap Up", y: 1.5 },
   { x: "Supply & Demand Short", y: 2 },
 ];
 
-const topLosingStrategies = [
+const topLosingStrategiesData = [
   // clock-wise
   { x: "ABCD", y: 1 },
   { x: "Gap Down", y: 1.5 },
@@ -495,6 +496,9 @@ export default function PerformanceInsights() {
 
   const topWinningSymbols = insights?.topWinningSecuritySymbols ? insights.topWinningSecuritySymbols.map(({ securityName, pnl }) => ({ x: securityName, y: pnl})).slice(0, MAX_FINSTRUMENTS) : [];
   const topLosingSymbols = insights?.topLosingSecuritySymbols ? insights.topLosingSecuritySymbols.map(({ securityName, pnl }) => ({ x: securityName, y: Math.abs(pnl)})).slice(0, MAX_FINSTRUMENTS) : [];
+
+  const topWinningStrategies = insights?.topWinningStrategies ? insights.topWinningStrategies.map(({ setup, pnl }) => ({ x: setup, y: pnl})).slice(0, MAX_STRATEGIES) : [];
+  const topLosingStrategies = insights?.topLosingStrategies ? insights.topLosingStrategies.map(({ setup, pnl }) => ({ x: setup, y: Math.abs(pnl)})).slice(0, MAX_STRATEGIES) : [];
   
 
   return (
