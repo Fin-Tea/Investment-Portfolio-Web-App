@@ -4,6 +4,7 @@ import {
   VictoryAxis,
   VictoryLine,
   VictoryScatter,
+  VictoryArea,
   VictoryVoronoiContainer,
 } from "victory";
 import Header from "../components/header";
@@ -18,7 +19,18 @@ const testData2 = [
   { x: new Date("2021-12-31"), y: 10011 },
 ];
 
-export default function LineChart({ title, data, dataset2, prefix, suffix, showDataPoints }) {
+export default function LineChart({
+  title,
+  data,
+  dataset2,
+  dataStyle = {},
+  dataset2Style = {},
+  prefix,
+  suffix,
+  showDataPoints,
+  showDataset2Area,
+  xAxisOffset
+}) {
   return (
     <div>
       <Header style={{ marginBottom: 0 }}>{title}</Header>
@@ -29,17 +41,19 @@ export default function LineChart({ title, data, dataset2, prefix, suffix, showD
         containerComponent={
           <VictoryVoronoiContainer
             labels={({ datum }) => {
-              console.log(datum);
+              // console.log(datum);
               return `${prefix}${datum.y}${suffix}`;
             }}
-            voronoiBlacklist={["scatter"]}
+            voronoiBlacklist={["scatter", "area"]}
           />
         }
       >
         {/* Y axis */}
         <VictoryAxis
           dependentAxis
-          tickFormat={(t) => `${prefix}${parseFloat(t).toLocaleString("en-US")}${suffix}`}
+          tickFormat={(t) =>
+            `${prefix}${parseFloat(t).toLocaleString("en-US")}${suffix}`
+          }
           width={5}
           style={{
             axis: {
@@ -54,12 +68,16 @@ export default function LineChart({ title, data, dataset2, prefix, suffix, showD
             },
           }}
           standalone={false}
+          crossAxis={false}
         />
         {/* X Axis */}
         <VictoryAxis
           standalone={false}
           tickValues={data.map((d) => d.x)}
-          tickFormat={(t) => { const dt = new Date(t); return `${dt.getMonth() + 1}/${dt.getDate()}`}}
+          tickFormat={(t) => {
+            const dt = new Date(t);
+            return `${dt.getMonth() + 1}/${dt.getDate()}`;
+          }}
           style={{
             axis: {
               stroke: "#777777",
@@ -69,23 +87,46 @@ export default function LineChart({ title, data, dataset2, prefix, suffix, showD
               fill: "#555555",
             },
           }}
+          offsetY={xAxisOffset || null}
         />
+
+{showDataset2Area && (
+          <VictoryArea name="area" style={{ data: { /*fill: "rgba(107 ,33, 168, 0.1)"*/ fill: "rgba(48,217,124,0.1)" } }} data={dataset2} />
+        )}        
         <VictoryLine
           name="line"
           style={{
-            data: { stroke: "#30d97c" },
-            parent: { border: "1px solid #ccc" },
+            ...dataStyle,
+            data: {
+              ...dataStyle?.data,
+              stroke: dataStyle?.data?.stroke || "#30d97c",
+            },
+            parent: {
+              ...dataStyle?.parent,
+              border: dataStyle?.data?.stroke || "1px solid #ccc",
+            },
           }}
           data={data}
         />
-        {dataset2 && (<VictoryLine
-          name="line"
-          style={{
-            data: { stroke: "#ff0000" },
-            parent: { border: "1px solid #ccc" },
-          }}
-          data={dataset2}
-        />)}
+        {dataset2 && (
+          <VictoryLine
+            name="line2"
+            style={{
+              ...dataset2Style,
+              data: {
+                ...dataset2Style?.data,
+                stroke: dataset2Style?.data?.stroke || "#ff0000",
+              },
+              parent: {
+                ...dataset2Style?.parent,
+                border: dataset2Style?.data?.stroke || "1px solid #ccc",
+              },
+            }}
+            data={dataset2}
+          />
+        )}
+
+
         {showDataPoints && (
           <VictoryScatter
             name="scatter"
@@ -102,15 +143,24 @@ export default function LineChart({ title, data, dataset2, prefix, suffix, showD
 LineChart.propTypes = {
   title: PropTypes.string,
   data: PropTypes.arrayOf({}),
+  dataStyle:  PropTypes.arrayOf({}),
+  dataset2Style:  PropTypes.arrayOf({}),
   prefix: PropTypes.string,
   suffix: PropTypes.string,
   showDataPoints: PropTypes.bool,
+  showDataset2Area: PropTypes.bool,
+  xAxisOffset: PropTypes.number
+
 };
 
 LineChart.defaultProps = {
   title: "",
   data: testData2,
+  dataStyle:  {},
+  dataset2Style:  {},
   prefix: "",
   suffix: "",
   showDataPoints: true,
+  showDataset2Area: false,
+  xAxisOffset: PropTypes.number
 };
