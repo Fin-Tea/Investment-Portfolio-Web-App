@@ -14,14 +14,14 @@ import {
     return (
       <div>
         <Header style={{ marginBottom: 0 }}>{title}</Header>
-          <VictoryPie
+          {data?.length ? (<VictoryPie
             colorScale={colorScale}
             height={height}
             width={width}
             name="pie"
             style={style}
             data={data}
-          />
+          />) : (<div className="h-full w-full flex justify-center mt-4"><p>No Info</p></div>)}
       </div>
     );
   }
