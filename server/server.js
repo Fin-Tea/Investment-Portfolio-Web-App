@@ -10,6 +10,7 @@ const tdAmeritrade = require("./integrations/tdameritrade");
 const tradingService = require("./services/trades");
 const improvementActionsService = require("./services/improvementActions");
 const insightsService = require("./services/insights");
+const platformInsightsService = require("./services/platformInsights");
 const config = require("./config");
 
 export const PORT = 8080;
@@ -515,7 +516,7 @@ app.get(
       );
     }
 
-    const insights = await insightsService.getPlatformInsights(platformAccountIds, options);
+    const insights = await platformInsightsService.getInsights(platformAccountIds, options);
 
     console.log("insights", JSON.stringify(insights));
 
