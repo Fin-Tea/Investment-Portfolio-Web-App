@@ -372,7 +372,10 @@ export default function PerformanceInsights() {
   function handlePillClick({ id }) {
     setTimeframeId(id);
     const { startDate, endDate } = getDateRange(timeframeId);
-    const params = { fromDate: startDate?.toFormat("yyyy-MM-dd"), toDate: endDate?.toFormat("yyyy-MM-dd"),  };
+    const params = {
+      fromDate: startDate?.toFormat("yyyy-MM-dd"),
+      toDate: endDate?.toFormat("yyyy-MM-dd"),
+    };
 
     if (!selectedPlatformItem.value) {
       params.allAccounts = "true";
@@ -445,7 +448,7 @@ export default function PerformanceInsights() {
   useEffect(() => {
     if (!insights && selectedPlatformItem) {
       const { startDate, endDate } = getDateRange(timeframeId);
-      const params = { fromDate: startDate?.toFormat("yyyy-MM-dd"), toDate: endDate?.toFormat("yyyy-MM-dd"),  };
+      const params = {}; // { fromDate: startDate?.toFormat("yyyy-MM-dd"), toDate: endDate?.toFormat("yyyy-MM-dd"),  };
       console.log("loading insights");
 
       if (!selectedPlatformItem.value) {
@@ -460,7 +463,34 @@ export default function PerformanceInsights() {
   console.log("selectedPlatformItem", selectedPlatformItem);
   console.log("insights", insights);
 
-  const netTradePnL = insights?.dailyPnL?.map(({ date, pnl }) => ({ x: date, y: pnl }));
+  const netTradePnL = insights?.dailyPnL?.map(({ date, pnl }) => ({
+    x: date,
+    y: pnl,
+  }));
+  const cumulativePnL = insights?.cumulativePnL?.map(({ date, pnl }) => ({
+    x: date,
+    y: pnl,
+  }));
+
+  const winRate = insights?.winRate ? insights.winRate * 100 : null;
+  const lossRate = winRate ? 100 - winRate : null;
+
+  const winLossRates = winRate ? [ { x: "Loss Rate", y: lossRate, color: "tomato" },{ x: "Win Rate", y: winRate, color: "green" },] : [];
+
+  const avgWinAmount = insights?.averageProfitAmount;
+  const avgLossAmount = insights?.averageLossAmount;
+
+  const winLossRatio = avgWinAmount && avgLossAmount ? (Math.abs(avgWinAmount / avgLossAmount)).toFixed(1) : null;
+
+  const winLossRatios = winLossRatio ? [ { x: "Loss Ratio", y: 1, color: "tomato" },
+  { x: "Win Ratio", y: winLossRatio, color: "green" },] : [];
+
+  const tradeQualityHigh = insights?.highQualityTrades ? insights.highQualityTrades.map(({ date, trades }) => ({ x: date, y: trades.length}))  : [];
+  const tradeQualityLow = insights?.lowQualityTrades ? insights.lowQualityTrades.map(({ date, trades }) => ({ x: date, y: trades.length}))  : [];
+  const tradeRevenge = insights?.revengeTrades ? insights.revengeTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
+  const tradeProfit = insights?.profitTrades ? insights.profitTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
+  const tradeLoss = insights?.lossTrades ? insights.lossTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
+  
 
   return (
     <div>
@@ -603,9 +633,13 @@ export default function PerformanceInsights() {
                   <div className="flex h-72">
                     <div className="basis-full border-r">
                       <LineChart
-                        title="Net Trade/Investment PnL"
+                        title="Daily Trade/Investment PnL"
                         data={netTradePnL}
+                        dataset2={cumulativePnL}
+                        dataset2Style={{data: { stroke: "none"}}}
+                        showDataset2Area
                         prefix="$"
+                        xAxisOffset={30}
                       />
                     </div>
                     <div className="basis-full border-l">
@@ -614,38 +648,23 @@ export default function PerformanceInsights() {
                           <PieChart
                             width={450}
                             title="Win/Loss Rate"
-                            data={winLossRateData}
+                            data={winLossRates}
                           />
                           <div className="text-center text-sm">
-                            <p>{`Win Rate ${
-                              winLossRateData.find(({ x }) => x.includes("Win"))
-                                .y
-                            }%`}</p>
-                            <p>{`Loss Rate ${
-                              winLossRateData.find(({ x }) =>
-                                x.includes("Loss")
-                              ).y
-                            }%`}</p>
+                            <p>{`Win Rate ${winRate ? `${winRate}%` : "Unknown"}`}</p>
+                            <p>{`Loss Rate ${lossRate ? `${lossRate}%` : "Unknown"}`}</p>
                           </div>
                         </div>
                         <div className="basis-full">
                           <PieChart
                             width={450}
                             title="Win/Loss Amount Ratio"
-                            data={winLossAmountData}
+                            data={winLossRatios}
                           />
                           <div className="text-center text-sm">
-                            <p>{`Win/Loss Amount Ratio ${
-                              winLossAmountData.find(({ x }) =>
-                                x.includes("Win")
-                              ).y
-                            }:${
-                              winLossAmountData.find(({ x }) =>
-                                x.includes("Loss")
-                              ).y
-                            }`}</p>
-                            <p>{`Avg. Win Amount $200`}</p>
-                            <p>{`Avg. Loss Amount $100`}</p>
+                            <p>{`Win/Loss Amount Ratio ${winLossRatio ? `${winLossRatio} to 1` : "Unknown"}`}</p>
+                            <p>{`Avg. Win Amount ${avgWinAmount ? `$${avgWinAmount.toFixed(2)}`: "Unknown"}`}</p>
+                            <p>{`Avg. Loss Amount ${avgLossAmount ? `-$${Math.abs(avgLossAmount).toFixed(2)}`: "Unknown"}`}</p>
                           </div>
                         </div>
                       </div>
@@ -658,13 +677,13 @@ export default function PerformanceInsights() {
                         <div className="basis-full border-r mb-12">
                           <LineChart
                             title="High Quality Trades"
-                            data={tradeQualityHighData}
+                            data={tradeQualityHigh}
                           />
                         </div>
                         <div className="basis-full">
                           <LineChart
                             title="Low Quality Trades"
-                            data={tradeQualityLowData}
+                            data={tradeQualityLow}
                           />
                         </div>
                       </div>
@@ -672,14 +691,14 @@ export default function PerformanceInsights() {
                         <div className="basis-full border-r">
                           <LineChart
                             title="Revenge Trades"
-                            data={tradeRevengeData}
+                            data={tradeRevenge}
                           />
                         </div>
                         <div className="basis-full">
                           <LineChart
                             title="PnL Trades"
-                            data={tradeProfitData}
-                            dataset2={tradeLossData}
+                            data={tradeProfit}
+                            dataset2={tradeLoss}
                           />
                         </div>
                       </div>
