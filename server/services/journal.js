@@ -515,8 +515,6 @@ export async function readJournalEntries(accountId, options = {}) {
 
   let journalEntries = await builder;
 
-  console.log("journalEntries", JSON.stringify(journalEntries));
-
   const {
     tradePlansJournalIds,
     milestoneJournalIds,
@@ -555,9 +553,8 @@ export async function readJournalEntries(accountId, options = {}) {
       reflectionJournalIds: [],
     }
   );
-  console.log("tradePlanIds", JSON.stringify(tradePlansJournalIds));
+
   const tradePlans = await readTradePlanEntries(tradePlansJournalIds);
-  console.log("tradePlans", JSON.stringify(tradePlans));
   const milestones = await readMilestoneEntries(milestoneJournalIds);
   const improvementAreas = await readImprovementAreaEntries(
     improvementAreaJournalIds
@@ -570,9 +567,6 @@ export async function readJournalEntries(accountId, options = {}) {
   const improvementAreasMap = createJournalEntryMap(improvementAreas);
   const finstrumentsMap = createJournalEntryMap(finstruments);
   const reflectionsMap = createJournalEntryMap(reflections);
-
-  console.log("tradePlansMap", tradePlansMap);
-  console.log("journalEntries", journalEntries);
 
   journalEntries = journalEntries.map((entry) => {
     const { id: journalEntryId, journalTagId } = entry;
