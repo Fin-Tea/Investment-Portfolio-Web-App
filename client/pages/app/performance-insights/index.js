@@ -11,6 +11,8 @@ import usePlatformAccounts from "../../../hooks/platformAccounts";
 import useInsights from "../../../hooks/insights";
 import { formatJournalDate } from "../../../date-utils";
 
+const MAX_FINSTRUMENTS = 3;
+
 const platformOptions = [
   { label: "TD Ameritrade", value: 0 },
   { label: "Ninja Trader", value: 1 },
@@ -490,6 +492,9 @@ export default function PerformanceInsights() {
   const tradeRevenge = insights?.revengeTrades ? insights.revengeTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
   const tradeProfit = insights?.profitTrades ? insights.profitTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
   const tradeLoss = insights?.lossTrades ? insights.lossTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
+
+  const topWinningSymbols = insights?.topWinningSecuritySymbols ? insights.topWinningSecuritySymbols.map(({ securityName, pnl }) => ({ x: securityName, y: pnl})).slice(0, MAX_FINSTRUMENTS) : [];
+  const topLosingSymbols = insights?.topLosingSecuritySymbols ? insights.topLosingSecuritySymbols.map(({ securityName, pnl }) => ({ x: securityName, y: Math.abs(pnl)})).slice(0, MAX_FINSTRUMENTS) : [];
   
 
   return (
@@ -711,7 +716,7 @@ export default function PerformanceInsights() {
                             colorScale={"green"}
                             width={400}
                             title="Top Winning Finstruments"
-                            data={topWinningFinstruments}
+                            data={topWinningSymbols}
                           />
                         </div>
                         <div className="basis-full">
@@ -729,7 +734,7 @@ export default function PerformanceInsights() {
                             colorScale={"red"}
                             width={400}
                             title="Top Losing Finstruments"
-                            data={topLosingFinstruments}
+                            data={topLosingSymbols}
                           />
                         </div>
                         <div className="basis-full border-l">
