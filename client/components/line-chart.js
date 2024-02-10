@@ -34,7 +34,7 @@ export default function LineChart({
   return (
     <div>
       <Header style={{ marginBottom: 0 }}>{title}</Header>
-      <VictoryChart
+      {data?.length || dataset2?.length ? (<VictoryChart
         theme={VictoryTheme.grayscale}
         scale={{ x: "time" }}
         padding={{ top: 40, left: 60, bottom: 30, right: 20 }}
@@ -135,7 +135,7 @@ export default function LineChart({
             data={data}
           />
         )}
-      </VictoryChart>
+      </VictoryChart>) : (<div className="h-full w-full flex justify-center mt-4"><p>No Info</p></div>)}
     </div>
   );
 }
