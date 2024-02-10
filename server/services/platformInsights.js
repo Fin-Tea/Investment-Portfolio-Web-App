@@ -615,6 +615,65 @@ export async function getWinRate(platformAccountIds, options = {}) {
   return numTrades ? parseFloat((wins / numTrades).toFixed(2)) : 0;
 }
 
+export async function getPnlBySymbols(platformAccountIds, options = {}) {
+    const { fromDate, toDate } = options;
+
+    let builder = db("tradeHistory")
+      .select(
+        db.raw(
+          `securityName, SUM(IF(pnl is not null, pnl, IF(tradeDirectionType = 'Long', (closePrice - openPrice), (openPrice - closePrice))  * IF(securityType = 'Option', quantity * 100, quantity))) as pnl`
+        )
+      )
+      .whereIn("platformAccountId", platformAccountIds);
+
+  
+    if (fromDate) {
+      const formattedFromDate = new Date(fromDate);
+      builder = builder.andWhere("tradeClosedAt", ">=", formattedFromDate);
+    }
+  
+    if (toDate) {
+      const formattedToDate = new Date(toDate);
+      builder = builder.andWhere("tradeClosedAt", "<=", formattedToDate);
+    }
+
+    builder = builder.groupBy('securityName');
+    builder = builder.orderBy('pnl', 'desc');
+  
+    return builder;
+}
+
+export async function getPnlByTradingSetups(platformAccountIds, options = {}) {
+    const { fromDate, toDate } = options;
+
+    let builder = db("tradeHistory")
+      .select(
+        db.raw(
+          `tradePlans.setup as setup, SUM(IF(tradeHistory.pnl is not null, tradeHistory.pnl, IF(tradeHistory.tradeDirectionType = 'Long', (tradeHistory.closePrice - tradeHistory.openPrice), (tradeHistory.openPrice - tradeHistory.closePrice))  * IF(tradeHistory.securityType = 'Option', tradeHistory.quantity * 100, tradeHistory.quantity))) as pnl`
+        )
+      )
+      .innerJoin("tradePlanTradeResults", "tradeHistory.id", "=", "tradePlanTradeResults.tradeHistoryId")
+      .innerJoin("tradePlans", "tradePlans.id", "=", "tradePlanTradeResults.tradePlanId")
+      .whereIn("tradeHistory.platformAccountId", platformAccountIds);
+
+  
+    if (fromDate) {
+      const formattedFromDate = new Date(fromDate);
+      builder = builder.andWhere("tradeHistory.tradeClosedAt", ">=", formattedFromDate);
+    }
+  
+    if (toDate) {
+      const formattedToDate = new Date(toDate);
+      builder = builder.andWhere("tradeHistory.tradeClosedAt", "<=", formattedToDate);
+    }
+
+    builder = builder.groupBy('setup');
+    builder = builder.orderBy('pnl', 'desc');
+  
+    return builder;
+}
+
+
 export async function getInsights(platformAccountIds, options = {}) {
   const { dailyPnL, cumulativePnL } = await getTradesPnL(
     platformAccountIds,
@@ -644,6 +703,18 @@ export async function getInsights(platformAccountIds, options = {}) {
 
   const { profitTrades, lossTrades } = await getPnlTrades(platformAccountIds, options);
 
+  const securitySymbolsPnL = await getPnlBySymbols(platformAccountIds, options);
+
+  const topWinningSecuritySymbols = securitySymbolsPnL.filter(({pnl}) => pnl >= 0);
+  const topLosingSecuritySymbols = securitySymbolsPnL.filter(({pnl}) => pnl < 0);
+  topLosingSecuritySymbols.sort((a,b) => a.pnl - b.pnl);
+
+  const tradingSetupsPnL = await getPnlByTradingSetups(platformAccountIds, options);
+
+  const topWinningStrategies = tradingSetupsPnL.filter(({pnl}) => pnl >= 0);
+  const topLosingStrategies = tradingSetupsPnL.filter(({pnl}) => pnl < 0);
+  topLosingStrategies.sort((a,b) => a.pnl - b.pnl);
+
   return {
     dailyPnL,
     cumulativePnL,
@@ -655,6 +726,10 @@ export async function getInsights(platformAccountIds, options = {}) {
     lowQualityTrades,
     revengeTrades,
     profitTrades,
-    lossTrades
+    lossTrades,
+    topWinningSecuritySymbols,
+    topLosingSecuritySymbols,
+    topWinningStrategies,
+    topLosingStrategies
   };
 }
