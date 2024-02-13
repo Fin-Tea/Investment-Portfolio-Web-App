@@ -503,22 +503,20 @@ app.get(
       allAccounts,
     };
 
-    const platformAccountIds = [];
+    let platformAccountIds = [];
 
     if (platformAccountId) {
       platformAccountIds.push(platformAccountId)
     }
 
     if (allAccounts && allAccounts === "true") {
-      const platformAccounts = await tradingService.readPlatformAccounts(accountId);
-      platformAccountIds.concat(
+      const platformAccounts = await accountService.readPlatformAccounts(accountId);
+      platformAccountIds = platformAccountIds.concat(
         platformAccounts.map(({ id }) => id)
       );
     }
 
     const insights = await platformInsightsService.getInsights(platformAccountIds, options);
-
-    console.log("insights", JSON.stringify(insights));
 
     res.json({ insights });
   }
