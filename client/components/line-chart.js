@@ -8,6 +8,7 @@ import {
   VictoryVoronoiContainer,
 } from "victory";
 import Header from "../components/header";
+import Legend from "./legend";
 import styles from "./line-chart.module.css";
 import PropTypes from "prop-types";
 
@@ -29,113 +30,132 @@ export default function LineChart({
   suffix,
   showDataPoints,
   showDataset2Area,
-  xAxisOffset
+  xAxisOffset,
+  legendItems,
+  height,
+  width,
 }) {
   return (
     <div>
       <Header style={{ marginBottom: 0 }}>{title}</Header>
-      {data?.length || dataset2?.length ? (<VictoryChart
-        theme={VictoryTheme.grayscale}
-        scale={{ x: "time" }}
-        padding={{ top: 40, left: 60, bottom: 30, right: 20 }}
-        containerComponent={
-          <VictoryVoronoiContainer
-            labels={({ datum }) => {
-              // console.log(datum);
-              return `${prefix}${datum.y}${suffix}`;
-            }}
-            voronoiBlacklist={["scatter", "area"]}
-          />
-        }
-      >
-        {/* Y axis */}
-        <VictoryAxis
-          dependentAxis
-          tickFormat={(t) =>
-            `${prefix}${parseFloat(t).toLocaleString("en-US")}${suffix}`
+      {legendItems && <Legend className="mt-2 mx-auto" items={legendItems} />}
+      {data?.length || dataset2?.length ? (
+        <VictoryChart
+          height={height}
+          width={width}
+          theme={VictoryTheme.grayscale}
+          scale={{ x: "time" }}
+          padding={{ top: 40, left: 60, bottom: 30, right: 20 }}
+          containerComponent={
+            <VictoryVoronoiContainer
+              labels={({ datum }) => {
+                // console.log(datum);
+                return `${prefix}${datum.y}${suffix}`;
+              }}
+              voronoiBlacklist={["scatter", "area"]}
+            />
           }
-          width={5}
-          style={{
-            axis: {
-              stroke: "#777777",
-            },
-            ticks: {
-              stroke: "transparent",
-            },
-            tickLabels: {
-              color: "#555555",
-              fill: "#555555",
-            },
-          }}
-          standalone={false}
-          crossAxis={false}
-        />
-        {/* X Axis */}
-        <VictoryAxis
-          standalone={false}
-          tickValues={data.map((d) => d.x)}
-          tickFormat={(t) => {
-            const dt = new Date(t);
-            return `${dt.getMonth() + 1}/${dt.getDate()}`;
-          }}
-          style={{
-            axis: {
-              stroke: "#777777",
-            },
-            tickLabels: {
-              color: "#555555",
-              fill: "#555555",
-            },
-          }}
-          offsetY={xAxisOffset || null}
-        />
-
-{showDataset2Area && (
-          <VictoryArea name="area" style={{ data: { /*fill: "rgba(107 ,33, 168, 0.1)"*/ fill: "rgba(48,217,124,0.1)" } }} data={dataset2} />
-        )}        
-        <VictoryLine
-          name="line"
-          style={{
-            ...dataStyle,
-            data: {
-              ...dataStyle?.data,
-              stroke: dataStyle?.data?.stroke || "#30d97c",
-            },
-            parent: {
-              ...dataStyle?.parent,
-              border: dataStyle?.data?.stroke || "1px solid #ccc",
-            },
-          }}
-          data={data}
-        />
-        {dataset2 && (
-          <VictoryLine
-            name="line2"
+        >
+          {/* Y axis */}
+          <VictoryAxis
+            dependentAxis
+            tickFormat={(t) =>
+              `${prefix}${parseFloat(t).toLocaleString("en-US")}${suffix}`
+            }
+            width={5}
             style={{
-              ...dataset2Style,
+              axis: {
+                stroke: "#777777",
+              },
+              ticks: {
+                stroke: "transparent",
+              },
+              tickLabels: {
+                color: "#555555",
+                fill: "#555555",
+              },
+            }}
+            standalone={false}
+            crossAxis={false}
+          />
+          {/* X Axis */}
+          <VictoryAxis
+            standalone={false}
+            tickValues={data.map((d) => d.x)}
+            tickFormat={(t) => {
+              const dt = new Date(t);
+              return `${dt.getMonth() + 1}/${dt.getDate()}`;
+            }}
+            style={{
+              axis: {
+                stroke: "#777777",
+              },
+              tickLabels: {
+                color: "#555555",
+                fill: "#555555",
+              },
+            }}
+            offsetY={xAxisOffset || null}
+          />
+
+          {showDataset2Area && (
+            <VictoryArea
+              name="area"
+              style={{
+                data: {
+                  /*fill: "rgba(107 ,33, 168, 0.1)"*/ fill: "rgba(48,217,124,0.1)",
+                },
+              }}
+              data={dataset2}
+            />
+          )}
+          <VictoryLine
+            name="line"
+            style={{
+              ...dataStyle,
               data: {
-                ...dataset2Style?.data,
-                stroke: dataset2Style?.data?.stroke || "#ff0000",
+                ...dataStyle?.data,
+                stroke: dataStyle?.data?.stroke || "#30d97c",
               },
               parent: {
-                ...dataset2Style?.parent,
-                border: dataset2Style?.data?.stroke || "1px solid #ccc",
+                ...dataStyle?.parent,
+                border: dataStyle?.data?.stroke || "1px solid #ccc",
               },
             }}
-            data={dataset2}
-          />
-        )}
-
-
-        {showDataPoints && (
-          <VictoryScatter
-            name="scatter"
-            style={{ data: { fill: "#333333" } }}
-            size={4}
             data={data}
           />
-        )}
-      </VictoryChart>) : (<div className="h-full w-full flex justify-center mt-4"><p>No Info</p></div>)}
+          {dataset2 && (
+            <VictoryLine
+              name="line2"
+              style={{
+                ...dataset2Style,
+                data: {
+                  ...dataset2Style?.data,
+                  stroke: dataset2Style?.data?.stroke || "#ff0000",
+                },
+                parent: {
+                  ...dataset2Style?.parent,
+                  border: dataset2Style?.data?.stroke || "1px solid #ccc",
+                },
+              }}
+              data={dataset2}
+            />
+          )}
+
+          {showDataPoints && (
+            <VictoryScatter
+              name="scatter"
+              style={{ data: { fill: "#333333" } }}
+              size={4}
+              data={data}
+            />
+          )}
+        </VictoryChart>
+      ) : (
+        <div className="h-full w-full flex justify-center mt-4">
+          <p>No Info</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -143,24 +163,23 @@ export default function LineChart({
 LineChart.propTypes = {
   title: PropTypes.string,
   data: PropTypes.arrayOf({}),
-  dataStyle:  PropTypes.arrayOf({}),
-  dataset2Style:  PropTypes.arrayOf({}),
+  dataStyle: PropTypes.arrayOf({}),
+  dataset2Style: PropTypes.arrayOf({}),
   prefix: PropTypes.string,
   suffix: PropTypes.string,
   showDataPoints: PropTypes.bool,
   showDataset2Area: PropTypes.bool,
-  xAxisOffset: PropTypes.number
-
+  xAxisOffset: PropTypes.number,
 };
 
 LineChart.defaultProps = {
   title: "",
   data: testData2,
-  dataStyle:  {},
-  dataset2Style:  {},
+  dataStyle: {},
+  dataset2Style: {},
   prefix: "",
   suffix: "",
   showDataPoints: true,
   showDataset2Area: false,
-  xAxisOffset: PropTypes.number
+  xAxisOffset: PropTypes.number,
 };

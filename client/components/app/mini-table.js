@@ -2,7 +2,7 @@ export default function MiniTable({className, title, columns, data }) {
   return (
     <div className={className}>
       <span className="text-base">{title}</span>
-      <table className="mt-2 w-full">
+      {data?.length ? (<table className="mt-2 w-full">
         <thead className="border-b border-black">
             <tr>
           {columns.map((c, i) => (
@@ -27,7 +27,7 @@ export default function MiniTable({className, title, columns, data }) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table>) : (<div className="h-full w-full ml-2 mt-4"><p>No Info</p></div>)}
     </div>
   );
 }
