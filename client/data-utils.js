@@ -23,7 +23,7 @@ export function calcRewardRiskRatio({ entry, exit, stopLoss }) {
 }
 
 export function appendQueryParam(endpoint, paramKey, paramValue) {
-  if (endpoint) {
+  if (endpoint && paramKey && paramValue) {
     const appendOrCreate = endpoint.includes("?") ? "&" : "?";
     return `${endpoint}${appendOrCreate}${paramKey}=${paramValue}`;
   }
