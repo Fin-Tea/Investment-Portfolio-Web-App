@@ -13,6 +13,7 @@ import { formatJournalDate } from "../../../date-utils";
 
 const MAX_FINSTRUMENTS = 3;
 const MAX_STRATEGIES = 3;
+const MAX_TRADES = 3;
 
 const platformOptions = [
   { label: "TD Ameritrade", value: 0 },
@@ -143,7 +144,7 @@ const tradeColumns = [
   },
 ];
 
-let topLosingTrades = [
+let topLosingTradesFixtures = [
   {
     id: 1,
     tradeOpenedAt: "2021-12-29T00:13:52.000Z",
@@ -212,7 +213,7 @@ let topLosingTrades = [
   },
 ];
 
-let topWinningTrades = [
+let topWinningTradesFixtures = [
   {
     id: 4,
     tradeOpenedAt: "2021-12-28T21:42:02.000Z",
@@ -360,12 +361,36 @@ function getDateRange(timeframeId) {
   return { startDate, endDate };
 }
 
+function formatPnl(pnl) {
+  if (pnl < 0) {
+    return `-$${Math.abs(pnl).toFixed(2)}`;
+  }
+
+  return `$${pnl.toFixed(2)}`;
+}
+
+function calcImprovementAreaStatus(startDate, endDate) {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  if (start > now) {
+    return "Not yet started";
+  }
+
+  if (now >= start && now <= end) {
+    return "In progress";
+  }
+
+  return "Done";
+}
+
 export default function PerformanceInsights() {
   const [platformAccounts, setPlatformAccounts] = useState([]);
   const [platformAccountItems, setPlatformAccountItems] = useState([]);
   const [selectedPlatformItem, setSelectedPlatformItem] = useState(null);
   const [insights, setInsights] = useState(null);
-  const [timeframeId, setTimeframeId] = useState(1);
+  const [timeframeId, setTimeframeId] = useState(6);
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
 
@@ -374,7 +399,7 @@ export default function PerformanceInsights() {
 
   function handlePillClick({ id }) {
     setTimeframeId(id);
-    const { startDate, endDate } = getDateRange(timeframeId);
+    const { startDate, endDate } = getDateRange(id);
     const params = {
       fromDate: startDate?.toFormat("yyyy-MM-dd"),
       toDate: endDate?.toFormat("yyyy-MM-dd"),
@@ -388,19 +413,23 @@ export default function PerformanceInsights() {
     loadInsights(params);
   }
 
-  topWinningTrades = topWinningTrades.map((t) => ({
-    ...t,
-    tradeOpenedAt: formatJournalDate(t.tradeOpenedAt),
-    tradeClosedAt: formatJournalDate(t.tradeClosedAt),
-    pnl: (parseFloat(t.closePrice) - parseFloat(t.openPrice)).toFixed(2),
-  }));
+  function handleAccountChange(account) {
+    setSelectedPlatformItem(account);
 
-  topLosingTrades = topLosingTrades.map((t) => ({
-    ...t,
-    tradeOpenedAt: formatJournalDate(t.tradeOpenedAt),
-    tradeClosedAt: formatJournalDate(t.tradeClosedAt),
-    pnl: (parseFloat(t.closePrice) - parseFloat(t.openPrice)).toFixed(2),
-  }));
+    const { startDate, endDate } = getDateRange(timeframeId);
+    const params = {
+      fromDate: startDate?.toFormat("yyyy-MM-dd"),
+      toDate: endDate?.toFormat("yyyy-MM-dd"),
+    };
+
+    console.log("loading insights");
+    if (!account.value) {
+      params.allAccounts = "true";
+    } else {
+      params.platformAccountId = account.value;
+    }
+    loadInsights(params);
+  }
 
   async function loadPlatformAccounts() {
     try {
@@ -451,7 +480,10 @@ export default function PerformanceInsights() {
   useEffect(() => {
     if (!insights && selectedPlatformItem) {
       const { startDate, endDate } = getDateRange(timeframeId);
-      const params = {}; // { fromDate: startDate?.toFormat("yyyy-MM-dd"), toDate: endDate?.toFormat("yyyy-MM-dd"),  };
+      const params = {
+        fromDate: startDate?.toFormat("yyyy-MM-dd"),
+        toDate: endDate?.toFormat("yyyy-MM-dd"),
+      };
       console.log("loading insights");
 
       if (!selectedPlatformItem.value) {
@@ -478,28 +510,118 @@ export default function PerformanceInsights() {
   const winRate = insights?.winRate ? insights.winRate * 100 : null;
   const lossRate = winRate ? 100 - winRate : null;
 
-  const winLossRates = winRate ? [ { x: "Loss Rate", y: lossRate, color: "tomato" },{ x: "Win Rate", y: winRate, color: "green" },] : [];
+  const winLossRates = winRate
+    ? [
+        { x: "Loss Rate", y: lossRate, color: "tomato" },
+        { x: "Win Rate", y: winRate, color: "green" },
+      ]
+    : [];
 
   const avgWinAmount = insights?.averageProfitAmount;
   const avgLossAmount = insights?.averageLossAmount;
 
-  const winLossRatio = avgWinAmount && avgLossAmount ? (Math.abs(avgWinAmount / avgLossAmount)).toFixed(1) : null;
+  const winLossRatio =
+    avgWinAmount && avgLossAmount
+      ? Math.abs(avgWinAmount / avgLossAmount).toFixed(1)
+      : null;
 
-  const winLossRatios = winLossRatio ? [ { x: "Loss Ratio", y: 1, color: "tomato" },
-  { x: "Win Ratio", y: winLossRatio, color: "green" },] : [];
+  const winLossRatios = winLossRatio
+    ? [
+        { x: "Loss Ratio", y: 1, color: "tomato" },
+        { x: "Win Ratio", y: winLossRatio, color: "green" },
+      ]
+    : [];
 
-  const tradeQualityHigh = insights?.highQualityTrades ? insights.highQualityTrades.map(({ date, trades }) => ({ x: date, y: trades.length}))  : [];
-  const tradeQualityLow = insights?.lowQualityTrades ? insights.lowQualityTrades.map(({ date, trades }) => ({ x: date, y: trades.length}))  : [];
-  const tradeRevenge = insights?.revengeTrades ? insights.revengeTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
-  const tradeProfit = insights?.profitTrades ? insights.profitTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
-  const tradeLoss = insights?.lossTrades ? insights.lossTrades.map(({ date, trades }) => ({ x: date, y: trades.length})) : [];
+  const tradeQualityHigh = insights?.highQualityTrades
+    ? insights.highQualityTrades.map(({ date, trades }) => ({
+        x: date,
+        y: trades.length,
+      }))
+    : [];
+  const tradeQualityLow = insights?.lowQualityTrades
+    ? insights.lowQualityTrades.map(({ date, trades }) => ({
+        x: date,
+        y: trades.length,
+      }))
+    : [];
+  const tradeRevenge = insights?.revengeTrades
+    ? insights.revengeTrades.map(({ date, trades }) => ({
+        x: date,
+        y: trades.length,
+      }))
+    : [];
+  const tradeProfit = insights?.profitTrades
+    ? insights.profitTrades.map(({ date, trades }) => ({
+        x: date,
+        y: trades.length,
+      }))
+    : [];
+  const tradeLoss = insights?.lossTrades
+    ? insights.lossTrades.map(({ date, trades }) => ({
+        x: date,
+        y: trades.length,
+      }))
+    : [];
 
-  const topWinningSymbols = insights?.topWinningSecuritySymbols ? insights.topWinningSecuritySymbols.map(({ securityName, pnl }) => ({ x: securityName, y: pnl})).slice(0, MAX_FINSTRUMENTS) : [];
-  const topLosingSymbols = insights?.topLosingSecuritySymbols ? insights.topLosingSecuritySymbols.map(({ securityName, pnl }) => ({ x: securityName, y: Math.abs(pnl)})).slice(0, MAX_FINSTRUMENTS) : [];
+  const topWinningSymbols = insights?.topWinningSecuritySymbols
+    ? insights.topWinningSecuritySymbols
+        .map(({ securityName, pnl }) => ({ x: securityName, y: pnl }))
+        .slice(0, MAX_FINSTRUMENTS)
+    : [];
+  const topLosingSymbols = insights?.topLosingSecuritySymbols
+    ? insights.topLosingSecuritySymbols
+        .map(({ securityName, pnl }) => ({ x: securityName, y: Math.abs(pnl) }))
+        .slice(0, MAX_FINSTRUMENTS)
+    : [];
 
-  const topWinningStrategies = insights?.topWinningStrategies ? insights.topWinningStrategies.map(({ setup, pnl }) => ({ x: setup, y: pnl})).slice(0, MAX_STRATEGIES) : [];
-  const topLosingStrategies = insights?.topLosingStrategies ? insights.topLosingStrategies.map(({ setup, pnl }) => ({ x: setup, y: Math.abs(pnl)})).slice(0, MAX_STRATEGIES) : [];
-  
+  const topWinningStrategies = insights?.topWinningStrategies
+    ? insights.topWinningStrategies
+        .map(({ setup, pnl }) => ({ x: setup, y: pnl }))
+        .slice(0, MAX_STRATEGIES)
+    : [];
+  const topLosingStrategies = insights?.topLosingStrategies
+    ? insights.topLosingStrategies
+        .map(({ setup, pnl }) => ({ x: setup, y: Math.abs(pnl) }))
+        .slice(0, MAX_STRATEGIES)
+    : [];
+
+  const topWinningTrades = insights?.topWinningTrades
+    ? insights.topWinningTrades
+        .map((trade) => ({
+          ...trade,
+          tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
+          tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
+          pnl: formatPnl(trade.pnl),
+        }))
+        .slice(0, MAX_TRADES)
+    : [];
+  const topLosingTrades = insights?.topLosingTrades
+    ? insights.topLosingTrades
+        .map((trade) => ({
+          ...trade,
+          tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
+          tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
+          pnl: formatPnl(trade.pnl),
+        }))
+        .slice(0, MAX_TRADES)
+    : [];
+
+  const milestonesSnapshot = insights?.milestonesSnapshot
+    ? insights.milestonesSnapshot.map(
+        ({ milestone: { milestoneText, reachedOn } }) => ({
+          milestone: milestoneText,
+          reachedOn: formatJournalDate(reachedOn),
+        })
+      )
+    : [];
+  const improvementAreasSnapshot = insights?.improvementAreasSnapshot
+    ? insights.improvementAreasSnapshot.map(
+        ({ improvementArea: { action, startDate, endDate } }) => ({
+          action,
+          status: calcImprovementAreaStatus(startDate, endDate),
+        })
+      )
+    : [];
 
   return (
     <div>
@@ -525,12 +647,23 @@ export default function PerformanceInsights() {
                       <Select
                         options={platformAccountItems}
                         value={selectedPlatformItem}
-                        onChange={(val) => setSelectedPlatformItem(val)}
+                        onChange={handleAccountChange}
                       />
                     </div>
                     <div className="mt-4">
                       <label className="text-base mb-1">Timeframe</label>
                       <div className="flex flex-wrap">
+                        <Pill
+                          size="lg"
+                          className="mr-2 mb-2"
+                          key={6}
+                          id={6}
+                          controlled
+                          onClick={handlePillClick}
+                          isActive={timeframeId === 6}
+                        >
+                          All Time
+                        </Pill>
                         <Pill
                           size="lg"
                           className="mr-2 mb-2"
@@ -586,17 +719,6 @@ export default function PerformanceInsights() {
                         >
                           Past Year
                         </Pill>
-                        <Pill
-                          size="lg"
-                          className="mr-2 mb-2"
-                          key={6}
-                          id={6}
-                          controlled
-                          onClick={handlePillClick}
-                          isActive={timeframeId === 6}
-                        >
-                          All Time
-                        </Pill>
                       </div>
                       <div className="mt-4">
                         <label className="text-base">Custom Dates</label>
@@ -645,10 +767,18 @@ export default function PerformanceInsights() {
                         title="Daily Trade/Investment PnL"
                         data={netTradePnL}
                         dataset2={cumulativePnL}
-                        dataset2Style={{data: { stroke: "none"}}}
+                        dataset2Style={{ data: { stroke: "none" } }}
                         showDataset2Area
                         prefix="$"
+                        height={250}
                         xAxisOffset={30}
+                        legendItems={[
+                          { name: "Daily PnL", color: "#30d97c" },
+                          {
+                            name: "Cumulative PnL",
+                            color: "rgba(48,217,124,0.1)",
+                          },
+                        ]}
                       />
                     </div>
                     <div className="basis-full border-l">
@@ -660,8 +790,12 @@ export default function PerformanceInsights() {
                             data={winLossRates}
                           />
                           <div className="text-center text-sm">
-                            <p>{`Win Rate ${winRate ? `${winRate}%` : "Unknown"}`}</p>
-                            <p>{`Loss Rate ${lossRate ? `${lossRate}%` : "Unknown"}`}</p>
+                            <p>{`Win Rate ${
+                              winRate ? `${winRate}%` : "Unknown"
+                            }`}</p>
+                            <p>{`Loss Rate ${
+                              lossRate ? `${lossRate}%` : "Unknown"
+                            }`}</p>
                           </div>
                         </div>
                         <div className="basis-full">
@@ -671,9 +805,19 @@ export default function PerformanceInsights() {
                             data={winLossRatios}
                           />
                           <div className="text-center text-sm">
-                            <p>{`Win/Loss Amount Ratio ${winLossRatio ? `${winLossRatio} to 1` : "Unknown"}`}</p>
-                            <p>{`Avg. Win Amount ${avgWinAmount ? `$${avgWinAmount.toFixed(2)}`: "Unknown"}`}</p>
-                            <p>{`Avg. Loss Amount ${avgLossAmount ? `-$${Math.abs(avgLossAmount).toFixed(2)}`: "Unknown"}`}</p>
+                            <p>{`Win/Loss Amount Ratio ${
+                              winLossRatio ? `${winLossRatio} to 1` : "Unknown"
+                            }`}</p>
+                            <p>{`Avg. Win Amount ${
+                              avgWinAmount
+                                ? `$${avgWinAmount.toFixed(2)}`
+                                : "Unknown"
+                            }`}</p>
+                            <p>{`Avg. Loss Amount ${
+                              avgLossAmount
+                                ? `-$${Math.abs(avgLossAmount).toFixed(2)}`
+                                : "Unknown"
+                            }`}</p>
                           </div>
                         </div>
                       </div>
@@ -752,20 +896,20 @@ export default function PerformanceInsights() {
                       </div>
                     </div>
                   </div>
-                  <hr className="w-full border-t border-gray-300 mx-auto lg:mt-8 xl:mt-12" />
+                  <hr className="w-full border-t border-gray-300 mx-auto lg:mt-4 xl:mt-6" />
                   <div className="flex pb-4">
                     <div className="flex basis-full flex-col border-r">
                       <MiniTable
                         className="px-2"
                         title={"Milestones Snapshot"}
                         columns={milestonesColumns}
-                        data={milestones}
+                        data={milestonesSnapshot}
                       />
                       <MiniTable
                         className="mt-4 px-2"
                         title={"Improvement Areas Snapshot"}
                         columns={improvementAreaColumns}
-                        data={improvementAreas}
+                        data={improvementAreasSnapshot}
                       />
                     </div>
 
