@@ -1,6 +1,6 @@
 import db from "../db";
 
-const JOURNAL_TAGS = {
+export const JOURNAL_TAGS = {
   TRADE_PLANS: 1,
   MILESTONES: 2,
   IMPROVEMENT_AREAS: 3,
@@ -491,7 +491,7 @@ function createJournalEntryMap(entries) {
 }
 
 export async function readJournalEntries(accountId, options = {}) {
-  const { limit, offset, journalEntryId, journalTagId } = options;
+  const { limit, offset, journalEntryId, journalTagId, fromDate, toDate } = options;
 
   let builder = db
     .select("id", "accountId", "journalTagId", "createdAt", "updatedAt")
@@ -505,6 +505,24 @@ export async function readJournalEntries(accountId, options = {}) {
   }
 
   builder = builder.andWhere({ deletedAt: null });
+
+  if (fromDate) {
+    const formattedFromDate = new Date(fromDate);
+    builder = builder.andWhere(
+      "updatedAt",
+      ">=",
+      formattedFromDate
+    );
+  }
+
+  if (toDate) {
+    const formattedToDate = new Date(toDate);
+    builder = builder.andWhere(
+      "updatedAt",
+      "<=",
+      formattedToDate
+    );
+  }
 
   if (limit) {
     builder = builder.limit(limit);
