@@ -364,16 +364,3 @@ export async function getInsights(accountIds, options = {}) {
   };
 }
 
-export async function getPlatformInsights(platformAccountIds, options = {}) {
-  const { dailyPnL, cummulativePnL } = await getTradesPnL(
-    platformAccountIds,
-    options
-  );
-
-  console.log("getPlatformInsights dailyPnL", JSON.stringify(dailyPnL));
-
-  return {
-    dailyPnL,
-    cummulativePnL,
-  };
-}
