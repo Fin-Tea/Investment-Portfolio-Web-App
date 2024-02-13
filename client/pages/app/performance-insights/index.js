@@ -431,6 +431,20 @@ export default function PerformanceInsights() {
     loadInsights(params);
   }
 
+  function handleCustomDatesClick() {
+    const params = {
+      fromDate: DateTime.fromJSDate(fromDate).toFormat("yyyy-MM-dd"),
+      toDate: DateTime.fromJSDate(toDate).toFormat("yyyy-MM-dd"),
+    };
+
+    if (!selectedPlatformItem.value) {
+      params.allAccounts = "true";
+    } else {
+      params.platformAccountId = selectedPlatformItem.value;
+    }
+    loadInsights(params);
+  }
+
   async function loadPlatformAccounts() {
     try {
       const resp = await fetchPlatformAccounts();
@@ -734,7 +748,10 @@ export default function PerformanceInsights() {
                             selected={toDate}
                             onChange={(date) => setToDate(date)}
                           />
-                          <button className="ml-5 rounded-full bg-purple-800 text-white px-4 py-1">
+                          <button
+                            className="ml-5 rounded-full bg-purple-800 text-white px-4 py-1"
+                            onClick={handleCustomDatesClick}
+                          >
                             Apply
                           </button>
                         </div>
