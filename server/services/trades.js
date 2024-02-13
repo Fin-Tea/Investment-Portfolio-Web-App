@@ -770,19 +770,6 @@ export function mapUploadedNinjaTradesToTradeInfo(uploadedTrades) {
         soldTimestamp,
       } = rawTrade;
 
-      // const currentTrade = {
-      //   tradeClosedAt: null,
-      //   tradeOpenedAt: null,
-      //   securityType,
-      //   tradeDirectionType,
-      //   closeQty: 0,
-      //   openQty: 0,
-      //   securitySymbol: symbol,
-      //   securityName: description,
-      //   closePrices: [],
-      //   openPrices: [],
-      // };
-
       const buyPriceF = parseFloat(buyPrice);
       const sellPriceF = parseFloat(sellPrice);
       let pnlF = parseFloat(pnl.replace(PNL_REGEX, ""));
@@ -795,19 +782,20 @@ export function mapUploadedNinjaTradesToTradeInfo(uploadedTrades) {
 
       const isProfit = !pnl.includes("(");
 
+      if (new Date(tradeOpenedAt) > new Date(tradeClosedAt)) {
+        tradeOpenedAt = soldTimestamp;
+        tradeClosedAt = boughtTimestamp;
+      }
+
       if (isProfit) {
         if (sellPriceF < buyPriceF) {
           tradeDirectionType = "Short";
-          tradeOpenedAt = soldTimestamp;
-          tradeClosedAt = boughtTimestamp;
           openPrice = sellPriceF;
           closePrice = buyPriceF;
         }
       } else {
         if (sellPrice > buyPriceF) {
           tradeDirectionType = "Short";
-          tradeOpenedAt = soldTimestamp;
-          tradeClosedAt = boughtTimestamp;
           openPrice = sellPriceF;
           closePrice = buyPriceF;
         }
