@@ -9,6 +9,7 @@ import {
 } from "victory";
 import Header from "../components/header";
 import Legend from "./legend";
+import Tooltip from "./app/tooltip";
 import styles from "./line-chart.module.css";
 import PropTypes from "prop-types";
 
@@ -30,14 +31,19 @@ export default function LineChart({
   suffix,
   showDataPoints,
   showDataset2Area,
+  showDataset2Points,
   xAxisOffset,
   legendItems,
   height,
   width,
+  tooltip,
 }) {
   return (
     <div>
+      <div className="flex justify-center items-center">
       <Header style={{ marginBottom: 0 }}>{title}</Header>
+      {tooltip && <Tooltip text={tooltip} />}
+      </div>
       {legendItems && <Legend className="mt-2 mx-auto" items={legendItems} />}
       {data?.length || dataset2?.length ? (
         <VictoryChart
@@ -148,6 +154,14 @@ export default function LineChart({
               style={{ data: { fill: "#333333" } }}
               size={4}
               data={data}
+            />
+          )}
+          {showDataset2Points && (
+            <VictoryScatter
+              name="scatter"
+              style={{ data: { fill: "#333333" } }}
+              size={4}
+              data={dataset2}
             />
           )}
         </VictoryChart>

@@ -1,7 +1,13 @@
-export default function MiniTable({className, title, columns, data }) {
+import Tooltip from "./tooltip";
+
+export default function MiniTable({className, title, tooltip, columns, data }) {
   return (
     <div className={className}>
+      
+      <div className="flex">
       <span className="text-base">{title}</span>
+      {tooltip && <Tooltip text={tooltip} />}
+      </div>
       {data?.length ? (<table className="mt-2 w-full">
         <thead className="border-b border-black">
             <tr>

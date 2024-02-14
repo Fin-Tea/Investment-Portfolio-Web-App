@@ -796,6 +796,7 @@ export default function PerformanceInsights() {
                             color: "rgba(48,217,124,0.1)",
                           },
                         ]}
+                        tooltip={"Daily PnL shows how much you've profited (or lost) each day. Cumulative PnL shows your overall profit (or loss) from the beginning of your trading history up to that point in time"}
                       />
                     </div>
                     <div className="basis-full border-l">
@@ -805,6 +806,7 @@ export default function PerformanceInsights() {
                             width={450}
                             title="Win/Loss Rate"
                             data={winLossRates}
+                            tooltip="How often you've won/lost on the number of trades/investments you've made during the time period. 50% or higher is good"
                           />
                           <div className="text-center text-sm">
                             <p>{`Win Rate ${
@@ -820,6 +822,7 @@ export default function PerformanceInsights() {
                             width={450}
                             title="Win/Loss Amount Ratio"
                             data={winLossRatios}
+                            tooltip="The average amount of money you've earned during the time period divided by the average amount of money you've lost during the time period. A win/loss amount ratio of 2 to 1 or higher is good"
                           />
                           <div className="text-center text-sm">
                             <p>{`Win/Loss Amount Ratio ${
@@ -848,12 +851,14 @@ export default function PerformanceInsights() {
                           <LineChart
                             title="High Quality Trades"
                             data={tradeQualityHigh}
+                            tooltip="Trades/investments with plans where you followed your plan"
                           />
                         </div>
                         <div className="basis-full">
                           <LineChart
                             title="Low Quality Trades"
                             data={tradeQualityLow}
+                            tooltip="Trades/investments without trade plans or trades where you didn't follow your plan"
                           />
                         </div>
                       </div>
@@ -862,6 +867,7 @@ export default function PerformanceInsights() {
                           <LineChart
                             title="Revenge Trades"
                             data={tradeRevenge}
+                            tooltip="Trades where you bought/sold again right after a loss with no plan. It's wise to go on a 30 minute break after a loss to calm down and center yourself so you can trade/invest well again"
                           />
                         </div>
                         <div className="basis-full">
@@ -869,6 +875,16 @@ export default function PerformanceInsights() {
                             title="PnL Trades"
                             data={tradeProfit}
                             dataset2={tradeLoss}
+                            legendItems={[
+                              { name: "Profit", color: "#30d97c", size: 12  },
+                              {
+                                name: "Loss",
+                                color: "#ff0000",
+                                size: 12
+                              },
+                            ]}
+                            showDataset2Points
+                            tooltip="The number of trades/investments per day where you profited or lost"
                           />
                         </div>
                       </div>
@@ -882,6 +898,7 @@ export default function PerformanceInsights() {
                             width={400}
                             title="Top Winning Finstruments"
                             data={topWinningSymbols}
+                            tooltip="The financial instruments (stocks, crypto, etc.) where you earned the most profits during the time period"
                           />
                         </div>
                         <div className="basis-full">
@@ -890,6 +907,7 @@ export default function PerformanceInsights() {
                             width={400}
                             title="Top Winning Strategies"
                             data={topWinningStrategies}
+                            tooltip="The investing strategies/tading setups in your trade plans where you earned the most profits during the time period"
                           />
                         </div>
                       </div>
@@ -900,6 +918,7 @@ export default function PerformanceInsights() {
                             width={400}
                             title="Top Losing Finstruments"
                             data={topLosingSymbols}
+                            tooltip="The financial instruments (stocks, crypto, etc.) where you lost the most money during the time period"
                           />
                         </div>
                         <div className="basis-full border-l">
@@ -908,6 +927,7 @@ export default function PerformanceInsights() {
                             width={400}
                             title="Top Losing Strategies"
                             data={topLosingStrategies}
+                            tooltip="The investing strategies/trading setups in your trade plans where you lost the most money during the time period"
                           />
                         </div>
                       </div>
@@ -921,12 +941,14 @@ export default function PerformanceInsights() {
                         title={"Milestones Snapshot"}
                         columns={milestonesColumns}
                         data={milestonesSnapshot}
+                        tooltip="Milestones you've achieved during the time period. Well done!"
                       />
                       <MiniTable
                         className="mt-4 px-2"
                         title={"Improvement Areas Snapshot"}
                         columns={improvementAreaColumns}
                         data={improvementAreasSnapshot}
+                        tooltip="Improvement areas you've scheduled during the time period. Keep going!"
                       />
                     </div>
 
@@ -936,12 +958,14 @@ export default function PerformanceInsights() {
                         title={"Top Winning Trades"}
                         columns={tradeColumns}
                         data={topWinningTrades}
+                        tooltip="Your most profitable trades/investments during the time period"
                       />
                       <MiniTable
                         className="mt-4 px-2"
                         title={"Top Losing Trades"}
                         columns={tradeColumns}
                         data={topLosingTrades}
+                        tooltip="Your biggest losing trades/investments during the time period. Every trader/investor has losses. Keep going!"
                       />
                     </div>
                   </div>
