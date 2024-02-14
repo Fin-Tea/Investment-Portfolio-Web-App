@@ -41,7 +41,7 @@ export default function Layout({ children }) {
       </header>
       <main className="bg-zinc-100 h-screen">{children}</main>
       <footer className="bg-purple-800 text-white p-2 px-3 pt-3">
-      <p className="text-sm font-bold">Plan your trades. Trade your plans.</p>
+      <p className="text-sm font-bold">Plan your trades. Trade your plans. Evolve.</p>
       <p className="text-sm">Disclaimer: The information provided on this platform/website/application is for informational purposes only and should not be considered as financial advice</p>
         <p className="text-sm text-center">Copyright © 2024 Fin Tea Financial Services</p>
       </footer>
