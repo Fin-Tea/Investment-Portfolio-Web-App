@@ -326,7 +326,7 @@ export default function TradingJournal() {
   return (
     <Layout>
       <div className="h-full">
-        <div className="pt-4 h-full flex">
+        <div className="pt-4 h-full flex pb-4">
           <SideView
             className="bg-white"
             header="Journal Entries"
