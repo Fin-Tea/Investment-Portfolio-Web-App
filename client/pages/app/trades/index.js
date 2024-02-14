@@ -333,21 +333,13 @@ export default function Trades() {
   const [platformAccounts, setPlatformAccounts] = useState([]);
   const [trades, setTrades] = useState([]);
   const [importLogs, setImportLogs] = useState([]);
+  const [searchString, setSearchString] = useState("");
+  const [debouncedSearchString, setDebouncedSearchString] = useState("");
 
   const { fetchPlatformAccounts } = usePlatformAccounts();
   const { uploadTradeHistoryCSV, fetchTradeHistory, fetchImportLogs } = useTrades();
 
-//   const data = testData.map((trade) => ({
-//     ...trade,
-//     tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
-//     tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
-//     pnl: (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(
-//       2
-//     ),
-//     tradePlanId: null,
-//   }));
-
-  const data = trades.map((trade) => {
+  let data = trades.map((trade) => {
     const platformAccount = platformAccounts.find(({id}) => id === trade.platformAccountId);
     return({
     ...trade,
@@ -361,6 +353,13 @@ export default function Trades() {
   })});
 
   console.log("data", data);
+
+  if (debouncedSearchString) {
+    console.log("debouncedSearchString", debouncedSearchString);
+    data = data.filter(({ securityName }) => securityName.toLowerCase().includes(debouncedSearchString.toLowerCase()));
+  }
+
+  console.log("filtered data", data);
 
   async function loadPlatformAccounts() {
     try {
@@ -418,6 +417,13 @@ export default function Trades() {
     loadImportLogs();
   }, []);
 
+  useEffect(() => {
+    const delayInputTimeoutId = setTimeout(() => {
+      setDebouncedSearchString(searchString);
+    }, 500);
+    return () => clearTimeout(delayInputTimeoutId);
+  }, [searchString, 500]);
+
   return (
     <div>
       <Layout>
@@ -451,9 +457,10 @@ export default function Trades() {
                 <hr className="w-[90%] border-t border-gray-300 mx-auto" />
               </div>
               <div className="w-full h-full">
-                {data.length ? (<div><div className="flex justify-end">
-                  <SearchBox className="mr-8" placeholder={"Search Symbol"} />
-                </div>
+              {trades.length && (<div className="flex justify-end">
+                  <SearchBox className="mr-8" placeholder={"Search Symbol"} onSearch={setSearchString} />
+                </div>)}
+                {trades.length && data.length ? (
                 <div className="mx-auto mt-4 max-w-[90%]">
                    <BasicTable
                     className="h-[50vh] border-b"
@@ -461,7 +468,7 @@ export default function Trades() {
                     data={data}
                   /> 
                 </div>
-              </div>) : (<div className="max-w-[90%] mx-auto"><p>No trades uploaded yet</p></div>)}
+              ) : trades.length && !data.length ? (<div className="max-w-[90%] mx-auto"><p>No search results</p></div>) : (<div className="max-w-[90%] mx-auto"><p>No trades uploaded yet</p></div>)}
               </div>
             </div>
           </div>
