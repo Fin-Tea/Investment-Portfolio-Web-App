@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function Pill({id, size="md", className, isActive = false, onClick, controlled, children}) {
+export default function Pill({id, size="md", className, isActive = false, onClick, controlled, children, disabled}) {
     const [active, setActive] = useState(isActive);
 
     const trueActive = controlled ? isActive : active;
@@ -19,6 +19,6 @@ export default function Pill({id, size="md", className, isActive = false, onClic
 
     const activeStyle = trueActive ?  "bg-purple-800 text-white" : "text-purple-800";
 
-    return (<button className={`${sizeClasses} rounded-full border-x border-y border-purple-800 ${activeStyle} ${className}`} onClick={() => { toggleActive(); onClick && onClick({ id, isActive: !trueActive }) }}>{children}</button>);
+    return (<button className={`${sizeClasses} rounded-full border-x border-y border-purple-800 ${activeStyle} ${className}`} disabled={disabled} onClick={() => { toggleActive(); onClick && onClick({ id, isActive: !trueActive }) }} >{children}</button>);
 
 }
