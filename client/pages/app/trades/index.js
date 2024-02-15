@@ -3,63 +3,11 @@ import Layout from "../../../components/app/layout";
 import SearchBox from "../../../components/app/search-box";
 import BasicTable from "../../../components/app/basic-table";
 import ImportTradesModal from "../../../components/app/import-trades-modal";
+import LinkTradePlanModal from "../../../components/app/link-trade-plan-modal";
 import usePlatformAccounts from "../../../hooks/platformAccounts";
 import useTrades from "../../../hooks/trades";
+import useJournal from "../../../hooks/journal";
 import { formatJournalDate } from "../../../date-utils";
-
-const columns = [
-  {
-    Header: "Symbol",
-    accessor: "securityName",
-    sticky: "left",
-  },
-  {
-    Header: "Direction",
-    accessor: "tradeDirectionType",
-  },
-  {
-    Header: "Opened On",
-    accessor: "tradeOpenedAt",
-  },
-  {
-    Header: "Closed On",
-    accessor: "tradeClosedAt",
-  },
-  {
-    Header: "Qty",
-    accessor: "quantity",
-  },
-  {
-    Header: "PnL",
-    accessor: "pnl",
-  },
-  {
-    Header: "Open Price",
-    accessor: "openPrice",
-  },
-  {
-    Header: "Close Price",
-    accessor: "closePrice",
-  },
-  {
-    Header: "Trading Account",
-    accessor: "platformAccount",
-  },
-  {
-    Header: "Trade Plan",
-    accessor: "tradePlanId",
-    sticky: "right",
-    Cell: ({ cell }) => {
-      const { id, securitySymbol, tradePlanId } = cell.row.values;
-
-      return (
-        <button className="rounded-full bg-purple-800 text-sm text-white px-2 py-1">
-          {tradePlanId ? "View" : "Add"}
-        </button>
-      );
-    },
-  },
-];
 
 const testData = [
   {
@@ -330,6 +278,9 @@ const testData = [
 
 export default function Trades() {
   const [isImportModalOpen, setImportModalOpen] = useState(false);
+  const [tradePlans, setTradePlans] = useState([]);
+  const [journalItems, setJournalItems] = useState({});
+  const [tradeInfo, setTradeInfo] = useState(null);
   const [platformAccounts, setPlatformAccounts] = useState([]);
   const [trades, setTrades] = useState([]);
   const [importLogs, setImportLogs] = useState([]);
@@ -337,26 +288,100 @@ export default function Trades() {
   const [debouncedSearchString, setDebouncedSearchString] = useState("");
 
   const { fetchPlatformAccounts } = usePlatformAccounts();
-  const { uploadTradeHistoryCSV, fetchTradeHistory, fetchImportLogs } = useTrades();
+  const {
+    uploadTradeHistoryCSV,
+    fetchTradeHistory,
+    fetchImportLogs,
+    linkTradePlanTradeResult,
+    unlinkTradePlanTradeResult,
+  } = useTrades();
+  const { journalTags, fetchJournalEntries, fetchJournalItems } = useJournal();
+
+  const columns = [
+    {
+      Header: "Id",
+      accessor: "id",
+    },
+    {
+      Header: "Symbol",
+      accessor: "securityName",
+      sticky: "left",
+    },
+    {
+      Header: "Direction",
+      accessor: "tradeDirectionType",
+    },
+    {
+      Header: "Opened On",
+      accessor: "tradeOpenedAt",
+    },
+    {
+      Header: "Closed On",
+      accessor: "tradeClosedAt",
+    },
+    {
+      Header: "Qty",
+      accessor: "quantity",
+    },
+    {
+      Header: "PnL",
+      accessor: "pnl",
+    },
+    {
+      Header: "Open Price",
+      accessor: "openPrice",
+    },
+    {
+      Header: "Close Price",
+      accessor: "closePrice",
+    },
+    {
+      Header: "Trading Account",
+      accessor: "platformAccount",
+    },
+    {
+      Header: "Trade Plan",
+      accessor: "tradePlan",
+      sticky: "right",
+      Cell: ({ cell }) => {
+        const { id, securitySymbol, tradePlan } = cell.row.values;
+
+        return (
+          <button
+            className="rounded-full bg-purple-800 text-sm text-white px-2 py-1"
+            onClick={() => setTradeInfo(cell.row.values)}
+          >
+            {tradePlan ? "View" : "Add"}
+          </button>
+        );
+      },
+    },
+  ];
 
   let data = trades.map((trade) => {
-    const platformAccount = platformAccounts.find(({id}) => id === trade.platformAccountId);
-    return({
-    ...trade,
-    tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
-    tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
-    pnl: trade.pnl || (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(
-      2
-    ),
-    platformAccount: platformAccount ? `${platformAccount.platform.name} ${platformAccount.accountName}`: "",
-    tradePlanId: null,
-  })});
+    const platformAccount = platformAccounts.find(
+      ({ id }) => id === trade.platformAccountId
+    );
+    return {
+      ...trade,
+      tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
+      tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
+      pnl:
+        trade.pnl ||
+        (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(2),
+      platformAccount: platformAccount
+        ? `${platformAccount.platform.name} ${platformAccount.accountName}`
+        : "",
+    };
+  });
 
   console.log("data", data);
 
   if (debouncedSearchString) {
     console.log("debouncedSearchString", debouncedSearchString);
-    data = data.filter(({ securityName }) => securityName.toLowerCase().includes(debouncedSearchString.toLowerCase()));
+    data = data.filter(({ securityName }) =>
+      securityName.toLowerCase().includes(debouncedSearchString.toLowerCase())
+    );
   }
 
   console.log("filtered data", data);
@@ -373,7 +398,7 @@ export default function Trades() {
 
   async function loadTradeHistory() {
     try {
-      const resp = await fetchTradeHistory({ platformAccountsOnly : true});
+      const resp = await fetchTradeHistory({ platformAccountsOnly: true, includeTradePlans: true });
       console.log("tradeHistory resp", resp);
       setTrades(resp.tradeHistory);
     } catch (e) {
@@ -391,6 +416,32 @@ export default function Trades() {
     }
   }
 
+  async function loadTradePlanJournalEntries() {
+    try {
+      const tagId = journalTags.find(
+        ({ label }) => label === "Trade Plans"
+      ).value;
+      const resp = await fetchJournalEntries({ tagId });
+      console.log("journalEntries resp", resp);
+      const tradePlans = resp.journalEntries.map(
+        ({ updatedAt, tradePlan }) => ({ ...tradePlan, updatedAt })
+      );
+      setTradePlans(tradePlans);
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
+  async function loadJournalItems() {
+    try {
+      const resp = await fetchJournalItems();
+      console.log("journalItems resp", resp);
+      setJournalItems(resp.journalItems);
+    } catch (e) {
+      console.error(e); // show error/alert
+    }
+  }
+
   async function handleImportTrades({ action, formData }) {
     try {
       if (action === "upload") {
@@ -401,8 +452,8 @@ export default function Trades() {
         console.log("csvUpload response success", resp.success);
         // if successful, refetch tradeHistory data and populate store
         if (resp.success) {
-            console.log("csvUpload success. loading tradehistory");
-            loadTradeHistory();
+          console.log("csvUpload success. loading tradehistory");
+          loadTradeHistory();
         }
       }
     } catch (e) {
@@ -411,10 +462,49 @@ export default function Trades() {
     setImportModalOpen(false);
   }
 
+  async function handleTradePlanModalSubmit({ tradePlanId, tradeId }) {
+    if (tradeInfo?.tradePlan) {
+        const resp = await unlinkTradePlanTradeResult(tradePlanId, tradeId);
+        console.log("unlinkTradePlanTradeResult", resp);
+        
+        if (resp.deleted) {
+            // remove trade plan from trades
+            const tradeIdx = trades.findIndex((({id}) => id === resp.tradeId));
+            const {tradePlan, ...tradeData } = trades[tradeIdx];
+            const updatedTrade = {...tradeData};
+
+            const updatedTrades = [trades.slice(0,tradeIdx), updatedTrade, trades.slice(tradeIdx + 1)];
+            setTrades(updatedTrades);
+        } else if (resp.error) {
+            console.error(resp.error);
+        }
+    } else {
+        const resp = await linkTradePlanTradeResult(tradePlanId, tradeId);
+        console.log("linkTradePlanTradeResult", resp);
+
+        if (resp.error) {
+            console.error(resp.error);
+        } else {
+            const { tradePlanTradeResultLink } = resp;
+
+            // find the tradePlan and update trades 
+            const tradeIdx = trades.findIndex((({id}) => id === tradePlanTradeResultLink.tradeId));
+            const trade = trades[tradeIdx];
+            const tradePlan = tradePlans.find(({id }) => id === tradePlanTradeResultLink.tradePlanId);
+            const updatedTrade = {...trade, tradePlan};
+
+            const updatedTrades = [trades.slice(0,tradeIdx), updatedTrade, trades.slice(tradeIdx + 1)];
+            setTrades(updatedTrades);
+        }
+    }
+  }
+
   useEffect(() => {
     loadTradeHistory();
     loadPlatformAccounts();
     loadImportLogs();
+    loadTradePlanJournalEntries();
+    loadJournalItems();
   }, []);
 
   useEffect(() => {
@@ -423,6 +513,42 @@ export default function Trades() {
     }, 500);
     return () => clearTimeout(delayInputTimeoutId);
   }, [searchString, 500]);
+
+  let tradePlanOptions = tradePlans.map(
+    ({
+      id,
+      securitySymbol,
+      tradeDirectionType,
+      planType,
+      entry,
+      exit,
+      stopLoss,
+      priceTarget1,
+      priceTarget2,
+      priceTarget3,
+      hypothesis,
+      updatedAt,
+    }) => ({
+      label: `${securitySymbol} ${tradeDirectionType}\nEntry @ ${entry}. ${
+        exit && planType === "Simple" ? `Exit @ ${exit}.` : ""
+      } ${
+        priceTarget1 && planType === "Advanced"
+          ? `Price Target 1 @ ${priceTarget1}.`
+          : ""
+      } ${
+        priceTarget2 && planType === "Advanced"
+          ? `Price Target 2 @ ${priceTarget2}.`
+          : ""
+      } ${
+        priceTarget3 && planType === "Advanced"
+          ? `Price Target 3 @ ${priceTarget3}.`
+          : ""
+      } Stop Loss @ ${stopLoss}\nPlan updated ${formatJournalDate(updatedAt)} `,
+      value: id,
+    })
+  );
+
+  console.log("tradePlanOptions", tradePlanOptions);
 
   return (
     <div>
@@ -436,10 +562,15 @@ export default function Trades() {
                 </div>
                 <div className="flex justify-between w-[90%] mx-auto">
                   <div>
-                   {importLogs.length ? (<span className="text-sm">
-                      Last Updated
-                      <br /> <i> {formatJournalDate(importLogs[0].createdAt)}</i>
-                    </span>) : ""}
+                    {importLogs.length ? (
+                      <span className="text-sm">
+                        Last Updated
+                        <br />{" "}
+                        <i> {formatJournalDate(importLogs[0].createdAt)}</i>
+                      </span>
+                    ) : (
+                      ""
+                    )}
                   </div>
                   <div>
                     {/* TODO: Refresh not in scope for MVP */}
@@ -457,18 +588,32 @@ export default function Trades() {
                 <hr className="w-[90%] border-t border-gray-300 mx-auto" />
               </div>
               <div className="w-full h-full">
-              {trades.length && (<div className="flex justify-end">
-                  <SearchBox className="mr-8" placeholder={"Search Symbol"} onSearch={setSearchString} />
-                </div>)}
+                {trades.length ? (
+                  <div className="flex justify-end">
+                    <SearchBox
+                      className="mr-8"
+                      placeholder={"Search Symbol"}
+                      onSearch={setSearchString}
+                    />
+                  </div>
+                ): null}
                 {trades.length && data.length ? (
-                <div className="mx-auto mt-4 max-w-[90%]">
-                   <BasicTable
-                    className="h-[50vh] border-b"
-                    columns={columns}
-                    data={data}
-                  /> 
-                </div>
-              ) : trades.length && !data.length ? (<div className="max-w-[90%] mx-auto"><p>No search results</p></div>) : (<div className="max-w-[90%] mx-auto"><p>No trades uploaded yet</p></div>)}
+                  <div className="mx-auto mt-4 max-w-[90%]">
+                    <BasicTable
+                      className="h-[50vh] border-b"
+                      columns={columns}
+                      data={data}
+                    />
+                  </div>
+                ) : trades.length && !data.length ? (
+                  <div className="max-w-[90%] mx-auto">
+                    <p>No search results</p>
+                  </div>
+                ) : (
+                  <div className="max-w-[90%] mx-auto">
+                    <p>No trades uploaded yet</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -484,6 +629,14 @@ export default function Trades() {
           })
         )}
         onSubmit={handleImportTrades}
+      />
+      <LinkTradePlanModal
+        isOpen={!!tradeInfo}
+        tradeInfo={tradeInfo}
+        tradePlanOptions={tradePlanOptions}
+        tradePlanItems={journalItems}
+        onClose={() => setTradeInfo(null)}
+        onSubmit={handleTradePlanModalSubmit}
       />
     </div>
   );

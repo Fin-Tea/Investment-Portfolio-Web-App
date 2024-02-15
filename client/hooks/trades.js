@@ -10,6 +10,7 @@ const CREATE_SETUP_ENDPOINT = "setup";
 const TRADE_DIRECTIONS_ENDPOINT = "tradeDirections";
 const TRADE_PLANS_ENDPOINT = "tradePlans";
 const TRADE_LINK_ENDPOINT = "tradePlanLink";
+const TRADE_PLAN_TRADE_RESULT_LINK_ENDPOINT = "tradePlanTradeResultLink";
 const UPLOAD_TRADE_HISTORY_ENDPOINT = "uploadTradeHistory";
 const IMPORT_LOGS_ENDPOINT = "importLogs";
 
@@ -28,11 +29,13 @@ export default function useTrades() {
   function fetchTradeHistory(queryParams) {
     let url = TRADE_HISTORY_ENDPOINT;
 
-    Object.entries(queryParams).forEach(([k, v]) => {
-      url = appendQueryParam(url, k, v);
-    });
+    if (queryParams) {
+      Object.entries(queryParams).forEach(([k, v]) => {
+        url = appendQueryParam(url, k, v);
+      });
+    }
 
-    return fetchUserData(TRADE_HISTORY_ENDPOINT);
+    return fetchUserData(url);
   }
 
   function updateTradeHistory(updatedTrades) {
@@ -83,6 +86,18 @@ export default function useTrades() {
     );
   }
 
+  function linkTradePlanTradeResult(tradePlanId, tradeId) {
+    return fetchUserData(TRADE_PLAN_TRADE_RESULT_LINK_ENDPOINT, "POST", { tradePlanId, tradeId });
+  }
+
+  function unlinkTradePlanTradeResult(tradePlanId, tradeId) {
+    return fetchUserData(
+      TRADE_PLAN_TRADE_RESULT_LINK_ENDPOINT,
+      "DELETE",
+      { tradePlanId, tradeId }
+    );
+  }
+
   function uploadTradeHistoryCSV(formData) {
     return fetchUserData(UPLOAD_TRADE_HISTORY_ENDPOINT, "POST", formData, {
       contentType: "multipart/form-data",
@@ -104,6 +119,8 @@ export default function useTrades() {
     updateTradePlans,
     createCatalyst,
     createSetup,
+    linkTradePlanTradeResult,
+    unlinkTradePlanTradeResult,
     linkTradePlan,
     unlinkTradePlan,
     uploadTradeHistoryCSV,
