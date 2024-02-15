@@ -15,14 +15,6 @@ import Reflection from "../../../components/app/journal-forms/reflection";
 import useJournal from "../../../hooks/journal";
 import { formatJournalDate } from "../../../date-utils";
 
-const filterPills = [
-  { label: "Trade Plans", value: 1 },
-  { label: "Milestones", value: 2 },
-  { label: "Improvement Areas", value: 3 },
-  { label: "Finstruments", value: 4 },
-  { label: "Reflections", value: 5 },
-];
-
 const formMap = {
   "Trade Plans": TradePlan,
   Milestones: Milestone,
@@ -78,6 +70,7 @@ export default function TradingJournal() {
   const [debouncedSearchString, setDebouncedSearchString] = useState("");
 
   const {
+    journalTags,
     createJournalEntry,
     fetchJournalEntries,
     fetchJournalItems,
@@ -199,7 +192,7 @@ export default function TradingJournal() {
           setJournalEntries(updatedJournalEntries);
         }
       } else {
-        const tagId = filterPills.find(
+        const tagId = journalTags.find(
           ({ label }) => label === currentFormName
         ).value;
         resp = await createJournalEntry({ ...data, tagId });
@@ -242,7 +235,7 @@ export default function TradingJournal() {
 
   function handleJournalEntryClick(journalEntryId) {
     const journalEntry = journalEntries.find(({ id }) => id === journalEntryId);
-    const tag = filterPills.find(
+    const tag = journalTags.find(
       ({ value }) => value === journalEntry.journalTagId
     ).label;
 
@@ -285,9 +278,12 @@ export default function TradingJournal() {
 
   const CurrentForm = currentFormName ? formMap[currentFormName] : null;
 
+  console.log("journalEntries", journalEntries);
+
   let journalEntrySummaries = journalEntries.map((entry) => {
     const { id, journalTagId, updatedAt } = entry;
-    const tag = filterPills.find(({ value }) => value === journalTagId).label;
+    console.log("journalTagId", journalTagId)
+    const tag = journalTags.find(({ value }) => value === journalTagId).label;
     const summary = { id, journalTagId, tag, updatedAt };
 
     switch (journalTagId) {
@@ -323,6 +319,8 @@ export default function TradingJournal() {
     journalEntrySummaries = journalEntrySummaries.filter(({ symbol, entryText }) => entryText.toLowerCase().includes(debouncedSearchString.toLowerCase()) || (symbol && debouncedSearchString.includes(symbol)));
   }
 
+  console.log("journalEntrySummaries", journalEntrySummaries);
+
   return (
     <Layout>
       <div className="h-full">
@@ -334,7 +332,7 @@ export default function TradingJournal() {
           >
             <SearchBox className="w-full" placeholder="Search symbol or text"  onSearch={setSearchString} />
             <div className="flex mt-4 w-full flex-wrap">
-              {filterPills.map(({ label, value }) => (
+              {journalTags.map(({ label, value }) => (
                 <Pill
                   className="m-0.5"
                   key={value}
@@ -427,7 +425,7 @@ export default function TradingJournal() {
           </div>
         </div>
         <JournalEntryModal
-          tags={filterPills}
+          tags={journalTags}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={({ label }) => {
