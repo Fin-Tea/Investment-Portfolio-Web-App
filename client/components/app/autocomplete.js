@@ -9,6 +9,7 @@ export default function Autocomplete({
   items,
   tooltip,
   value,
+  disabled,
 }) {
   const [options, setOptions] = useState(items);
 
@@ -25,6 +26,7 @@ export default function Autocomplete({
           isClearable
           isSearchable
           onCreateOption={(label) => {const item = {label}; setOptions([item, ...options]); onSelect && onSelect(item); }}
+          isDisabled={disabled}
         />
       </div>
       {tooltip && <Tooltip text={tooltip} />}
