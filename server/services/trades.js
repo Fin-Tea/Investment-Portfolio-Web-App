@@ -23,7 +23,7 @@ const NINJA_TRADER_HEADERS = [
 
 const PNL_REGEX = /[$()]/g;
 
-export function getTradeHistory(accountId, options = {}) {
+export async function getTradeHistory(accountId, options = {}) {
   const {
     limit,
     offset,
@@ -40,6 +40,7 @@ export function getTradeHistory(accountId, options = {}) {
     isMilestone,
     tradeOpenedAt,
     isPlatformAccounts,
+    includeTradePlans,
   } = options;
 
   let builder = db
@@ -118,7 +119,7 @@ export function getTradeHistory(accountId, options = {}) {
   }
 
   if (isPlatformAccounts) {
-    builder = builder.andWhereNotNull("platformAccountId");
+    builder = builder.whereNotNull("platformAccountId");
   }
 
   if (tradeOpenedAt) {
@@ -138,7 +139,108 @@ export function getTradeHistory(accountId, options = {}) {
     }
   }
 
-  return builder;
+  let trades = await builder;
+
+  if (includeTradePlans) {
+    console.log("including trade plans");
+    const tradeHistoryIds = trades.map(({ id }) => id);
+
+    builder = db("tradePlanTradeResults")
+      .select("tradePlanId", "tradeHistoryId")
+      .whereIn("tradeHistoryId", tradeHistoryIds);
+
+    const tradePlanTradeResults = await builder;
+
+    console.log("tradePlanTradeResults", JSON.stringify(tradePlanTradeResults));
+
+    const tradePlanTradeResultIdsMap = tradePlanTradeResults.reduce(
+      (acc, { tradePlanId, tradeHistoryId }) => {
+        acc.set(tradeHistoryId, tradePlanId);
+        return acc;
+      },
+      new Map()
+    );
+
+    const tradePlanIds = tradePlanTradeResults.map(
+      ({ tradePlanId }) => tradePlanId
+    );
+
+    let tradePlans = await db
+      .select(
+        "id",
+        "hypothesis",
+        "invalidationPoint",
+        "securitySymbol",
+        "tradeDirectionType",
+        "setup",
+        "entry",
+        "exit",
+        "stopLoss",
+        "planType",
+        "priceTarget1",
+        "positionSizePercent1",
+        "priceTarget2",
+        "positionSizePercent2",
+        "priceTarget3",
+        "positionSizePercent3"
+      )
+      .from("tradePlans")
+      .whereIn("id", tradePlanIds);
+
+    const newsCatalysts = await db
+      .select(
+        "id",
+        "tradePlanId",
+        "label",
+        "sentimentType",
+        "statusType",
+        "url",
+        "newsText"
+      )
+      .from("newsCatalysts")
+      .whereIn("tradePlanId", tradePlanIds);
+
+    const confirmations = await db
+      .select("id", "tradePlanId", "confirmationText")
+      .from("confirmations")
+      .whereIn("tradePlanId", tradePlanIds);
+
+    const newsCatalystsMap = newsCatalysts.reduce((acc, catalyst) => {
+      acc.set(catalyst.tradePlanId, catalyst);
+      return acc;
+    }, new Map());
+
+    const confirmationsMap = confirmations.reduce((acc, confirmation) => {
+      const confirmationsGroup = acc.get(confirmation.tradePlanId) || [];
+      confirmationsGroup.push(confirmation);
+      acc.set(confirmation.tradePlanId, confirmationsGroup);
+      return acc;
+    }, new Map());
+
+    tradePlans = tradePlans.map((tradePlan) => {
+      const { id } = tradePlan;
+      const newsCatalyst = newsCatalystsMap.get(id);
+      const confirmations = confirmationsMap.get(id);
+      return { ...tradePlan, newsCatalyst, confirmations };
+    });
+
+    const tradePlansMap = tradePlans.reduce((acc, tradePlan) => {
+      acc.set(tradePlan.id, tradePlan);
+      return acc;
+    }, new Map());
+
+    trades = trades.map((trade) => {
+      const { id } = trade;
+
+      const tradePlanId = tradePlanTradeResultIdsMap.get(id);
+
+      const tradePlan = tradePlansMap.get(tradePlanId);
+
+      return { ...trade, tradePlan };
+    });
+  }
+
+  return trades;
 }
 
 export function getOpenTrades(accountId, options = {}) {
@@ -394,6 +496,106 @@ export async function updateTradeHistoryBulk(tradeUpdates) {
   );
 
   return updateInfo;
+}
+
+function readTradePlanTradeResults(accountId, options = {}) {
+  const { limit, offset, tradeId, tradePlanId, includeDeleted } = options;
+
+  let builder = db
+    .select(
+      "accountId",
+      "tradePlanId",
+      "tradeHistoryId as tradeId",
+      "createdAt",
+      "updatedAt"
+    )
+    .from("tradePlanTradeResults")
+    .where({ accountId });
+
+  if (tradeId) {
+    builder = builder.andWhere({ tradeHistoryId: tradeId });
+  }
+
+  if (tradePlanId) {
+    builder = builder.andWhere({ tradePlanId });
+  }
+
+  if (!includeDeleted) {
+    builder = builder.andWhere({ deletedAt: null });
+  }
+
+  if (limit) {
+    builder = builder.limit(limit);
+    if (offset) {
+      builder = builder.offset(offset);
+    }
+  }
+
+  return builder;
+}
+
+export async function createTradePlanTradeResultLink(
+  accountId,
+  tradePlanId,
+  tradeId
+) {
+  const tradePlanTradeResults = await readTradePlanTradeResults(accountId, {
+    tradePlanId,
+    tradeId,
+    includeDeleted: true,
+  });
+
+  if (tradePlanTradeResults.length) {
+    // update the row, setting deletedAt to null
+    await db("tradePlanTradeResults")
+      .where({ tradePlanId, tradeHistoryId: tradeId })
+      .update({
+        deletedAt: null,
+      });
+  } else {
+    // insert new row
+    const now = new Date();
+    await db("tradePlanTradeResults").insert([
+      {
+        accountId,
+        tradePlanId,
+        tradeHistoryId: tradeId,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+  }
+
+  const [tradePlanTradeResult] = await readTradePlanTradeResults(accountId, {
+    tradePlanId,
+    tradeId,
+  });
+
+  return tradePlanTradeResult;
+}
+
+export async function deleteTradePlanTradeResultLink(
+  accountId,
+  tradePlanId,
+  tradeId
+) {
+  const tradePlanTradeResults = await readTradePlanTradeResults(accountId, {
+    tradePlanId,
+    tradeId,
+  });
+
+  if (!tradePlanTradeResults.length) {
+    throw new Error(`Trade plan trade result link not found`);
+  }
+
+  // update the row, setting deletedAt to current datetime
+  await db("tradePlanTradeResults")
+    .where({ tradePlanId, tradeHistoryId: tradeId })
+    .update({
+      deletedAt: new Date(),
+    });
+
+  return { tradePlanId, tradeId, delete: true };
 }
 
 function getCatalystByDescription(description) {
@@ -813,7 +1015,7 @@ export function mapUploadedNinjaTradesToTradeInfo(uploadedTrades) {
         securityName: symbol.substring(0, symbol.length - 2),
         openPrices: [openPrice],
         closePrices: [closePrice],
-        pnl: pnlF
+        pnl: pnlF,
       };
 
       acc.completedTrades.push(trade);
@@ -854,7 +1056,7 @@ export async function readImportLogs(accountId, options = {}) {
     }
   }
 
-  builder = builder.orderBy('createdAt', 'desc')
+  builder = builder.orderBy("createdAt", "desc");
 
   return builder;
 }
@@ -891,7 +1093,6 @@ export async function processUploadedTrades(
     console.log("processing completed trades");
     const dbTradeInfo = await completedTrades.reduce(
       async (acc, trade) => {
-
         const newAcc = await acc;
         const {
           tradeOpenedAt: rawTradeOpenedAt,
@@ -969,7 +1170,7 @@ export async function processUploadedTrades(
             updatedAt: todayFormatted,
             platformAccountId,
             importLogId: id,
-            pnl
+            pnl,
           };
 
           newAcc.tradesToInsert.push(dbTrade);

@@ -245,7 +245,8 @@ app.get(
       securityName,
       milestonesOnly,
       allAccounts,
-      platformAccountsOnly
+      platformAccountsOnly,
+      includeTradePlans,
     } = req.query;
 
     const options = {
@@ -300,6 +301,12 @@ app.get(
 
     if (platformAccountsOnly && platformAccountsOnly.toLowerCase() === "true") {
       options.isPlatformAccounts = true;
+    }
+
+    console.log("includeTradePlans", includeTradePlans);
+
+    if (includeTradePlans && includeTradePlans.toLowerCase() === "true") {
+      options.includeTradePlans = true;
     }
 
     const tradeHistory = await tradingService.getTradeHistory(
@@ -382,9 +389,13 @@ app.get(
   authMiddleware,
   async (req, res) => {
     const { accountId } = req.params;
-    const { rowsPerPage, numPages, page, tagId, id } = req.query;
+    const { rowsPerPage, numPages, page, tagId } = req.query;
 
     const options = {};
+
+    if (tagId) {
+      options.journalTagId = tagId;
+    }
 
     if (rowsPerPage && numPages) {
       // TODO: rowsPerPage && numPage must be >= 1
@@ -455,19 +466,29 @@ app.get("/api/platforms", authMiddleware, async (req, res) => {
   res.json({ platforms });
 });
 
-app.get("/api/account/:accountId/importLogs", authMiddleware, async (req, res) => {
-  const { accountId } = req.params;
-  const importLogs = await tradingService.readImportLogs(accountId);
+app.get(
+  "/api/account/:accountId/importLogs",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+    const importLogs = await tradingService.readImportLogs(accountId);
 
-  res.json({ importLogs });
-});
+    res.json({ importLogs });
+  }
+);
 
 app.get(
   "/api/account/:accountId/tradeInsights",
   authMiddleware,
   async (req, res) => {
     const { accountId } = req.params;
-    const { fromDate, toDate, allAccounts, platformAccountId, allPlatformAccounts } = req.query;
+    const {
+      fromDate,
+      toDate,
+      allAccounts,
+      platformAccountId,
+      allPlatformAccounts,
+    } = req.query;
 
     const options = {
       fromDate,
@@ -506,17 +527,22 @@ app.get(
     let platformAccountIds = [];
 
     if (platformAccountId) {
-      platformAccountIds.push(platformAccountId)
+      platformAccountIds.push(platformAccountId);
     }
 
     if (allAccounts && allAccounts === "true") {
-      const platformAccounts = await accountService.readPlatformAccounts(accountId);
+      const platformAccounts = await accountService.readPlatformAccounts(
+        accountId
+      );
       platformAccountIds = platformAccountIds.concat(
         platformAccounts.map(({ id }) => id)
       );
     }
 
-    const insights = await platformInsightsService.getInsights(platformAccountIds, options);
+    const insights = await platformInsightsService.getInsights(
+      platformAccountIds,
+      options
+    );
 
     res.json({ insights });
   }
@@ -592,6 +618,49 @@ app.post(
       res.json({ success: true });
     } catch (e) {
       res.json({ error: e });
+    }
+  }
+);
+
+app.post(
+  "/api/account/:accountId/tradePlanTradeResultLink",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+    const { tradeId, tradePlanId } = req.body;
+
+    try {
+      const tradePlanTradeResultLink =
+        await tradingService.createTradePlanTradeResultLink(
+          accountId,
+          tradePlanId,
+          tradeId
+        );
+
+      res.json({ tradePlanTradeResultLink });
+    } catch (e) {
+      res.json({ error: e.message });
+    }
+  }
+);
+
+app.delete(
+  "/api/account/:accountId/tradePlanTradeResultLink",
+  authMiddleware,
+  async (req, res) => {
+    const { accountId } = req.params;
+    const { tradeId, tradePlanId } = req.body;
+
+    try {
+      const result = await tradingService.deleteTradePlanTradeResultLink(
+        accountId,
+        tradePlanId,
+        tradeId
+      );
+
+      res.json(result);
+    } catch (e) {
+      res.json({ error: e.message });
     }
   }
 );
@@ -846,26 +915,23 @@ app.post(
         // console.log(req.files.csv.data.toString("utf8"));
         const orders = tradingService.parseTDAOrdersFromCSV(file);
         console.log(JSON.stringify(orders));
-        tradeInfo =
-          tradingService.mapUploadedTDAOrdersToTradeInfo(orders);
-
+        tradeInfo = tradingService.mapUploadedTDAOrdersToTradeInfo(orders);
       } else if (platform.id === tradingService.PLATFORMS.NINJA_TRADER) {
         const trades = tradingService.parseNinjaTradesFromCSV(file);
 
-        tradeInfo =
-        tradingService.mapUploadedNinjaTradesToTradeInfo(trades);
+        tradeInfo = tradingService.mapUploadedNinjaTradesToTradeInfo(trades);
       }
 
       if (tradeInfo) {
-      console.log(JSON.stringify(tradeInfo));
-      const results = await tradingService.processUploadedTrades(
-        accountId,
-        platformAccountId,
-        "Upload",
-        tradeInfo
-      );
+        console.log(JSON.stringify(tradeInfo));
+        const results = await tradingService.processUploadedTrades(
+          accountId,
+          platformAccountId,
+          "Upload",
+          tradeInfo
+        );
 
-      respData = { ...respData, success: true, ...results };
+        respData = { ...respData, success: true, ...results };
       }
 
       return res.json(respData);
