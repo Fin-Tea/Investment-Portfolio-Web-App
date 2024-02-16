@@ -73,7 +73,8 @@ export async function getTradeHistory(accountId, options = {}) {
       "pnl"
     )
     .from("tradeHistory")
-    .where({ accountId });
+    .where({ accountId })
+    .andWhere({ deletedAt: null });
 
   if (tradeId) {
     return builder.andWhere({ id: tradeId }).first();

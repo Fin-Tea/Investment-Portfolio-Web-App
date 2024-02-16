@@ -403,11 +403,66 @@ async function readTradePlanEntries(journalEntryIds) {
     return acc;
   }, new Map());
 
+  // include trade results (could be multiple trade results per trade plan)
+  const tradePlanTradeResults = await db("tradePlanTradeResults")
+    .select("tradePlanId", "tradeHistoryId")
+    .whereIn("tradePlanId", tradePlanIds)
+    .andWhere({ deletedAt: null });
+
+  const tradeIds = tradePlanTradeResults.map(
+    ({ tradeHistoryId }) => tradeHistoryId
+  );
+
+  const tradeHistory = await db
+    .select(
+      "id",
+      "tradeOpenedAt",
+      "tradeClosedAt",
+      "timeRangeType",
+      "securityType",
+      "tradeDirectionType",
+      "quantity",
+      "securitySymbol",
+      "securityName",
+      "openPrice",
+      "closePrice",
+      "openUnderlyingPrice",
+      "closeUnderlyingPrice",
+      "underlyingSymbol",
+      "platformAccountId",
+      "importLogId",
+      "pnl"
+    )
+    .from("tradeHistory")
+    .whereIn("id", tradeIds)
+    .andWhere({ deletedAt: null });
+
+    const tradeHistoryMap = tradeHistory.reduce((acc, trade) => {
+        acc.set(trade.id, trade);
+        return acc;
+    }, new Map());
+
+
+
+  const tradePlanTradeResultsMap = tradePlanTradeResults.reduce(
+    (acc, { tradePlanId, tradeHistoryId }) => {
+      const trades = acc.get(tradePlanId) || [];
+      const trade = tradeHistoryMap.get(tradeHistoryId);
+
+      trades.push(trade);
+
+      acc.set(tradePlanId, trades);
+      return acc;
+    },
+    new Map()
+  );
+
   return tradePlans.map((tradePlan) => {
     const { id } = tradePlan;
     const newsCatalyst = newsCatalystsMap.get(id);
     const confirmations = confirmationsMap.get(id);
-    return { ...tradePlan, newsCatalyst, confirmations };
+    const tradeResults = tradePlanTradeResultsMap.get(id);
+    return { ...tradePlan, newsCatalyst, confirmations, tradeResults };
   });
 }
 
@@ -491,7 +546,8 @@ function createJournalEntryMap(entries) {
 }
 
 export async function readJournalEntries(accountId, options = {}) {
-  const { limit, offset, journalEntryId, journalTagId, fromDate, toDate } = options;
+  const { limit, offset, journalEntryId, journalTagId, fromDate, toDate } =
+    options;
 
   let builder = db
     .select("id", "accountId", "journalTagId", "createdAt", "updatedAt")
@@ -508,20 +564,12 @@ export async function readJournalEntries(accountId, options = {}) {
 
   if (fromDate) {
     const formattedFromDate = new Date(fromDate);
-    builder = builder.andWhere(
-      "updatedAt",
-      ">=",
-      formattedFromDate
-    );
+    builder = builder.andWhere("updatedAt", ">=", formattedFromDate);
   }
 
   if (toDate) {
     const formattedToDate = new Date(toDate);
-    builder = builder.andWhere(
-      "updatedAt",
-      "<=",
-      formattedToDate
-    );
+    builder = builder.andWhere("updatedAt", "<=", formattedToDate);
   }
 
   if (limit) {
@@ -675,30 +723,21 @@ export async function readJournalItems(accountId) {
 
   const securitySymbols = [...symbolsSet].map((item) => ({ label: item }));
 
-  let newsCatalysts = new Set([
-    ...newsCatalystsSet,
-    ...newsCatalystPrefills,
-  ]);
+  let newsCatalysts = new Set([...newsCatalystsSet, ...newsCatalystPrefills]);
 
   newsCatalysts = [...newsCatalysts].map((item) => ({ label: item }));
 
-  let setups = new Set([
-    ...setupsSet,
-    ...setupPrefills,
-  ]);
+  let setups = new Set([...setupsSet, ...setupPrefills]);
 
-   setups = [...setups].map((item) => ({ label: item }));
+  setups = [...setups].map((item) => ({ label: item }));
 
-   console.log("confirmations set", JSON.stringify([...confirmationsSet]));
+  console.log("confirmations set", JSON.stringify([...confirmationsSet]));
 
-   let confirmations = new Set([
-    ...confirmationsSet,
-    ...confirmationPrefills,
-  ]);
+  let confirmations = new Set([...confirmationsSet, ...confirmationPrefills]);
 
   console.log("confirmations set", JSON.stringify([...confirmations]));
 
-   confirmations = [...confirmations].map((item) => ({ label: item }));
+  confirmations = [...confirmations].map((item) => ({ label: item }));
 
   return {
     securitySymbols,
