@@ -8,6 +8,8 @@ import Select from "react-select";
 import { Switch } from "@chakra-ui/react";
 import Tooltip from "../tooltip";
 import Pill from "../pill";
+import MiniTable from "../mini-table";
+import { formatJournalDate } from "../../../date-utils";
 
 const symbolFixtures = [{ label: "ES" }, { label: "NQ" }];
 
@@ -37,8 +39,47 @@ const confirmationFixtures = [
   { label: "200 SMA crossover" },
 ];
 
+const tradeResultsColumns = [
+    {
+      Header: "Symbol",
+      accessor: "securityName",
+    },
+    {
+      Header: "Direction",
+      accessor: "tradeDirectionType",
+    },
+    {
+      Header: "Opened On",
+      accessor: "tradeOpenedAt",
+    },
+    {
+      Header: "Closed On",
+      accessor: "tradeClosedAt",
+    },
+    {
+      Header: "Qty",
+      accessor: "quantity",
+    },
+    {
+      Header: "PnL",
+      accessor: "pnl",
+    },
+    {
+      Header: "Open Price",
+      accessor: "openPrice",
+    },
+    {
+      Header: "Close Price",
+      accessor: "closePrice",
+    },
+    {
+      Header: "Trading Account",
+      accessor: "platformAccount",
+    },
+  ];
+
 export default function TradePlan({ data, items, onSubmit, onDelete }) {
-    const { securitySymbols, newsCatalysts, setups, confirmations } = items;
+    const { securitySymbols, newsCatalysts, setups, confirmations, platformAccounts } = items;
 
 
   const validationSchema = Yup.object().shape({
@@ -248,6 +289,23 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   useEffect(() => {
     reset(formOptions.defaultValues);
   }, [data]);
+
+  let tradeResults = (data?.tradePlan?.tradeResults || []).map((trade) => {
+    const platformAccount = platformAccounts.find(
+      ({ id }) => id === trade.platformAccountId
+    );
+    return {
+      ...trade,
+      tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
+      tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
+      pnl:
+        trade.pnl ||
+        (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(2),
+      platformAccount: platformAccount
+        ? `${platformAccount.platform.name} ${platformAccount.accountName}`
+        : "",
+    };
+  });
 
   return (
     <BaseForm header="Trade Plan" edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
@@ -620,6 +678,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
         </button>
         <Tooltip text="In edit mode, you can link your trade plan to the actual trade that happened so our tools can help you improve your trading & investing decisions" />
       </div>
+      {tradeResults.length ? (<div className="mt-4"><MiniTable title="Trade Results" columns={tradeResultsColumns} data={tradeResults} /></div>) : null}
     </BaseForm>
   );
 }

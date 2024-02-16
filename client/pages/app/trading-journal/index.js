@@ -14,6 +14,7 @@ import Finstrument from "../../../components/app/journal-forms/finstrument";
 import Reflection from "../../../components/app/journal-forms/reflection";
 import useJournal from "../../../hooks/journal";
 import { formatJournalDate } from "../../../date-utils";
+import usePlatformAccounts from "../../../hooks/platformAccounts";
 
 const formMap = {
   "Trade Plans": TradePlan,
@@ -77,6 +78,8 @@ export default function TradingJournal() {
     updateJournalEntry,
     deleteJournalEntry,
   } = useJournal();
+
+  const { fetchPlatformAccounts } = usePlatformAccounts();
 
   function updateFilterIds({ id, isActive }) {
     console.log("updateFilterIds", id, isActive);
@@ -255,9 +258,10 @@ export default function TradingJournal() {
 
   async function loadJournalItems() {
     try {
-      const resp = await fetchJournalItems();
-      console.log("journalItems resp", resp);
-      setJournalItems(resp.journalItems);
+      const journalItemsResp = await fetchJournalItems();
+      const platformAccountsResp = await fetchPlatformAccounts();
+      console.log("journalItems resp", journalItemsResp);
+      setJournalItems({ ...journalItemsResp.journalItems, ...platformAccountsResp });
     } catch (e) {
       console.error(e); // show error/alert
     }
