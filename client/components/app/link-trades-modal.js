@@ -90,17 +90,23 @@ export default function LinkTradesModal({
 }) {
   const { platformAccounts } = tradePlanItems;
   console.log("tradePlanInfo", tradePlanInfo);
-  const [selectedTradeIds, setSelectedTradeIds] = useState(new Set());
+  const [selectedTradeIds, setSelectedTradeIds] = useState(new Set((tradePlanInfo?.tradeResults || []).map(({ id }) => id)));
   const [searchString, setSearchString] = useState("");
   const [debouncedSearchString, setDebouncedSearchString] = useState("");
 
   function addTradeId(id) {
-    selectedTradeIds(new Set([...selectedTradeIds, id]));
+    setSelectedTradeIds(new Set([...selectedTradeIds, id]));
   }
 
-  function deleteTradeId(id) {
+  function removeTradeId(id) {
     selectedTradeIds.delete(id);
-    selectedTradeIds(new Set([...selectedTradeIds]));
+    setSelectedTradeIds(new Set([...selectedTradeIds]));
+  }
+
+  function handleClose() {
+    setSelectedTradeIds(new Set((tradePlanInfo?.tradeResults || []).map(({ id }) => id)));
+    setSearchString("");
+    onClose && onClose();
   }
 
   const tradeColumns = [
@@ -150,9 +156,9 @@ export default function LinkTradesModal({
       accessor: "tradePlan",
       sticky: "right",
       Cell: ({ cell }) => {
-        const { tradePlan } = cell.row.values;
+        const {id, tradePlan } = cell.row.values;
 
-        return <Checkbox className="" />;
+        return <Checkbox isChecked={selectedTradeIds.has(id)} colorScheme="purple" className="p-2" onChange={(e) => e.target.checked ? addTradeId(id) : removeTradeId(id) } />;
       },
     },
   ];
@@ -188,7 +194,7 @@ export default function LinkTradesModal({
   }, [searchString, 500]);
 
   return (
-    <Modal className="w-full" isOpen={isOpen} onClose={onClose}>
+    <Modal className="w-full" isOpen={isOpen} onClose={handleClose}>
       <ModalOverlay />
       <ModalContent maxWidth={800}>
         <ModalHeader>Link/Unlink Trades & Investments</ModalHeader>
@@ -221,7 +227,7 @@ export default function LinkTradesModal({
         </ModalBody>
 
         <ModalFooter>
-          <button className="rounded-md border p-2 px-4 mr-4" onClick={onClose}>
+          <button className="rounded-md border p-2 px-4 mr-4" onClick={handleClose}>
             {" "}
             Close
           </button>
