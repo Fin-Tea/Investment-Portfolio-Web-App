@@ -111,13 +111,11 @@ export default function LinkTradesModal({
 
   function handleClose() {
     onClose && onClose();
-    resetModal();
   }
 
   function handleSubmit() {
     onSubmit && onSubmit([...selectedTradeIds]);
     onClose && onClose();
-    resetModal();
   }
 
   const tradeColumns = [
@@ -203,6 +201,11 @@ export default function LinkTradesModal({
     }, 500);
     return () => clearTimeout(delayInputTimeoutId);
   }, [searchString, 500]);
+
+
+  useEffect(() => {
+      resetModal();
+  }, [tradePlanInfo]);
 
   return (
     <Modal className="w-full" isOpen={isOpen} onClose={handleClose}>
