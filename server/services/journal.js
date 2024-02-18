@@ -1,3 +1,4 @@
+import Bluebird from "bluebird";
 import db from "../db";
 
 export const JOURNAL_TAGS = {
@@ -437,12 +438,10 @@ async function readTradePlanEntries(journalEntryIds) {
     .whereIn("id", tradeIds)
     .andWhere({ deletedAt: null });
 
-    const tradeHistoryMap = tradeHistory.reduce((acc, trade) => {
-        acc.set(trade.id, trade);
-        return acc;
-    }, new Map());
-
-
+  const tradeHistoryMap = tradeHistory.reduce((acc, trade) => {
+    acc.set(trade.id, trade);
+    return acc;
+  }, new Map());
 
   const tradePlanTradeResultsMap = tradePlanTradeResults.reduce(
     (acc, { tradePlanId, tradeHistoryId }) => {
@@ -777,6 +776,7 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
   const {
     newsCatalyst,
     confirmations,
+    linkedTradeIds,
     // createdAt: _planCreatedAt,
     // deletedAt: _planDeletedAt,
     ...tradePlanFields
@@ -843,6 +843,65 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
     );
 
     updateInfo.confirmationsUpdated = confirmationsUpdateInfo;
+  }
+
+  if (linkedTradeIds && linkedTradeIds.length) {
+    // upsert TradePlanTradeResults
+    const tradePlanTradeResults = await db("tradePlanTradeResults").where({
+      tradePlanId,
+    });
+
+    const existingTradeIds = tradePlanTradeResults.map(
+      ({ tradeHistoryId }) => tradeHistoryId
+    );
+
+    const existingTradeIdsSet = new Set(existingTradeIds);
+    const linkedTradeIdsSet = new Set(linkedTradeIds);
+
+    const activeTradeIds = existingTradeIds.filter((id) => linkedTradeIdsSet.has(id));
+    const inactiveTradeIds = existingTradeIds.filter((id) => !linkedTradeIdsSet.has(id));
+    const now = new Date();
+
+    if (activeTradeIds.length) {
+      await db("tradePlanTradeResults")
+        .whereIn("tradeHistoryId", activeTradeIds)
+        .update({
+          deletedAt: null,
+          updatedAt: now,
+        });
+    }
+
+    if (inactiveTradeIds.length) {
+        await db("tradePlanTradeResults")
+          .whereIn("tradeHistoryId", inactiveTradeIds)
+          .update({
+            deletedAt: now,
+            updatedAt: now,
+          });
+      }
+
+    const newTradeIds = linkedTradeIds.filter(
+      (id) => !existingTradeIdsSet.has(id)
+    );
+
+    if (newTradeIds.length) {
+      const { accountId } = await db
+        .select("accountId")
+        .from("journalEntries")
+        .where({ id: journalEntryId })
+        .first();
+
+      const newTradePlanTradeResults = newTradeIds.map((id) => ({
+        accountId,
+        tradePlanId,
+        tradeHistoryId: id,
+        createdAt: now,
+        updatedAt: now,
+      }));
+
+      await db("tradePlanTradeResults").insert(newTradePlanTradeResults);
+      updateInfo.linkedTradeIds = true;
+    }
   }
 
   updateInfo.updated = true;
