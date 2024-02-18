@@ -13,8 +13,10 @@ import ImprovementArea from "../../../components/app/journal-forms/improvement-a
 import Finstrument from "../../../components/app/journal-forms/finstrument";
 import Reflection from "../../../components/app/journal-forms/reflection";
 import useJournal from "../../../hooks/journal";
-import { formatJournalDate } from "../../../date-utils";
 import usePlatformAccounts from "../../../hooks/platformAccounts";
+import useTrades from "../../../hooks/trades";
+import { formatJournalDate } from "../../../date-utils";
+
 
 const formMap = {
   "Trade Plans": TradePlan,
@@ -80,6 +82,8 @@ export default function TradingJournal() {
   } = useJournal();
 
   const { fetchPlatformAccounts } = usePlatformAccounts();
+
+  const { fetchTradeHistory } = useTrades();
 
   function updateFilterIds({ id, isActive }) {
     console.log("updateFilterIds", id, isActive);
@@ -260,8 +264,8 @@ export default function TradingJournal() {
     try {
       const journalItemsResp = await fetchJournalItems();
       const platformAccountsResp = await fetchPlatformAccounts();
-      console.log("journalItems resp", journalItemsResp);
-      setJournalItems({ ...journalItemsResp.journalItems, ...platformAccountsResp });
+      const tradeHistoryResp = await fetchTradeHistory({ platformAccountsOnly: true, includeTradePlans: true });
+      setJournalItems({ ...journalItemsResp.journalItems, ...platformAccountsResp, ...tradeHistoryResp });
     } catch (e) {
       console.error(e); // show error/alert
     }
