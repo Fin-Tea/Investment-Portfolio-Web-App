@@ -344,7 +344,7 @@ export default function Trades() {
       accessor: "tradePlan",
       sticky: "right",
       Cell: ({ cell }) => {
-        const { id, securitySymbol, tradePlan } = cell.row.values;
+        const { tradePlan } = cell.row.values;
 
         return (
           <button
