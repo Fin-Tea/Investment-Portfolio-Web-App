@@ -197,6 +197,7 @@ export default function TradingJournal() {
             ...journalEntries.slice(idx + 1),
           ];
           setJournalEntries(updatedJournalEntries);
+          setCurrentJournalEntry(resp.journalEntry);
         }
       } else {
         const tagId = journalTags.find(

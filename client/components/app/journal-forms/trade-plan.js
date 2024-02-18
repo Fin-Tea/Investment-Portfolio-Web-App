@@ -256,6 +256,11 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
     setValue("catalystSentimentType", id);
   }
 
+  function handleTradeLinkUpdates(linkedTradeIds) {
+    setValue("linkedTradeIds", linkedTradeIds);
+    handleSubmit(onSubmit)();
+  }
+
   let rewardRisk = null;
   let rewardRiskColor = "text-black";
 
@@ -311,6 +316,8 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
         : "",
     };
   });
+
+  console.log("trade plan tradeResults", tradeResults);
 
   const tradePlanInfo = data ? {...data.tradePlan, createdAt: formatJournalDate(data.createdAt)} : null;
 
@@ -687,6 +694,6 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
         <Tooltip text="In edit mode, you can link your trade plan to the actual trade that happened so our tools can help you improve your trading & investing decisions" />
       </div>
       {tradeResults.length ? (<div className="mt-4"><MiniTable title="Trade Results" columns={tradeResultsColumns} data={tradeResults} /></div>) : null}
-    </BaseForm>{tradePlanInfo && (<LinkTradesModal isOpen={showLinkTradesModal} onClose={() => setShowLinkTradesModal(false)} tradePlanInfo={tradePlanInfo} trades={tradeHistory} tradePlanItems={items} />)}</div>
+    </BaseForm>{tradePlanInfo && (<LinkTradesModal isOpen={showLinkTradesModal} onClose={() => setShowLinkTradesModal(false)} tradePlanInfo={tradePlanInfo} trades={tradeHistory} tradePlanItems={items} onSubmit={handleTradeLinkUpdates} />)}</div>
   );
 }

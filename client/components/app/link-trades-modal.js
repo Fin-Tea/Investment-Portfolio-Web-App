@@ -103,10 +103,21 @@ export default function LinkTradesModal({
     setSelectedTradeIds(new Set([...selectedTradeIds]));
   }
 
-  function handleClose() {
+  function resetModal() {
     setSelectedTradeIds(new Set((tradePlanInfo?.tradeResults || []).map(({ id }) => id)));
     setSearchString("");
+  }
+
+
+  function handleClose() {
     onClose && onClose();
+    resetModal();
+  }
+
+  function handleSubmit() {
+    onSubmit && onSubmit([...selectedTradeIds]);
+    onClose && onClose();
+    resetModal();
   }
 
   const tradeColumns = [
@@ -182,7 +193,7 @@ export default function LinkTradesModal({
 
   if (debouncedSearchString) {
     data = data.filter(({ securityName }) =>
-      securityName.toLowerCase().includes(debouncedSearchString.toLowerCase())
+      securityName.toLowerCase().startsWith(debouncedSearchString.toLowerCase())
     );
   }
 
@@ -234,6 +245,7 @@ export default function LinkTradesModal({
           <button
             className="rounded-md bg-purple-800
              text-white p-2 px-4"
+             onClick={handleSubmit}
           >
             Save
           </button>
