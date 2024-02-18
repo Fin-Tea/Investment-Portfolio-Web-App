@@ -8,6 +8,7 @@ import Select from "react-select";
 import { Switch } from "@chakra-ui/react";
 import Tooltip from "../tooltip";
 import Pill from "../pill";
+import LinkTradesModal from "../link-trades-modal";
 import MiniTable from "../mini-table";
 import { formatJournalDate } from "../../../date-utils";
 
@@ -79,7 +80,7 @@ const tradeResultsColumns = [
   ];
 
 export default function TradePlan({ data, items, onSubmit, onDelete }) {
-    const { securitySymbols, newsCatalysts, setups, confirmations, platformAccounts } = items;
+    const { securitySymbols, newsCatalysts, setups, confirmations, platformAccounts, tradeHistory } = items;
 
 
   const validationSchema = Yup.object().shape({
@@ -245,6 +246,10 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   const confirmation2 = watch("confirmation2");
   const confirmation3 = watch("confirmation3");
 
+  const [showLinkTradesModal, setShowLinkTradesModal] = useState(
+   false
+  );                                                                                                                                                                    
+
   console.log("errors", errors);
 
   function handlePillClick({ id }) {
@@ -307,7 +312,9 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
     };
   });
 
-  return (
+  const tradePlanInfo = data ? {...data.tradePlan, createdAt: formatJournalDate(data.createdAt)} : null;
+
+  return (<div>
     <BaseForm header="Trade Plan" edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
       <div>
         <label className="text-sm ml">Symbol*</label>
@@ -672,13 +679,14 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
       <div className="mt-4 flex items-center">
         <button
           disabled={!data}
-          className="rounded-md bg-gray-400 text-white px-4"
+          className={`rounded-md ${!data ? "bg-gray-400" : "bg-purple-800"} text-white px-4`}
+          onClick={() => setShowLinkTradesModal(true)}
         >
-          Link Trade
+          Link/Unlink Trades
         </button>
         <Tooltip text="In edit mode, you can link your trade plan to the actual trade that happened so our tools can help you improve your trading & investing decisions" />
       </div>
       {tradeResults.length ? (<div className="mt-4"><MiniTable title="Trade Results" columns={tradeResultsColumns} data={tradeResults} /></div>) : null}
-    </BaseForm>
+    </BaseForm>{tradePlanInfo && (<LinkTradesModal isOpen={showLinkTradesModal} onClose={() => setShowLinkTradesModal(false)} tradePlanInfo={tradePlanInfo} trades={tradeHistory} tradePlanItems={items} />)}</div>
   );
 }
