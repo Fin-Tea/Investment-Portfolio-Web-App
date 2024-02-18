@@ -186,7 +186,12 @@ export default function LinkTradesModal({
       platformAccount: platformAccount
         ? `${platformAccount.platform.name} ${platformAccount.accountName}`
         : "",
+        isLinkedSortNum: selectedTradeIds.has(trade.id) ? 1 : 0
     };
+  });
+
+  data = data.sort((a,b) => {
+    return b.isLinkedSortNum - a.isLinkedSortNum;
   });
 
   if (debouncedSearchString) {
