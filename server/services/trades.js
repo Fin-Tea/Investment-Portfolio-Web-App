@@ -546,16 +546,18 @@ export async function createTradePlanTradeResultLink(
     includeDeleted: true,
   });
 
+  const now = new Date();
+
   if (tradePlanTradeResults.length) {
     // update the row, setting deletedAt to null
     await db("tradePlanTradeResults")
       .where({ tradePlanId, tradeHistoryId: tradeId })
       .update({
         deletedAt: null,
+        updatedAt: now,
       });
   } else {
     // insert new row
-    const now = new Date();
     await db("tradePlanTradeResults").insert([
       {
         accountId,
