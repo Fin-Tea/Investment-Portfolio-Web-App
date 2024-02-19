@@ -10,6 +10,7 @@ import DatePicker from "react-datepicker";
 import usePlatformAccounts from "../../../hooks/platformAccounts";
 import useInsights from "../../../hooks/insights";
 import { formatJournalDate } from "../../../date-utils";
+import Loader from "../../../components/loader";
 
 const MAX_FINSTRUMENTS = 3;
 const MAX_STRATEGIES = 3;
@@ -393,6 +394,7 @@ export default function PerformanceInsights() {
   const [timeframeId, setTimeframeId] = useState(6);
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const { fetchPlatformAccounts } = usePlatformAccounts();
   const { fetchPlatformInsights } = useInsights();
@@ -473,8 +475,7 @@ export default function PerformanceInsights() {
       console.log("insights resp", resp);
 
       setInsights(resp.insights);
-
-      // TODO: call loadInsights()
+      setLoading(false);
     } catch (e) {
       console.error(e); // show error/alert
     }
@@ -658,11 +659,11 @@ export default function PerformanceInsights() {
                       <label className="text-base mb-1">
                         Trading/Investing Account
                       </label>
-                      <Select
+                      {platformAccountItems ? (<Select
                         options={platformAccountItems}
                         value={selectedPlatformItem}
                         onChange={handleAccountChange}
-                      />
+                      />) : "Loading accounts..."}
                     </div>
                     <div className="mt-4">
                       <label className="text-base mb-1">Timeframe</label>
@@ -777,7 +778,7 @@ export default function PerformanceInsights() {
                   </div>
                 </div>
                 <hr className="w-full border-t border-gray-300 mx-auto" />
-                <div className="mx-auto mt-4 w-full">
+                {!loading ? (<div className="mx-auto mt-4 w-full">
                   <div className="flex h-72">
                     <div className="basis-full border-r">
                       <LineChart
@@ -969,7 +970,7 @@ export default function PerformanceInsights() {
                       />
                     </div>
                   </div>
-                </div>
+                </div>) : <Loader /> }
               </div>
             </div>
           </div>

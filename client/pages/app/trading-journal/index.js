@@ -16,6 +16,7 @@ import useJournal from "../../../hooks/journal";
 import usePlatformAccounts from "../../../hooks/platformAccounts";
 import useTrades from "../../../hooks/trades";
 import { formatJournalDate } from "../../../date-utils";
+import Loader from "../../../components/loader";
 
 
 const formMap = {
@@ -71,6 +72,7 @@ export default function TradingJournal() {
   const [isSideViewExpanded, setSideViewExpanded] = useState(true);
   const [searchString, setSearchString] = useState("");
   const [debouncedSearchString, setDebouncedSearchString] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const {
     journalTags,
@@ -256,6 +258,7 @@ export default function TradingJournal() {
       const resp = await fetchJournalEntries();
       console.log("journalEntries resp", resp);
       setJournalEntries(resp.journalEntries);
+      setLoading(false);
     } catch (e) {
       console.error(e); // show error/alert
     }
@@ -267,6 +270,7 @@ export default function TradingJournal() {
       const platformAccountsResp = await fetchPlatformAccounts();
       const tradeHistoryResp = await fetchTradeHistory({ platformAccountsOnly: true, includeTradePlans: true });
       setJournalItems({ ...journalItemsResp.journalItems, ...platformAccountsResp, ...tradeHistoryResp });
+      setLoading(false);
     } catch (e) {
       console.error(e); // show error/alert
     }
@@ -353,6 +357,7 @@ export default function TradingJournal() {
               ))}
             </div>
             <div className="mt-4 mb-8 overflow-auto px-2">
+              {loading && (<Loader />)}
               {!journalEntries.length && !searchString && (
                 <div>
                   <p>No journal entries yet...</p>{" "}

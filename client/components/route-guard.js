@@ -17,5 +17,5 @@ export default function RouteGuard({ children }) {
     }
   }, [router.pathname]);
 
-  return <div>{ authorized ? children : <Loader color="rgb(107,33,168)" />}</div>;
+  return <div>{ authorized ? children : <Loader />}</div>;
 }

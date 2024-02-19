@@ -8,6 +8,7 @@ import usePlatformAccounts from "../../../hooks/platformAccounts";
 import useTrades from "../../../hooks/trades";
 import useJournal from "../../../hooks/journal";
 import { formatJournalDate } from "../../../date-utils";
+import Loader from "../../../components/loader";
 
 const testData = [
   {
@@ -286,6 +287,7 @@ export default function Trades() {
   const [importLogs, setImportLogs] = useState([]);
   const [searchString, setSearchString] = useState("");
   const [debouncedSearchString, setDebouncedSearchString] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const { fetchPlatformAccounts } = usePlatformAccounts();
   const {
@@ -401,6 +403,7 @@ export default function Trades() {
       const resp = await fetchTradeHistory({ platformAccountsOnly: true, includeTradePlans: true });
       console.log("tradeHistory resp", resp);
       setTrades(resp.tradeHistory);
+      setLoading(false);
     } catch (e) {
       console.error(e); // show error/alert
     }
@@ -597,6 +600,7 @@ export default function Trades() {
                     />
                   </div>
                 ): null}
+                {loading && (<Loader />)}
                 {trades.length && data.length ? (
                   <div className="mx-auto mt-4 max-w-[90%]">
                     <BasicTable
