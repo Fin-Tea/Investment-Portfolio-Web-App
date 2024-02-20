@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Layout from "../../../components/app/layout";
@@ -67,12 +68,14 @@ export default function TradingJournal() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentFormName, setCurrentFormName] = useState("");
   const [journalEntries, setJournalEntries] = useState([]);
-  const [journalItems, setJournalItems] = useState([]);
+  const [journalItems, setJournalItems] = useState(null);
   const [currentJournalEntry, setCurrentJournalEntry] = useState(null);
   const [isSideViewExpanded, setSideViewExpanded] = useState(true);
   const [searchString, setSearchString] = useState("");
   const [debouncedSearchString, setDebouncedSearchString] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
 
   const {
     journalTags,
@@ -251,6 +254,7 @@ export default function TradingJournal() {
 
     setCurrentJournalEntry(journalEntry);
     setCurrentFormName(tag);
+    router.push(router.pathname, `${router.pathname}?id=${journalEntryId}`, { shallow: true });
   }
 
   async function loadJournalEntries() {
@@ -281,6 +285,21 @@ export default function TradingJournal() {
     loadJournalEntries();
     loadJournalItems();
   }, []);
+
+  useEffect(() => {
+    const { id } = router.query;
+    if (journalEntries?.length && journalItems && !currentJournalEntry && id) {
+        const journalEntry = journalEntries.find(({id: journalId}) => journalId === parseInt(id));
+        const tag = journalTags.find(
+          ({ value }) => value === journalEntry.journalTagId
+        ).label;
+
+        if (journalEntry) {
+          setCurrentJournalEntry(journalEntry);
+          setCurrentFormName(tag);
+        }
+    }
+  }, [journalEntries, journalItems]);
 
   useEffect(() => {
     const delayInputTimeoutId = setTimeout(() => {
@@ -443,7 +462,6 @@ export default function TradingJournal() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={({ label }) => {
-            console.log(label);
             if (label) {
               setCurrentFormName(label);
               setIsModalOpen(false);
