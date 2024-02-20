@@ -401,7 +401,7 @@ export default function TradingJournal() {
               <div className="pt-2 text-center relative">
                 {currentFormName && (
                   <FontAwesomeIcon
-                    className="cursor-pointer absolute ml-4"
+                    className="cursor-pointer absolute left-4 h-6"
                     onClick={() => {
                       setCurrentFormName("");
                       setCurrentJournalEntry(null);
