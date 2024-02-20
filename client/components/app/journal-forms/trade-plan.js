@@ -12,6 +12,8 @@ import LinkTradesModal from "../link-trades-modal";
 import MiniTable from "../mini-table";
 import { formatJournalDate } from "../../../date-utils";
 
+const QUALITY_TOLERANCE = 0.2;
+
 const symbolFixtures = [{ label: "ES" }, { label: "NQ" }];
 
 const tradeDirections = [
@@ -261,35 +263,77 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
     handleSubmit(onSubmit)();
   }
 
-  let rewardRisk = null;
-  let rewardRiskColor = "text-black";
+  let plannedAverageExit = 0;
+  let plannedRewardRisk = null;
+  let plannedRewardRiskColor = "text-black";
+  let actualPnL = 0;
+  let actualRewardRisk = null;
+  let actualRewardRiskColor = "text-black";
+  let averageClosePrice = 0;
+  let isExitEarly = false;
+  let isExitEarlyColor = "text-black";
+  let isStopLossLate = false;
+  let isStopLossLateColor = "text-black";
 
   if (!isAdvancedExit) {
     if (entry && exit && stopLoss) {
-      rewardRisk = Math.abs(exit - entry) / Math.abs(entry - stopLoss);
+      plannedRewardRisk = Math.abs(exit - entry) / Math.abs(entry - stopLoss);
     }
   } else {
     if (priceTarget1 && percentPosSize1 && priceTarget2 && percentPosSize2) {
-      let averageExit =
-        (Math.abs(priceTarget1 - entry) * percentPosSize1) / 100 +
-        (Math.abs(priceTarget2 - entry) * percentPosSize2) / 100;
+       plannedAverageExit =
+        (priceTarget1 * percentPosSize1) / 100 +
+        (priceTarget2 * percentPosSize2) / 100;
 
       if (priceTarget3 && percentPosSize3) {
-        averageExit += (Math.abs(priceTarget3 - entry) * percentPosSize3) / 100;
+        plannedAverageExit += (priceTarget3 * percentPosSize3) / 100;
       }
 
-      console.log("averageExit", averageExit);
-
-      rewardRisk = averageExit / Math.abs(entry - stopLoss);
+      plannedRewardRisk = Math.abs(plannedAverageExit - entry) / Math.abs(entry - stopLoss);
     }
   }
 
-  if (rewardRisk) {
-    rewardRisk = (Math.round(rewardRisk * 100) / 100).toFixed(2);
-    rewardRiskColor = "text-orange-500";
+  if (data?.tradePlan.tradeResults) {
+    actualPnL = data.tradePlan.tradeResults.reduce((acc, result) => { return acc + result.pnl; }, 0);
+    if (entry && stopLoss) {
+      averageClosePrice = data.tradePlan.tradeResults.reduce((acc, result) => { return acc + result.closePrice; }, 0) / data.tradePlan.tradeResults.length;
+      if (actualPnL >= 0) {
+      actualRewardRisk = actualPnL / Math.abs(entry - stopLoss);
+      actualRewardRiskColor = "text-orange-500";
+      if (actualRewardRisk >= 2) {
+        actualRewardRiskColor = "text-green-600";
+      }
 
-    if (rewardRisk >= 2) {
-      rewardRiskColor = "text-green-600";
+      isExitEarly = tradeDirectionType.label === "Long" ? averageClosePrice < (1 - QUALITY_TOLERANCE) * (plannedAverageExit || exit) :  averageClosePrice > (1 - QUALITY_TOLERANCE) * (plannedAverageExit || exit); 
+      isExitEarlyColor = "text-green-600";
+      if (isExitEarly) {
+        isExitEarlyColor = "text-orange-500";
+      }
+    } else {
+      isStopLossLate = tradeDirectionType.label === "Long" ? averageClosePrice < (1 - QUALITY_TOLERANCE) * stopLoss : averageClosePrice > (1 - QUALITY_TOLERANCE) * stopLoss;
+      isStopLossLateColor = "text-green-600";
+      if (isStopLossLate) {
+        isStopLossLateColor = "text-orange-500";
+      }
+    }
+    }
+  }
+
+  if (plannedRewardRisk) {
+    plannedRewardRisk = (Math.round(plannedRewardRisk * 100) / 100).toFixed(2);
+    plannedRewardRiskColor = "text-orange-500";
+
+    if (plannedRewardRisk >= 2) {
+      plannedRewardRiskColor = "text-green-600";
+    }
+  }
+
+  if (actualRewardRisk) {
+    actualRewardRisk = (Math.round(actualRewardRisk * 100) / 100).toFixed(2);
+    actualRewardRiskColor = "text-orange-500";
+
+    if (actualRewardRisk >= 2) {
+      actualRewardRiskColor = "text-green-600";
     }
   }
 
@@ -322,7 +366,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   const tradePlanInfo = data ? {...data.tradePlan, createdAt: formatJournalDate(data.createdAt)} : null;
 
   return (<div>
-    <BaseForm header="Trade Plan" edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
+    <BaseForm header="Trade Plan" date={data.updatedAt} edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
       <div>
         <label className="text-sm ml">Symbol*</label>
         <Autocomplete
@@ -632,10 +676,10 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
       </div>
 
       <div className="mt-4 flex items-center">
-        <span className="font-bold">Reward Risk Ratio:&nbsp;</span>
+        <span className="font-bold">Planned Reward Risk Ratio:&nbsp;</span>
 
-        <span className={`${rewardRiskColor}`}>
-          {rewardRisk || "Not enough info"}
+        <span className={`${plannedRewardRiskColor}`}>
+          {plannedRewardRisk || "Not enough info"}
         </span>
         <Tooltip text="The expected reward (profit) divided by the planned risk amount based on stop loss. A Reward Risk ratio of 2+ is standard" />
       </div>
@@ -694,6 +738,17 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
         <Tooltip text="In edit mode, you can link your trade plan to the actual trade that happened so our tools can help you improve your trading & investing decisions" />
       </div>
       {tradeResults.length ? (<div className="mt-4"><MiniTable title="Trade Results" columns={tradeResultsColumns} data={tradeResults} /></div>) : null}
+
+      {tradeResults.length ? (<div className="mt-4">
+        <p>Trade Analysis</p>
+        {/* TODO: Add grades and points after MVP launch (not in scope for MVP) */}
+        {/* <p>Overall Grade (A|B|C|D|F) (Reward trying & failing & growing over not trying or beginner's luck)</p> */}
+        {/* <p>Points Earned (leaderboard)(Reward trying & failing & growing over not trying or beginner's luck)</p> */}
+        <p className="text-sm">{`Profitable? ${ actualPnL >= 0 ? "Yes" : "No"}`}</p>
+        <p className="text-sm">Actual Reward Risk Ratio:<span className={`${actualRewardRiskColor}`}>{` ${actualRewardRisk || "Not enough info"}`}</span></p>
+        <p className="text-sm">Exited Early? <span className={`${isExitEarlyColor}`}>{` ${ actualPnL >= 0 ? isExitEarly ? "Yes" : "No" : "N/A"}`}</span></p>
+        <p className="text-sm">Stopped Out Late? <span className={`${isStopLossLateColor}`}>{` ${ actualPnL < 0 ? isStopLossLate ? "Yes" : "No" : "N/A"}`}</span></p>
+      </div>) : null}
     </BaseForm>{tradePlanInfo && (<LinkTradesModal isOpen={showLinkTradesModal} onClose={() => setShowLinkTradesModal(false)} tradePlanInfo={tradePlanInfo} trades={tradeHistory} tradePlanItems={items} onSubmit={handleTradeLinkUpdates} />)}</div>
   );
 }
