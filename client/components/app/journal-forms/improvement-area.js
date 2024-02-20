@@ -48,6 +48,7 @@ export default function ImprovementArea({ data, onSubmit, onDelete }) {
   return (
     <BaseForm
       header="Improvement Area"
+      date={data.updatedAt}
       edit={!!data}
       onSave={handleSubmit(onSubmit)}
       onDelete={onDelete}

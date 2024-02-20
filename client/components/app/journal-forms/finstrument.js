@@ -47,6 +47,7 @@ export default function Finstrument({ data, items, onSubmit, onDelete }) {
   return (
     <BaseForm
       header="Finstrument"
+      date={data.updatedAt}
       edit={!!data}
       onSave={handleSubmit(onSubmit)}
       onDelete={onDelete}

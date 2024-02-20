@@ -43,6 +43,7 @@ export default function Milestone({ data, onSubmit, onDelete }) {
     <BaseForm
       header="Milestone"
       edit={!!data}
+      date={data.updatedAt}
       onSave={handleSubmit(onSubmit)}
       onDelete={onDelete}
     >
