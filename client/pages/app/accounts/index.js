@@ -5,6 +5,7 @@ import usePlatformAccounts from "../../../hooks/platformAccounts";
 import AccountInfo from "../../../components/app/account-info";
 import PlatformAccountModal from "../../../components/app/platform-account-modal";
 import DeleteConfirmationModal from "../../../components/app/delete-confirmation-modal";
+import { useRouter } from "next/router";
 
 
 export default function Accounts() {
@@ -13,6 +14,8 @@ export default function Accounts() {
   const [accountId, setAccountId] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const router = useRouter();
 
   const {
     fetchPlatforms,
@@ -81,6 +84,13 @@ export default function Accounts() {
     loadPlatformAccounts();
     loadPlatforms();
   }, []);
+
+  useEffect(() => {
+    const { create } = router.query;
+    if (platforms?.length && create === "true") {
+      setIsCreateModalOpen(true);
+    }
+  }, [platforms]);
 
   return (
     <div>

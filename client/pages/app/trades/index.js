@@ -9,6 +9,7 @@ import useTrades from "../../../hooks/trades";
 import useJournal from "../../../hooks/journal";
 import { formatJournalDate } from "../../../date-utils";
 import Loader from "../../../components/loader";
+import TradingAccountRequiredModal from "../../../components/app/trading-account-required-modal";
 
 const testData = [
   {
@@ -278,6 +279,7 @@ const testData = [
 ];
 
 export default function Trades() {
+  const [isAcctRequiredModalOpen, setAcctRequiredOpen] = useState(false);
   const [isImportModalOpen, setImportModalOpen] = useState(false);
   const [tradePlans, setTradePlans] = useState([]);
   const [journalItems, setJournalItems] = useState({});
@@ -392,6 +394,9 @@ export default function Trades() {
     try {
       const resp = await fetchPlatformAccounts();
       console.log("platformAccounts resp", resp);
+      if (!resp.platformAccounts?.length) {
+        setAcctRequiredOpen(true);
+      }
       setPlatformAccounts(resp.platformAccounts);
     } catch (e) {
       console.error(e); // show error/alert
@@ -642,6 +647,7 @@ export default function Trades() {
         onClose={() => setTradeInfo(null)}
         onSubmit={handleTradePlanModalSubmit}
       />
+      <TradingAccountRequiredModal body="To import and view trades/investments, create an account first" isOpen={isAcctRequiredModalOpen} />
     </div>
   );
 }

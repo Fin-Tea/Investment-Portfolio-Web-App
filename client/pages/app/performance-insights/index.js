@@ -11,6 +11,7 @@ import usePlatformAccounts from "../../../hooks/platformAccounts";
 import useInsights from "../../../hooks/insights";
 import { formatJournalDate } from "../../../date-utils";
 import Loader from "../../../components/loader";
+import TradingAccountRequiredModal from "../../../components/app/trading-account-required-modal";
 
 const MAX_FINSTRUMENTS = 3;
 const MAX_STRATEGIES = 3;
@@ -387,6 +388,7 @@ function calcImprovementAreaStatus(startDate, endDate) {
 }
 
 export default function PerformanceInsights() {
+  const [isAcctRequiredModalOpen, setAcctRequiredOpen] = useState(false);
   const [platformAccounts, setPlatformAccounts] = useState([]);
   const [platformAccountItems, setPlatformAccountItems] = useState([]);
   const [selectedPlatformItem, setSelectedPlatformItem] = useState(null);
@@ -452,6 +454,9 @@ export default function PerformanceInsights() {
       const resp = await fetchPlatformAccounts();
       console.log("platformAccounts resp", resp);
       setPlatformAccounts(resp.platformAccounts);
+      if (!resp.platformAccounts?.length) {
+        setAcctRequiredOpen(true);
+      }
       const items = resp.platformAccounts.map(
         ({ accountName, id, platform: { name } }) => ({
           label: `${name} ${accountName}`,
@@ -510,7 +515,6 @@ export default function PerformanceInsights() {
     }
   }, [selectedPlatformItem, insights]);
 
-  console.log("selectedPlatformItem", selectedPlatformItem);
   console.log("insights", insights);
 
   const netTradePnL = insights?.dailyPnL?.map(({ date, pnl }) => ({
@@ -976,6 +980,7 @@ export default function PerformanceInsights() {
           </div>
         </div>
       </Layout>
+      <TradingAccountRequiredModal body="To see performance insights, create an account and import trades/investments first" isOpen={isAcctRequiredModalOpen}/>
     </div>
   );
 }
