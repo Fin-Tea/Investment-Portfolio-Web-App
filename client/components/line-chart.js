@@ -10,7 +10,6 @@ import {
 import Header from "../components/header";
 import Legend from "./legend";
 import Tooltip from "./app/tooltip";
-import styles from "./line-chart.module.css";
 import PropTypes from "prop-types";
 
 const testData2 = [
@@ -34,6 +33,7 @@ export default function LineChart({
   showDataset2Points,
   xAxisOffset,
   legendItems,
+  legendPosition,
   height,
   width,
   tooltip,
@@ -44,7 +44,7 @@ export default function LineChart({
       <Header style={{ marginBottom: 0 }}>{title}</Header>
       {tooltip && <Tooltip text={tooltip} />}
       </div>
-      {legendItems && <Legend className="mt-2 mx-auto" items={legendItems} />}
+      {legendItems && legendPosition === "Top" && (<Legend className="mt-2 mx-auto" items={legendItems} />)}
       {data?.length || dataset2?.length ? (
         <VictoryChart
           height={height}
@@ -170,6 +170,7 @@ export default function LineChart({
           <p>No Info</p>
         </div>
       )}
+      {legendItems && legendPosition === "Bottom" && (<Legend className="mt-2 mx-auto" items={legendItems} />)}
     </div>
   );
 }
@@ -184,6 +185,7 @@ LineChart.propTypes = {
   showDataPoints: PropTypes.bool,
   showDataset2Area: PropTypes.bool,
   xAxisOffset: PropTypes.number,
+  legendPosition: PropTypes.string,
 };
 
 LineChart.defaultProps = {
@@ -196,4 +198,5 @@ LineChart.defaultProps = {
   showDataPoints: true,
   showDataset2Area: false,
   xAxisOffset: PropTypes.number,
+  legendPosition: "Top"
 };

@@ -11,7 +11,7 @@ export default function PieChart({
   data,
   tooltip
 }) {
-  const style = {};
+  const style = {labels: { fontSize: 25 }};
 
   if (data.some((datum) => !!datum.color)) {
     style.data = { fill: ({ datum }) => datum.color || null };
@@ -31,6 +31,8 @@ export default function PieChart({
           name="pie"
           style={style}
           data={data}
+          labelPlacement={"perpendicular"}
+          
         />
       ) : (
         <div className="h-full w-full flex justify-center mt-4">

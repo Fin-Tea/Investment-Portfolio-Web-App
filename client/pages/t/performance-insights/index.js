@@ -557,6 +557,7 @@ export default function PerformanceInsights() {
         y: trades.length,
       }))
     : [];
+
   const tradeQualityLow = insights?.lowQualityTrades
     ? insights.lowQualityTrades.map(({ date, trades }) => ({
         x: date,
@@ -771,9 +772,6 @@ export default function PerformanceInsights() {
                           <li>
                             <div className="flex">
                               <span>{action}</span>
-                              {/* <button className="ml-2 rounded-full bg-purple-800 text-white px-2 h-5">
-                                +
-                              </button> */}
                             </div>
                           </li>
                         ))}
@@ -803,6 +801,9 @@ export default function PerformanceInsights() {
                         ]}
                         tooltip={"Daily PnL shows how much you've profited (or lost) each day. Cumulative PnL shows your overall profit (or loss) from the beginning of your trading history up to that point in time"}
                       />
+                      {cumulativePnL?.length ? <div className="mt-2 text-center">
+                        <span className="text-sm">{`Net Current PnL $${cumulativePnL[cumulativePnL.length - 1].y}`}</span>
+                      </div> : null}
                     </div>
                     <div className="basis-full border-l">
                       <div className="flex">
@@ -857,6 +858,7 @@ export default function PerformanceInsights() {
                             title="High Quality Trades"
                             data={tradeQualityHigh}
                             tooltip="Trades/investments with plans where you followed your plan"
+                            xAxisOffset={30}
                           />
                         </div>
                         <div className="basis-full">
@@ -864,6 +866,7 @@ export default function PerformanceInsights() {
                             title="Low Quality Trades"
                             data={tradeQualityLow}
                             tooltip="Trades/investments without trade plans or trades where you didn't follow your plan"
+                            xAxisOffset={30}
                           />
                         </div>
                       </div>
@@ -873,6 +876,7 @@ export default function PerformanceInsights() {
                             title="Revenge Trades"
                             data={tradeRevenge}
                             tooltip="Trades where you bought/sold again right after a loss with no plan. It's wise to go on a 30 minute break after a loss to calm down and center yourself so you can trade/invest well again"
+                            xAxisOffset={30}
                           />
                         </div>
                         <div className="basis-full">
@@ -888,8 +892,10 @@ export default function PerformanceInsights() {
                                 size: 12
                               },
                             ]}
+                            legendPosition="Bottom"
                             showDataset2Points
                             tooltip="The number of trades/investments per day where you profited or lost"
+                            xAxisOffset={30}
                           />
                         </div>
                       </div>
