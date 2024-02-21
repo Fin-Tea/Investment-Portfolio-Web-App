@@ -240,7 +240,9 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
 
   const stopLoss = watch("stopLoss");
   const isAdvancedExit = watch("isAdvancedExit");
-  //   const [isAdvancedExit, setIsAdvancedExit] = useState(false);
+
+
+
   const [showConfirmations, setShowConfirmations] = useState(
     !!data?.tradePlan.confirmations
   );
@@ -338,6 +340,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   }
 
   const hasConfirmation = confirmation1 || confirmation2 || confirmation3;
+  const hasConfirmationColor = hasConfirmation ? "text-green-600" : "text-orange-500";
   const hasNewsCatalyst = catalystLabel || catalystURL || catalystDescription;
 
   useEffect(() => {
@@ -746,6 +749,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
         {/* <p>Points Earned (leaderboard)(Reward trying & failing & growing over not trying or beginner's luck)</p> */}
         <p className="text-sm">{`Profitable? ${ actualPnL >= 0 ? "Yes" : "No"}`}</p>
         <p className="text-sm">Actual Reward Risk Ratio:<span className={`${actualRewardRiskColor}`}>{` ${actualRewardRisk || "Not enough info"}`}</span></p>
+        <p className="text-sm">Had Confirmation? <span className={`${hasConfirmationColor}`}>{` ${ hasConfirmation ? "Yes" : "No" }`}</span></p>
         <p className="text-sm">Exited Early? <span className={`${isExitEarlyColor}`}>{` ${ actualPnL >= 0 ? isExitEarly ? "Yes" : "No" : "N/A"}`}</span></p>
         <p className="text-sm">Stopped Out Late? <span className={`${isStopLossLateColor}`}>{` ${ actualPnL < 0 ? isStopLossLate ? "Yes" : "No" : "N/A"}`}</span></p>
       </div>) : null}
