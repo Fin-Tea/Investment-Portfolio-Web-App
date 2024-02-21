@@ -4,10 +4,9 @@ import Popup from "reactjs-popup";
 import useAuth from "../../hooks/auth";
 import classNames from "classnames";
 
-import styles from "../account-menu/account-menu.module.css";
-
 const ROUTES = {
   ACCOUNTS: "/app/accounts",
+  CHANGE_PASSWORD: "/app/change-password"
 };
 
 export default function AccountMenu() {
@@ -20,7 +19,7 @@ export default function AccountMenu() {
 
   return (
     <Popup
-      contentStyle={{ width: 130 }}
+      contentStyle={{ width: 120, border: "1px solid rgb(209, 213, 219)", borderRadius: 12, backgroundColor: "#ffffff" }}
       open={isMenuOpen}
       trigger={
         <div
@@ -43,11 +42,18 @@ export default function AccountMenu() {
         </div>
       }
     >
-      <ul className="list-none bg-white rounded-md p-1">
-        <li>
+      <div className="pl-2">
+      <ul className="list-none p-1">
+        <li className="border-b">
           {" "}
           <Link href={ROUTES.ACCOUNTS}>
             <a className="no-underline outline-none">Accounts</a>
+          </Link>
+        </li>
+        <li className="border-b">
+          {" "}
+          <Link href={ROUTES.CHANGE_PASSWORD}>
+            <a className="no-underline outline-none">Change Password</a>
           </Link>
         </li>
         <li>
@@ -56,6 +62,7 @@ export default function AccountMenu() {
           </a>
         </li>
       </ul>
+      </div>
     </Popup>
   );
 }
