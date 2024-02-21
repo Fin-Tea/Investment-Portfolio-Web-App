@@ -34,3 +34,8 @@ img {
 /* .react-datepicker-wrapper input {
   max-width: 100px;
 } */
+
+.multiline .Select-value-label, .multiline .Select-option {
+  white-space: pre-wrap;
+}
+
