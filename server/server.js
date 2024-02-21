@@ -582,8 +582,6 @@ app.post("/api/account/magicLogin", async (req, res) => {
   try {
     const { token } = req.body;
 
-    console.log("token", token);
-
     if (!token) {
       throw new Error("Missing token");
     }
@@ -593,9 +591,6 @@ app.post("/api/account/magicLogin", async (req, res) => {
     if (decodedToken.error) {
       throw new Error (decodedToken.error);
     }
-
-    console.log("decodedToken", decodedToken);
-
 
     // sign jwt
     const accessToken = accountService.generateAccessToken({
@@ -666,6 +661,42 @@ app.post("/api/account/logout", async (req, res) => {
   res.clearCookie("jwt");
 
   res.json({ loggedOut: true });
+});
+
+app.post("/api/account/:accountId/changePassword", authMiddleware, async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      throw new Error("Missing current password, new password, or password confirmation");
+    }
+
+    const account = await accountService.getAccount({ id: accountId });
+
+    if (!account) {
+      throw new Error("Account not found");
+    }
+
+    if (newPassword.length < 8) {
+      throw new Error("New password must be at least 8 chars");
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      throw new Error("New password and password confirmation don't match");
+    }
+
+    // authenticate current password
+    await accountService.authenticate(account.email, currentPassword);
+
+    // update password
+    await accountService.updatePassword(account.email, newPassword);
+
+    res.json({ passwordChanged: true });
+  } catch (e) {
+    // send error
+    res.json({ error: e.message });
+  }
 });
 
 app.post(
