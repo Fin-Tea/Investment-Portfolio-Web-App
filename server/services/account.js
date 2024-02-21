@@ -117,23 +117,23 @@ export async function authenticate(email, password) {
   };
 }
 
-export function generateAccessToken(account) {
+export function generateAccessToken(account, expiresIn = SECONDS_EXPIRES_IN) {
   return jwt.sign(account, config.auth.jwtTokenSecret, {
-    expiresIn: `${SECONDS_EXPIRES_IN}s`,
+    expiresIn: `${expiresIn}s`,
   });
 }
 
 export function authenticateToken(token) {
   if (!token) {
-    return null;
+    throw new Error("Missing token");
   }
 
   try {
     const decodedToken = jwt.verify(token, config.auth.jwtTokenSecret);
     return decodedToken;
   } catch (e) {
-    // TODO: Add refresh_token support. 'if e.name === 'TokenExpiredError' then try refresh'
-    return null;
+    const message = e.name === "TokenExpiredError" ? "Token expired" : e.message;
+    return { error: message };
   }
 }
 
