@@ -3,13 +3,15 @@ import { useRouter } from "next/router";
 import useAuth from "../hooks/auth";
 import Loader from "./loader";
 
+const AUTHORIZED_ROUTES = ["/login", "/magicLogin"];
+
 export default function RouteGuard({ children }) {
   const router = useRouter();
-  const [authorized, setAuthorized] = useState(router.pathname === "/login");
+  const [authorized, setAuthorized] = useState(AUTHORIZED_ROUTES.includes(router.pathname));
   const { getCachedUser } = useAuth();
 
   useEffect(() => {
-    const isAuthorized = !!getCachedUser() || router.pathname === "/login";
+    const isAuthorized = !!getCachedUser() || AUTHORIZED_ROUTES.includes(router.pathname);
     if (!isAuthorized) {
       router.push("/login");
     } else {
