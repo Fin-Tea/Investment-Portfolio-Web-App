@@ -5,6 +5,7 @@ const https = require("https");
 const fs = require("fs");
 const authMiddleware = require("./middleware").default;
 const accountService = require("./services/account");
+const mailService = require("./services/mail");
 const journalService = require("./services/journal");
 const tdAmeritrade = require("./integrations/tdameritrade");
 const tradingService = require("./services/trades");
@@ -59,7 +60,7 @@ app.use(function (req, res, next) {
 const server = https.createServer({ key, cert }, app);
 
 app.options("/*", (req, res) => {
-  res.send(200);
+  res.sendStatus(200);
 });
 
 app.get("/api/account/:accountId/tda", (req, res) => {
@@ -548,7 +549,6 @@ app.get(
   }
 );
 
-// make the posts (data updates) accept JSON
 app.post("/api/account/login", async (req, res) => {
   // authenticate
   try {
@@ -571,6 +571,90 @@ app.post("/api/account/login", async (req, res) => {
     });
 
     res.json({ ...account, accessToken });
+  } catch (e) {
+    // send login error
+    res.json({ error: e.message });
+  }
+});
+
+app.post("/api/account/magicLogin", async (req, res) => {
+  // authenticate
+  try {
+    const { token } = req.body;
+
+    console.log("token", token);
+
+    if (!token) {
+      throw new Error("Missing token");
+    }
+
+    const decodedToken = accountService.authenticateToken(token);
+
+    if (decodedToken.error) {
+      throw new Error (decodedToken.error);
+    }
+
+    console.log("decodedToken", decodedToken);
+
+
+    // sign jwt
+    const accessToken = accountService.generateAccessToken({
+      id: decodedToken.id,
+    });
+
+    const { passwordHash, ...accountInfo } = await accountService.getAccount({
+      id: decodedToken.id,
+    });
+
+    // set jwt on cookie
+    res.cookie("jwt", accessToken, {
+      httpOnly: true, // http only, prevents JavaScript cookie access
+      secure: true, // cookie must be sent over https / ssl
+      sameSite: "none",
+    });
+
+    res.json({ ...accountInfo, accessToken });
+  } catch (e) {
+    // send login error
+    res.json({ error: e.message });
+  }
+});
+
+app.post("/api/account/magicLink", async (req, res) => {
+  // authenticate
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new Error("Missing email");
+    }
+
+    const account = await accountService.getAccount({ email });
+
+    if (!account) {
+      throw new Error("Account not found");
+    }
+
+    const tempAccessToken = accountService.generateAccessToken(
+      { id: account.id },
+      300
+    );
+
+    const magicLinkUrl = `${config.clientBaseUrl}/login?token=${tempAccessToken}`
+
+    // send magic link email
+   const info = await mailService.sendMail({
+      from: mailService.SUPPORT_EMAIL,
+      to: account.email,
+      subject: "Magic Login Link",
+      template: "magic-link",
+      context: { name: account.firstName, magicLinkUrl },
+      text: "Easy login"
+    });
+
+    console.log("info",JSON.stringify(info));
+
+    res.json({ emailSent: true });
   } catch (e) {
     // send login error
     res.json({ error: e.message });
