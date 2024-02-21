@@ -5,7 +5,7 @@
 
 .layoutHeader {
   height: 75px;
-  background-color: #30d97c;
+  background-color: rgb(107,33,168);
 }
 
 .content {
@@ -15,7 +15,7 @@
 }
 
 .title {
-  color: #464646;
+  color: #ffffff;
   text-align: center;
   padding-top: 10px;
 }

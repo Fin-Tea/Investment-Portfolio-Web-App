@@ -12,12 +12,12 @@ export default function Layout({ children }) {
         <link rel="icon" href="/favicon.ico" />
         <meta
           name="description"
-          content="Easy Trading Performance Tracking &amp; Insights"
+          content="Easy Trading Journaling &amp; Performance Insights"
         />
-        <meta name="og:title" content="Growth Track" />
+        <meta name="og:title" content="Fin Tea" />
       </Head>
       <header className={styles.layoutHeader}>
-        <h1 className={styles.title}>GrowthTrack</h1>
+        <h1 className={styles.title}>Fin Tea</h1>
         <AccountMenu />
       </header>
       <div className={styles.container}>
