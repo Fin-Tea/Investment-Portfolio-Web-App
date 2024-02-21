@@ -5,8 +5,8 @@ import useAuth from "../../hooks/auth";
 import classNames from "classnames";
 
 const ROUTES = {
-  ACCOUNTS: "/app/accounts",
-  CHANGE_PASSWORD: "/app/change-password"
+  ACCOUNTS: "/t/accounts",
+  CHANGE_PASSWORD: "/t/change-password"
 };
 
 export default function AccountMenu() {

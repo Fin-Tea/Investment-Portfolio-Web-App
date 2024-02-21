@@ -4,15 +4,13 @@ import AccountMenu from "./account-menu";
 import LayoutLink from "./layout-link";
 
 const ROUTES = {
-  JOURNAL: "/app/trading-journal",
-  TRADES: "/app/trades",
-  INSIGHTS: "/app/performance-insights",
+  JOURNAL: "/t/trading-journal",
+  TRADES: "/t/trades",
+  INSIGHTS: "/t/performance-insights",
 };
 
 export default function Layout({ children }) {
   const router = useRouter();
-
-  const route = router.pathname;
 
   return (
     <div>
