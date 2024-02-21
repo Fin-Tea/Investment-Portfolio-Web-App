@@ -110,6 +110,7 @@ export default function Milestone({ data, onSubmit, onDelete }) {
           />
           <Tooltip text="(Keep blank until completed)" />
         </div>
+        <div className="text-red-600 text-xs">{errors.reachedOn?.message}</div>
       </div>
 
       <div className="mt-4">
@@ -121,7 +122,7 @@ export default function Milestone({ data, onSubmit, onDelete }) {
           />
           <Tooltip text="Celebrate and keep track of achievements throughout your trading/investing journey!" />
         </div>
-        <div className="text-red-600 text-xs">{errors.reachedOn?.message}</div>
+        <div className="text-red-600 text-xs">{errors.milestoneText?.message}</div>
       </div>
     </BaseForm>
   );
