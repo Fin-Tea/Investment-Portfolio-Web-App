@@ -903,7 +903,7 @@ export default function PerformanceInsights() {
 
                     <div className="flex basis-full flex-col justify-between">
                       <div className="flex">
-                        <div className="basis-full border-r px-2">
+                        <div className="basis-full border-r p-2">
                           <PieChart
                             colorScale={"green"}
                             width={400}
@@ -912,7 +912,7 @@ export default function PerformanceInsights() {
                             tooltip="The financial instruments (stocks, crypto, etc.) where you earned the most profits during the time period"
                           />
                         </div>
-                        <div className="basis-full px-2">
+                        <div className="basis-full p-2">
                           <PieChart
                             colorScale={"cool"}
                             width={400}
@@ -923,7 +923,7 @@ export default function PerformanceInsights() {
                         </div>
                       </div>
                       <div className="flex">
-                        <div className="basis-full px-2">
+                        <div className="basis-full p-2">
                           <PieChart
                             colorScale={"red"}
                             width={400}
@@ -932,7 +932,7 @@ export default function PerformanceInsights() {
                             tooltip="The financial instruments (stocks, crypto, etc.) where you lost the most money during the time period"
                           />
                         </div>
-                        <div className="basis-full border-l px-2">
+                        <div className="basis-full border-l p-2">
                           <PieChart
                             colorScale={"warm"}
                             width={400}
