@@ -1,64 +1,95 @@
-    <html>
-      <head>
-        <meta
-          name="description"
-          content="Easy Trading Journaling &amp; Performance Insights"
-        />
-        <meta name="og:title" content="Fin Tea" />
+<html>
+  <head>
+    <meta
+      name="description"
+      content="Easy Trading Journaling &amp; Performance Insights"
+    />
+    <meta name="og:title" content="Fin Tea" />
 
-        <style>
-            body {
-              font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-            }
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+          Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+          "Segoe UI Symbol";
+      }
 
-            .bg-purple-800 {
-                background-color: rgb(107,33,168);
-            }
+      .bg-purple-800 {
+        background-color: rgb(107, 33, 168);
+      }
 
-            .flex {
-                display: flex;
-            }
+      .flex {
+        display: flex;
+      }
 
-            .justify-between {
-                justify-content: space-between;
-            }
+      .justify-between {
+        justify-content: space-between;
+      }
 
-            .items-center {
-                align-items: center;
-            }
+      .items-center {
+        align-items: center;
+      }
 
-            .text-white {
-                color: #ffffff;
-            }
+      .text-white {
+        color: #ffffff;
+      }
 
-            .text-center {
-                text-align: center;
-            }
+      .text-center {
+        text-align: center;
+      }
 
-            .font-bold {
-                font-weight: bold;
-            }
-        </style>
-      </head>
-      <body>
-      <header style="padding: 2px 5px;" class="h-12 bg-purple-800 flex justify-between items-center">
-        <h1 style="margin-left: 5px;" class="pt-2 ml-4 text-lg text-white">Fin Tea</h1>
-      </header>
-      <div style="padding: 2px 5px;">
-        <h2>Magic Login Link</h2>
-        <p>Hey {{name}},</p>
-        <a class="cursor: pointer;" href="{{magicLinkUrl}}"><button style="height: 40px; padding: 5px 15px;border: none; border-radius: 20px; font-size: 16px; cursor: pointer;" class="bg-purple-800 text-white">Click Here To Log In</button></a>  
-        <p>or copy/paste the following url into your browser.</p>
-        <a href="{{magicLinkUrl}}">{{magicLinkUrl}}</a>
-        <p>The link will expire in 5 minutes.</p>
-        <br />
-        <p>Happy Trading,</p>
-        <p>Fin Tea Support</p>
-      </div>
-      </body>
-      <footer style="padding: 2px 10px;" class="bg-purple-800 text-white p-2 px-3 pt-3">
-      <p class="text-sm font-bold">Plan your trades. Trade your plans. Evolve.</p>
-      <p class="text-sm">Disclaimer: The information provided on this platform/website/application is for informational purposes only and should not be considered as financial advice</p>
-        <p class="text-sm text-center">Copyright © 2024 Fin Tea Financial Services</p>
-      </footer>
-    </html>
+      .font-bold {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display:none;">Easy one-click login</div>
+    <header
+      style="padding: 2px 5px"
+      class="h-12 bg-purple-800 flex justify-between items-center"
+    >
+      <h1 style="margin-left: 5px" class="pt-2 ml-4 text-lg text-white">
+        Fin Tea
+      </h1>
+    </header>
+    <div style="padding: 2px 5px">
+      <h2>Magic Login Link</h2>
+      <p>Hey {{name}},</p>
+      <a class="cursor: pointer;" href="{{magicLinkUrl}}"
+        ><button
+          style="
+            height: 40px;
+            padding: 5px 15px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+          "
+          class="bg-purple-800 text-white"
+        >
+          Click Here To Log In
+        </button></a
+      >
+      <p>or copy/paste the following url into your browser.</p>
+      <a href="{{magicLinkUrl}}">{{magicLinkUrl}}</a>
+      <p>The link will expire in 5 minutes.</p>
+      <br />
+      <p>Happy Trading,</p>
+      <p>Fin Tea Support</p>
+    </div>
+  </body>
+  <footer
+    style="padding: 2px 10px"
+    class="bg-purple-800 text-white p-2 px-3 pt-3"
+  >
+    <p class="text-sm font-bold">Plan your trades. Trade your plans. Evolve.</p>
+    <p class="text-sm">
+      Disclaimer: The information provided on this platform/website/application
+      is for informational purposes only and should not be considered as
+      financial advice
+    </p>
+    <p class="text-sm text-center">
+      Copyright © 2024 Fin Tea Financial Services
+    </p>
+  </footer>
+</html>
