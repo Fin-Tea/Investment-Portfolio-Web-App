@@ -15,7 +15,7 @@ export default function Layout({ children }) {
   return (
     <div>
       <Head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico?v=2" />
         <meta
           name="description"
           content="Easy Trading Journaling &amp; Performance Insights"
@@ -23,7 +23,10 @@ export default function Layout({ children }) {
         <meta name="og:title" content="Fin.Tea" />
       </Head>
       <header className="h-12 bg-purple-800 flex justify-between items-center">
-        <h1 className="pt-2 ml-4 text-lg text-white">Fin Tea</h1>
+        <div className="flex items-center ml-4">
+        <img style={{filter: "invert(100%)"}} src="/images/tea.svg" width={32}  />
+        <h1 className="pt-2 ml-2 text-lg text-white">Fin Tea</h1>
+        </div>
         <LayoutLink href={ROUTES.JOURNAL}>
             Trading Journal
         </LayoutLink>
