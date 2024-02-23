@@ -15,6 +15,7 @@ export default function Layout({ children }) {
   return (
     <div>
       <Head>
+        <title>Fin Tea</title>
         <link rel="icon" href="/favicon.ico?v=2" />
         <meta
           name="description"
