@@ -19,7 +19,6 @@ import useTrades from "../../../hooks/trades";
 import { formatJournalDate } from "../../../date-utils";
 import Loader from "../../../components/loader";
 
-
 const formMap = {
   "Trade Plans": TradePlan,
   Milestones: Milestone,
@@ -94,12 +93,15 @@ export default function TradingJournal() {
     console.log("updateFilterIds", id, isActive);
     let newFilterIds = null;
     if (isActive) {
-        newFilterIds = [...activeFilterIds, id];
+      newFilterIds = [...activeFilterIds, id];
     } else {
-        const idx = activeFilterIds.findIndex(val => val === id);
-        newFilterIds = [...activeFilterIds.slice(0,idx), ...activeFilterIds.slice(idx + 1)];
+      const idx = activeFilterIds.findIndex((val) => val === id);
+      newFilterIds = [
+        ...activeFilterIds.slice(0, idx),
+        ...activeFilterIds.slice(idx + 1),
+      ];
     }
-    console.log("newFilterIds",newFilterIds);
+    console.log("newFilterIds", newFilterIds);
     setActiveFilterIds(newFilterIds);
   }
 
@@ -254,7 +256,9 @@ export default function TradingJournal() {
 
     setCurrentJournalEntry(journalEntry);
     setCurrentFormName(tag);
-    router.push(router.pathname, `${router.pathname}?id=${journalEntryId}`, { shallow: true });
+    router.push(router.pathname, `${router.pathname}?id=${journalEntryId}`, {
+      shallow: true,
+    });
   }
 
   async function loadJournalEntries() {
@@ -272,8 +276,15 @@ export default function TradingJournal() {
     try {
       const journalItemsResp = await fetchJournalItems();
       const platformAccountsResp = await fetchPlatformAccounts();
-      const tradeHistoryResp = await fetchTradeHistory({ platformAccountsOnly: true, includeTradePlans: true });
-      setJournalItems({ ...journalItemsResp.journalItems, ...platformAccountsResp, ...tradeHistoryResp });
+      const tradeHistoryResp = await fetchTradeHistory({
+        platformAccountsOnly: true,
+        includeTradePlans: true,
+      });
+      setJournalItems({
+        ...journalItemsResp.journalItems,
+        ...platformAccountsResp,
+        ...tradeHistoryResp,
+      });
       setLoading(false);
     } catch (e) {
       console.error(e); // show error/alert
@@ -289,15 +300,17 @@ export default function TradingJournal() {
   useEffect(() => {
     const { id } = router.query;
     if (journalEntries?.length && journalItems && !currentJournalEntry && id) {
-        const journalEntry = journalEntries.find(({id: journalId}) => journalId === parseInt(id));
-        const tag = journalTags.find(
-          ({ value }) => value === journalEntry.journalTagId
-        ).label;
+      const journalEntry = journalEntries.find(
+        ({ id: journalId }) => journalId === parseInt(id)
+      );
+      const tag = journalTags.find(
+        ({ value }) => value === journalEntry.journalTagId
+      ).label;
 
-        if (journalEntry) {
-          setCurrentJournalEntry(journalEntry);
-          setCurrentFormName(tag);
-        }
+      if (journalEntry) {
+        setCurrentJournalEntry(journalEntry);
+        setCurrentFormName(tag);
+      }
     }
   }, [journalEntries, journalItems]);
 
@@ -306,15 +319,12 @@ export default function TradingJournal() {
       setDebouncedSearchString(searchString);
     }, 500);
     return () => clearTimeout(delayInputTimeoutId);
-  }, [searchString, 500]);
+  }, [searchString]);
 
   const CurrentForm = currentFormName ? formMap[currentFormName] : null;
 
-  console.log("journalEntries", journalEntries);
-
   let journalEntrySummaries = journalEntries.map((entry) => {
     const { id, journalTagId, updatedAt } = entry;
-    console.log("journalTagId", journalTagId)
     const tag = journalTags.find(({ value }) => value === journalTagId).label;
     const summary = { id, journalTagId, tag, updatedAt };
 
@@ -340,18 +350,19 @@ export default function TradingJournal() {
     return summary;
   });
 
-  console.log("activeFilterIds", activeFilterIds);
-
   if (activeFilterIds.length) {
-    journalEntrySummaries = journalEntrySummaries.filter(({ journalTagId }) => activeFilterIds.includes(journalTagId));
+    journalEntrySummaries = journalEntrySummaries.filter(({ journalTagId }) =>
+      activeFilterIds.includes(journalTagId)
+    );
   }
 
   if (debouncedSearchString) {
-    console.log("debouncedSearchString", debouncedSearchString);
-    journalEntrySummaries = journalEntrySummaries.filter(({ symbol, entryText }) => entryText.toLowerCase().includes(debouncedSearchString.toLowerCase()) || (symbol && debouncedSearchString.includes(symbol)));
+    journalEntrySummaries = journalEntrySummaries.filter(
+      ({ symbol, entryText }) =>
+        entryText.toLowerCase().includes(debouncedSearchString.toLowerCase()) ||
+        (symbol && debouncedSearchString.includes(symbol))
+    );
   }
-
-  console.log("journalEntrySummaries", journalEntrySummaries);
 
   return (
     <Layout>
@@ -362,7 +373,11 @@ export default function TradingJournal() {
             header="Journal Entries"
             onToggle={handleSideViewToggle}
           >
-            <SearchBox className="w-full" placeholder="Search symbol or text"  onSearch={setSearchString} />
+            <SearchBox
+              className="w-full"
+              placeholder="Search symbol or text"
+              onSearch={setSearchString}
+            />
             <div className="flex mt-4 w-full flex-wrap">
               {journalTags.map(({ label, value }) => (
                 <Pill
@@ -376,7 +391,7 @@ export default function TradingJournal() {
               ))}
             </div>
             <div className="mt-4 mb-8 overflow-auto px-2">
-              {loading && (<Loader />)}
+              {loading && <Loader />}
               {!journalEntries.length && !searchString && (
                 <div>
                   <p>No journal entries yet...</p>{" "}
@@ -395,7 +410,7 @@ export default function TradingJournal() {
               )}
               {journalEntrySummaries.map(
                 ({ id, tag, symbol, updatedAt, entryText }) => (
-                  <div>
+                  <div key={id}>
                     <JournalEntry
                       id={id}
                       tag={tag}

@@ -515,7 +515,6 @@ export default function PerformanceInsights() {
     }
   }, [selectedPlatformItem, insights]);
 
-  console.log("insights", insights);
 
   const netTradePnL = insights?.dailyPnL?.map(({ date, pnl }) => ({
     x: date,
@@ -664,11 +663,15 @@ export default function PerformanceInsights() {
                       <label className="text-base mb-1">
                         Trading/Investing Account
                       </label>
-                      {platformAccountItems ? (<Select
-                        options={platformAccountItems}
-                        value={selectedPlatformItem}
-                        onChange={handleAccountChange}
-                      />) : "Loading accounts..."}
+                      {platformAccountItems ? (
+                        <Select
+                          options={platformAccountItems}
+                          value={selectedPlatformItem}
+                          onChange={handleAccountChange}
+                        />
+                      ) : (
+                        "Loading accounts..."
+                      )}
                     </div>
                     <div className="mt-4">
                       <label className="text-base mb-1">Timeframe</label>
@@ -768,8 +771,8 @@ export default function PerformanceInsights() {
                     <div className="border p-2 rounded-md w-full h-full">
                       <h2 className="text-lg">Ways You Can Improve</h2>
                       <ul className="list-disc">
-                        {autogenWaysToImprove.map(({ action }) => (
-                          <li>
+                        {autogenWaysToImprove.map(({ action }, i) => (
+                          <li key={i}>
                             <div className="flex">
                               <span>{action}</span>
                             </div>
@@ -780,213 +783,228 @@ export default function PerformanceInsights() {
                   </div>
                 </div>
                 <hr className="w-full border-t border-gray-300 mx-auto" />
-                {!loading ? (<div className="mx-auto mt-4 w-full">
-                  <div className="flex h-72">
-                    <div className="basis-full border-r">
-                      <LineChart
-                        title="Daily Trade/Investment PnL"
-                        data={netTradePnL}
-                        dataset2={cumulativePnL}
-                        dataset2Style={{ data: { stroke: "none" } }}
-                        showDataset2Area
-                        prefix="$"
-                        height={250}
-                        xAxisOffset={30}
-                        legendItems={[
-                          { name: "Daily PnL", color: "#30d97c" },
-                          {
-                            name: "Cumulative PnL",
-                            color: "rgba(48,217,124,0.1)",
-                          },
-                        ]}
-                        tooltip={"Daily PnL shows how much you've profited (or lost) each day. Cumulative PnL shows your overall profit (or loss) from the beginning of your trading history up to that point in time"}
-                      />
-                      {cumulativePnL?.length ? <div className="mt-2 text-center">
-                        <span className="text-sm">{`Net Current PnL $${cumulativePnL[cumulativePnL.length - 1].y}`}</span>
-                      </div> : null}
-                    </div>
-                    <div className="basis-full border-l">
-                      <div className="flex">
-                        <div className="basis-full">
-                          <PieChart
-                            width={450}
-                            title="Win/Loss Rate"
-                            data={winLossRates}
-                            tooltip="How often you've won/lost on the number of trades/investments you've made during the time period. 50% or higher is good"
-                          />
-                          <div className="text-center text-sm">
-                            <p>{`Win Rate ${
-                              winRate ? `${winRate}%` : "Unknown"
-                            }`}</p>
-                            <p>{`Loss Rate ${
-                              lossRate ? `${lossRate}%` : "Unknown"
-                            }`}</p>
+                {!loading ? (
+                  <div className="mx-auto mt-4 w-full">
+                    <div className="flex h-72">
+                      <div className="basis-full border-r">
+                        <LineChart
+                          title="Daily Trade/Investment PnL"
+                          data={netTradePnL}
+                          dataset2={cumulativePnL}
+                          dataset2Style={{ data: { stroke: "none" } }}
+                          showDataset2Area
+                          prefix="$"
+                          height={250}
+                          xAxisOffset={30}
+                          legendItems={[
+                            { name: "Daily PnL", color: "#30d97c" },
+                            {
+                              name: "Cumulative PnL",
+                              color: "rgba(48,217,124,0.1)",
+                            },
+                          ]}
+                          tooltip={
+                            "Daily PnL shows how much you've profited (or lost) each day. Cumulative PnL shows your overall profit (or loss) from the beginning of your trading history up to that point in time"
+                          }
+                        />
+                        {cumulativePnL?.length ? (
+                          <div className="mt-2 text-center">
+                            <span className="text-sm">{`Net Current PnL $${
+                              cumulativePnL[cumulativePnL.length - 1].y
+                            }`}</span>
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="basis-full border-l">
+                        <div className="flex">
+                          <div className="basis-full">
+                            <PieChart
+                              width={450}
+                              title="Win/Loss Rate"
+                              data={winLossRates}
+                              tooltip="How often you've won/lost on the number of trades/investments you've made during the time period. 50% or higher is good"
+                            />
+                            <div className="text-center text-sm">
+                              <p>{`Win Rate ${
+                                winRate ? `${winRate}%` : "Unknown"
+                              }`}</p>
+                              <p>{`Loss Rate ${
+                                lossRate ? `${lossRate}%` : "Unknown"
+                              }`}</p>
+                            </div>
+                          </div>
+                          <div className="basis-full">
+                            <PieChart
+                              width={450}
+                              title="Win/Loss Amount Ratio"
+                              data={winLossRatios}
+                              tooltip="The average amount of money you've earned during the time period divided by the average amount of money you've lost during the time period. A win/loss amount ratio of 2 to 1 or higher is good"
+                            />
+                            <div className="text-center text-sm">
+                              <p>{`Win/Loss Amount Ratio ${
+                                winLossRatio
+                                  ? `${winLossRatio} to 1`
+                                  : "Unknown"
+                              }`}</p>
+                              <p>{`Avg. Win Amount ${
+                                avgWinAmount
+                                  ? `$${avgWinAmount.toFixed(2)}`
+                                  : "Unknown"
+                              }`}</p>
+                              <p>{`Avg. Loss Amount ${
+                                avgLossAmount
+                                  ? `-$${Math.abs(avgLossAmount).toFixed(2)}`
+                                  : "Unknown"
+                              }`}</p>
+                            </div>
                           </div>
                         </div>
-                        <div className="basis-full">
-                          <PieChart
-                            width={450}
-                            title="Win/Loss Amount Ratio"
-                            data={winLossRatios}
-                            tooltip="The average amount of money you've earned during the time period divided by the average amount of money you've lost during the time period. A win/loss amount ratio of 2 to 1 or higher is good"
-                          />
-                          <div className="text-center text-sm">
-                            <p>{`Win/Loss Amount Ratio ${
-                              winLossRatio ? `${winLossRatio} to 1` : "Unknown"
-                            }`}</p>
-                            <p>{`Avg. Win Amount ${
-                              avgWinAmount
-                                ? `$${avgWinAmount.toFixed(2)}`
-                                : "Unknown"
-                            }`}</p>
-                            <p>{`Avg. Loss Amount ${
-                              avgLossAmount
-                                ? `-$${Math.abs(avgLossAmount).toFixed(2)}`
-                                : "Unknown"
-                            }`}</p>
+                      </div>
+                    </div>
+                    <hr className="w-full border-t border-gray-300 mx-auto lg:mt-14 xl:mt-24" />
+                    <div className="flex">
+                      <div className="flex basis-full flex-col border-r">
+                        <div className="flex">
+                          <div className="basis-full border-r mb-12">
+                            <LineChart
+                              title="High Quality Trades"
+                              data={tradeQualityHigh}
+                              tooltip="Trades/investments with plans where you followed your plan"
+                              xAxisOffset={30}
+                            />
+                          </div>
+                          <div className="basis-full">
+                            <LineChart
+                              title="Low Quality Trades"
+                              data={tradeQualityLow}
+                              tooltip="Trades/investments without trade plans or trades where you didn't follow your plan"
+                              xAxisOffset={30}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex">
+                          <div className="basis-full border-r">
+                            <LineChart
+                              title="Revenge Trades"
+                              data={tradeRevenge}
+                              tooltip="Trades where you bought/sold again right after a loss with no plan. It's wise to go on a 30 minute break after a loss to calm down and center yourself so you can trade/invest well again"
+                              xAxisOffset={30}
+                            />
+                          </div>
+                          <div className="basis-full">
+                            <LineChart
+                              title="PnL Trades"
+                              data={tradeProfit}
+                              dataset2={tradeLoss}
+                              legendItems={[
+                                { name: "Profit", color: "#30d97c", size: 12 },
+                                {
+                                  name: "Loss",
+                                  color: "#ff0000",
+                                  size: 12,
+                                },
+                              ]}
+                              legendPosition="Bottom"
+                              showDataset2Points
+                              tooltip="The number of trades/investments per day where you profited or lost"
+                              xAxisOffset={30}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex basis-full flex-col justify-between">
+                        <div className="flex">
+                          <div className="basis-full border-r p-2">
+                            <PieChart
+                              colorScale={"green"}
+                              width={400}
+                              title="Top Winning Finstruments"
+                              data={topWinningSymbols}
+                              tooltip="The financial instruments (stocks, crypto, etc.) where you earned the most profits during the time period"
+                            />
+                          </div>
+                          <div className="basis-full p-2">
+                            <PieChart
+                              colorScale={"cool"}
+                              width={400}
+                              title="Top Winning Strategies"
+                              data={topWinningStrategies}
+                              tooltip="The investing strategies/tading setups in your trade plans where you earned the most profits during the time period"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex">
+                          <div className="basis-full p-2">
+                            <PieChart
+                              colorScale={"red"}
+                              width={400}
+                              title="Top Losing Finstruments"
+                              data={topLosingSymbols}
+                              tooltip="The financial instruments (stocks, crypto, etc.) where you lost the most money during the time period"
+                            />
+                          </div>
+                          <div className="basis-full border-l p-2">
+                            <PieChart
+                              colorScale={"warm"}
+                              width={400}
+                              title="Top Losing Strategies"
+                              data={topLosingStrategies}
+                              tooltip="The investing strategies/trading setups in your trade plans where you lost the most money during the time period"
+                            />
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <hr className="w-full border-t border-gray-300 mx-auto lg:mt-14 xl:mt-24" />
-                  <div className="flex">
-                    <div className="flex basis-full flex-col border-r">
-                      <div className="flex">
-                        <div className="basis-full border-r mb-12">
-                          <LineChart
-                            title="High Quality Trades"
-                            data={tradeQualityHigh}
-                            tooltip="Trades/investments with plans where you followed your plan"
-                            xAxisOffset={30}
-                          />
-                        </div>
-                        <div className="basis-full">
-                          <LineChart
-                            title="Low Quality Trades"
-                            data={tradeQualityLow}
-                            tooltip="Trades/investments without trade plans or trades where you didn't follow your plan"
-                            xAxisOffset={30}
-                          />
-                        </div>
+                    <hr className="w-full border-t border-gray-300 mx-auto lg:mt-4 xl:mt-6" />
+                    <div className="flex pb-4">
+                      <div className="flex basis-full flex-col border-r">
+                        <MiniTable
+                          className="px-2"
+                          title={"Milestones Snapshot"}
+                          columns={milestonesColumns}
+                          data={milestonesSnapshot}
+                          tooltip="Milestones you've achieved during the time period. Well done!"
+                        />
+                        <MiniTable
+                          className="mt-4 px-2"
+                          title={"Improvement Areas Snapshot"}
+                          columns={improvementAreaColumns}
+                          data={improvementAreasSnapshot}
+                          tooltip="Improvement areas you've scheduled during the time period. Keep going!"
+                        />
                       </div>
-                      <div className="flex">
-                        <div className="basis-full border-r">
-                          <LineChart
-                            title="Revenge Trades"
-                            data={tradeRevenge}
-                            tooltip="Trades where you bought/sold again right after a loss with no plan. It's wise to go on a 30 minute break after a loss to calm down and center yourself so you can trade/invest well again"
-                            xAxisOffset={30}
-                          />
-                        </div>
-                        <div className="basis-full">
-                          <LineChart
-                            title="PnL Trades"
-                            data={tradeProfit}
-                            dataset2={tradeLoss}
-                            legendItems={[
-                              { name: "Profit", color: "#30d97c", size: 12  },
-                              {
-                                name: "Loss",
-                                color: "#ff0000",
-                                size: 12
-                              },
-                            ]}
-                            legendPosition="Bottom"
-                            showDataset2Points
-                            tooltip="The number of trades/investments per day where you profited or lost"
-                            xAxisOffset={30}
-                          />
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="flex basis-full flex-col justify-between">
-                      <div className="flex">
-                        <div className="basis-full border-r p-2">
-                          <PieChart
-                            colorScale={"green"}
-                            width={400}
-                            title="Top Winning Finstruments"
-                            data={topWinningSymbols}
-                            tooltip="The financial instruments (stocks, crypto, etc.) where you earned the most profits during the time period"
-                          />
-                        </div>
-                        <div className="basis-full p-2">
-                          <PieChart
-                            colorScale={"cool"}
-                            width={400}
-                            title="Top Winning Strategies"
-                            data={topWinningStrategies}
-                            tooltip="The investing strategies/tading setups in your trade plans where you earned the most profits during the time period"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex">
-                        <div className="basis-full p-2">
-                          <PieChart
-                            colorScale={"red"}
-                            width={400}
-                            title="Top Losing Finstruments"
-                            data={topLosingSymbols}
-                            tooltip="The financial instruments (stocks, crypto, etc.) where you lost the most money during the time period"
-                          />
-                        </div>
-                        <div className="basis-full border-l p-2">
-                          <PieChart
-                            colorScale={"warm"}
-                            width={400}
-                            title="Top Losing Strategies"
-                            data={topLosingStrategies}
-                            tooltip="The investing strategies/trading setups in your trade plans where you lost the most money during the time period"
-                          />
-                        </div>
+                      <div className="flex basis-full flex-col justify-between">
+                        <MiniTable
+                          className="px-2"
+                          title={"Top Winning Trades"}
+                          columns={tradeColumns}
+                          data={topWinningTrades}
+                          tooltip="Your most profitable trades/investments during the time period"
+                        />
+                        <MiniTable
+                          className="mt-4 px-2"
+                          title={"Top Losing Trades"}
+                          columns={tradeColumns}
+                          data={topLosingTrades}
+                          tooltip="Your biggest losing trades/investments during the time period. Every trader/investor has losses. Keep going!"
+                        />
                       </div>
                     </div>
                   </div>
-                  <hr className="w-full border-t border-gray-300 mx-auto lg:mt-4 xl:mt-6" />
-                  <div className="flex pb-4">
-                    <div className="flex basis-full flex-col border-r">
-                      <MiniTable
-                        className="px-2"
-                        title={"Milestones Snapshot"}
-                        columns={milestonesColumns}
-                        data={milestonesSnapshot}
-                        tooltip="Milestones you've achieved during the time period. Well done!"
-                      />
-                      <MiniTable
-                        className="mt-4 px-2"
-                        title={"Improvement Areas Snapshot"}
-                        columns={improvementAreaColumns}
-                        data={improvementAreasSnapshot}
-                        tooltip="Improvement areas you've scheduled during the time period. Keep going!"
-                      />
-                    </div>
-
-                    <div className="flex basis-full flex-col justify-between">
-                      <MiniTable
-                        className="px-2"
-                        title={"Top Winning Trades"}
-                        columns={tradeColumns}
-                        data={topWinningTrades}
-                        tooltip="Your most profitable trades/investments during the time period"
-                      />
-                      <MiniTable
-                        className="mt-4 px-2"
-                        title={"Top Losing Trades"}
-                        columns={tradeColumns}
-                        data={topLosingTrades}
-                        tooltip="Your biggest losing trades/investments during the time period. Every trader/investor has losses. Keep going!"
-                      />
-                    </div>
-                  </div>
-                </div>) : <Loader /> }
+                ) : (
+                  <Loader />
+                )}
               </div>
             </div>
           </div>
         </div>
       </Layout>
-      <TradingAccountRequiredModal body="To see performance insights, create an account and import trades/investments first" isOpen={isAcctRequiredModalOpen}/>
+      <TradingAccountRequiredModal
+        body="To see performance insights, create an account and import trades/investments first"
+        isOpen={isAcctRequiredModalOpen}
+      />
     </div>
   );
 }

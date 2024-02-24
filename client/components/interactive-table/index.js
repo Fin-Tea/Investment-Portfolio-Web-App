@@ -240,10 +240,11 @@ export default function InteractiveTable({
       <hr className={styles.underline} />
       <table className="interactive-table" {...getTableProps()}>
         <thead>
-          {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
+          {headerGroups.map((headerGroup, i) => (
+            <tr key={i} {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column, j) => (
                 <th
+                  key={j}
                   {...column.getHeaderProps()}
                   style={{ paddingLeft: 3, paddingRight: 3 }}
                 >
@@ -257,10 +258,11 @@ export default function InteractiveTable({
           {page.map((row, i) => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps()}>
-                {row.cells.map((cell) => {
+              <tr key={i} {...row.getRowProps()}>
+                {row.cells.map((cell, j) => {
                   return (
                     <td
+                      key={j}
                       {...cell.getCellProps()}
                       style={{ fontSize: 16, paddingLeft: 3, paddingRight: 3 }}
                     >

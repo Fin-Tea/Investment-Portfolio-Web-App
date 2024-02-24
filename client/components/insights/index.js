@@ -406,16 +406,16 @@ export default function Insights({ insightsData }) {
       <Header>Trade Insights</Header>
       <hr className={styles.underline} />
       <div className="grid">
-        {rows.map((row) => {
+        {rows.map((row, i) => {
           return (
-            <div className="row">
+            <div key={i} className="row">
               <div className="col">
                 <h6>{row.label}</h6>
               </div>
               <div className="col">
                 {row.values.length ? (
-                  row.values.map((val) => (
-                    <div>
+                  row.values.map((val, j) => (
+                    <div key={j}>
                       <p className={styles.dataValue}>{val}</p>
                     </div>
                   ))

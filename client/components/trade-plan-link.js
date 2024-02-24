@@ -77,6 +77,7 @@ function TradePlanSelection({
               entry,
             }) => (
               <div
+                key={id}
                 style={{
                   backgroundColor:
                     id === selectedTradePlanId ? "#30d97c" : "transparent",

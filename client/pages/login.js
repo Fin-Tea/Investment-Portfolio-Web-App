@@ -49,7 +49,7 @@ export default function Login() {
 
   useEffect(() => {
     if (authError && loading) {
-        console.log("authError", authError);
+      console.log("authError", authError);
     }
   }, [authError, loading]);
 
@@ -106,9 +106,12 @@ export default function Login() {
               {authError && (
                 <div className="alert alert-danger mt-3 mb-0">{authError}</div>
               )}
-             
             </form>
-            <Link href="/magicLogin"><a  href="/magicLogin" className="underline text-blue-800 inline-block mt-4">Forgot password? Login with Magic Link</a></Link>
+            <Link href="/magicLogin">
+              <a className="underline text-blue-800 inline-block mt-4">
+                Forgot password? Login with Magic Link
+              </a>
+            </Link>
           </div>
         ) : (
           <Loader />

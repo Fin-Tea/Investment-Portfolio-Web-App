@@ -124,10 +124,14 @@ export default function BasicTable({
           style={{ width: 800, height: 400, border: "none" }}
         >
           <div className="header">
-            {headerGroups.map((headerGroup) => (
-              <div {...headerGroup.getHeaderGroupProps()} className="tr">
-                {headerGroup.headers.map((column) => (
-                  <div {...column.getHeaderProps()} className="th">
+            {headerGroups.map((headerGroup, i) => (
+              <div
+                key={i}
+                {...headerGroup.getHeaderGroupProps()}
+                className="tr"
+              >
+                {headerGroup.headers.map((column, j) => (
+                  <div key={j} {...column.getHeaderProps()} className="th">
                     {column.render("Header")}
                   </div>
                 ))}
@@ -139,10 +143,10 @@ export default function BasicTable({
             {page.map((row, i) => {
               prepareRow(row);
               return (
-                <div {...row.getRowProps()} className="tr">
-                  {row.cells.map((cell) => {
+                <div key={i} {...row.getRowProps()} className="tr">
+                  {row.cells.map((cell, j) => {
                     return (
-                      <div {...cell.getCellProps()} className="td">
+                      <div key={j} {...cell.getCellProps()} className="td">
                         {cell.render("Cell")}
                       </div>
                     );
@@ -256,5 +260,5 @@ BasicTable.defaultProps = {
   onUpload: undefined,
   uploadError: "",
   allowRowPreprend: false,
-  rowsPerPage: 30
+  rowsPerPage: 30,
 };
