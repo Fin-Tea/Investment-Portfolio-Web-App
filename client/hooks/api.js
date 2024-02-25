@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 
-export const STORAGE_KEY = "growthTrack";
+export const STORAGE_KEY = "FinTea";
 //const HOST = "https://localhost:8080/api/";
 
 function getHost(port = 8080) {
