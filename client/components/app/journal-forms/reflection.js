@@ -51,7 +51,7 @@ export default function Reflection({ data, onSubmit, onDelete }) {
     <BaseForm
       header="Reflection"
       edit={!!data}
-      date={data.updatedAt}
+      date={data?.updatedAt}
       onSave={handleSubmit(onSubmit)}
       onDelete={onDelete}
     >

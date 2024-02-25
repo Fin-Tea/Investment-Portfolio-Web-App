@@ -369,7 +369,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   const tradePlanInfo = data ? {...data.tradePlan, createdAt: formatJournalDate(data.createdAt)} : null;
 
   return (<div>
-    <BaseForm header="Trade Plan" date={data.updatedAt} edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
+    <BaseForm header="Trade Plan" date={data?.updatedAt} edit={!!data} onSave={handleSubmit(onSubmit)} onDelete={onDelete}>
       <div>
         <label className="text-sm ml">Symbol*</label>
         <Autocomplete
