@@ -1,10 +1,9 @@
 import { useRouter } from "next/router";
 
 export const STORAGE_KEY = "FinTea";
-//const HOST = "https://localhost:8080/api/";
 
 function getHost(port = 8080) {
-  return `https://localhost:${port}/api/`;
+  return `${process.env.NEXT_PUBLIC_API_HOST}:${port}/api/`;
 }
 
 export default function useApi(port) {
