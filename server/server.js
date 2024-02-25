@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const https = require("https");
 const fs = require("fs");
+const path = require("path");
 const authMiddleware = require("./middleware").default;
 const accountService = require("./services/account");
 const mailService = require("./services/mail");
@@ -16,8 +17,8 @@ const config = require("./config");
 
 export const PORT = 8080;
 
-const key = fs.readFileSync("./security/key.pem");
-const cert = fs.readFileSync("./security/new_cert.pem");
+const key = fs.readFileSync(path.join(__dirname, "/security/key.pem"));
+const cert = fs.readFileSync(path.join(__dirname, "/security/new_cert.pem"));
 
 const app = express();
 
