@@ -90,7 +90,6 @@ export default function TradingJournal() {
   const { fetchTradeHistory } = useTrades();
 
   function updateFilterIds({ id, isActive }) {
-    console.log("updateFilterIds", id, isActive);
     let newFilterIds = null;
     if (isActive) {
       newFilterIds = [...activeFilterIds, id];
@@ -101,7 +100,6 @@ export default function TradingJournal() {
         ...activeFilterIds.slice(idx + 1),
       ];
     }
-    console.log("newFilterIds", newFilterIds);
     setActiveFilterIds(newFilterIds);
   }
 
@@ -110,7 +108,6 @@ export default function TradingJournal() {
   }
 
   async function handleSubmit(formData) {
-    console.log("formData", formData);
     let data = { ...formData };
 
     if (currentFormName === "Trade Plans") {
@@ -177,7 +174,6 @@ export default function TradingJournal() {
         }
 
         data.confirmations = confirmations;
-        console.log("confirmations", confirmations);
       }
     }
 
@@ -190,7 +186,6 @@ export default function TradingJournal() {
     }
 
     try {
-      console.log("data", data);
       let resp = null;
       if (currentJournalEntry) {
         resp = await updateJournalEntry(currentJournalEntry.id, data);
@@ -218,7 +213,7 @@ export default function TradingJournal() {
           setCurrentJournalEntry(null);
         }
       }
-      console.log("journalEntry", resp);
+
       // toast/alert that journal entry was created or an error happened
     } catch (e) {
       // show error
@@ -264,7 +259,7 @@ export default function TradingJournal() {
   async function loadJournalEntries() {
     try {
       const resp = await fetchJournalEntries();
-      console.log("journalEntries resp", resp);
+      // console.log("journalEntries resp", resp);
       setJournalEntries(resp.journalEntries);
       setLoading(false);
     } catch (e) {
@@ -439,6 +434,9 @@ export default function TradingJournal() {
                     onClick={() => {
                       setCurrentFormName("");
                       setCurrentJournalEntry(null);
+                      router.push(router.pathname, router.pathname, {
+                        shallow: true,
+                      });
                     }}
                     icon={faArrowLeft}
                     height={32}
@@ -477,7 +475,7 @@ export default function TradingJournal() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={({ label }) => {
-            if (label) {
+            if (label) {;
               setCurrentFormName(label);
               setIsModalOpen(false);
             }
