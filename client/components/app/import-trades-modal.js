@@ -19,6 +19,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 const FILE_UPLOAD_KEY = "csv";
 const PLATFORM_ACCOUNT_KEY = "platformAccountId";
 const TIMEZONE_KEY = "timezone";
+const TIMEZONE_OFFSET_KEY = "timezoneOffset";
 const CONNECT_PLATFORM_KEY = "connectPlatformId";
 
 const platformOptions = [
@@ -216,6 +217,7 @@ export default function ImportTradesModal({
       formData.append(FILE_UPLOAD_KEY, data[FILE_UPLOAD_KEY]);
       formData.append(PLATFORM_ACCOUNT_KEY, data[PLATFORM_ACCOUNT_KEY].value);
       formData.append(TIMEZONE_KEY, timeZone);
+      formData.append(TIMEZONE_OFFSET_KEY, new Date().getTimezoneOffset());
       // console.log(
       //   "formData",
       //   formData.get(PLATFORM_ACCOUNT_KEY),
