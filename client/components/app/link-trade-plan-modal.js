@@ -62,9 +62,6 @@ export default function LinkTradePlanModal({
   const [selectedTradePlan, setSelectedTradePlan] = useState(null);
   // label: "securitySymbol, tradeDirection, Entry, Exit (or priceTarget1), description (?), updatedAt", value: id
 
-  console.log("tradeInfo", tradeInfo);
-  console.log("tradePlanItems", tradePlanItems);
-
   return (
     <Modal className="w-full" isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -92,11 +89,12 @@ export default function LinkTradePlanModal({
                 isSearchable
               />
             </div>
-          ) : (<div className="mt-4">
-            <TradePlanReadOnly
-              tradePlan={tradeInfo?.tradePlan}
-              items={tradePlanItems}
-            />
+          ) : (
+            <div className="mt-4">
+              <TradePlanReadOnly
+                tradePlan={tradeInfo?.tradePlan}
+                items={tradePlanItems}
+              />
             </div>
           )}
         </ModalBody>
@@ -111,9 +109,14 @@ export default function LinkTradePlanModal({
               !tradeInfo?.tradePlan ? "bg-purple-800" : "bg-red-500"
             } text-white p-2 px-4`}
             onClick={() => {
-              if (selectedTradePlan && onSubmit) {
+              if (
+                onSubmit &&
+                ((!tradeInfo?.tradePlan && selectedTradePlan) ||
+                  !!tradeInfo.tradePlan)
+              ) {
                 onSubmit({
-                  tradePlanId: selectedTradePlan.value,
+                  tradePlanId:
+                    selectedTradePlan?.value || tradeInfo?.tradePlan?.id,
                   tradeId: tradeInfo.id,
                 });
                 setSelectedTradePlan(null);

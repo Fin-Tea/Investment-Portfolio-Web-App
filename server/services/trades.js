@@ -149,7 +149,8 @@ export async function getTradeHistory(accountId, options = {}) {
 
     builder = db("tradePlanTradeResults")
       .select("tradePlanId", "tradeHistoryId")
-      .whereIn("tradeHistoryId", tradeHistoryIds);
+      .whereIn("tradeHistoryId", tradeHistoryIds)
+      .andWhere("deletedAt", null);
 
     const tradePlanTradeResults = await builder;
 
@@ -599,7 +600,7 @@ export async function deleteTradePlanTradeResultLink(
       deletedAt: new Date(),
     });
 
-  return { tradePlanId, tradeId, delete: true };
+  return { tradePlanId, tradeId, deleted: true };
 }
 
 function getCatalystByDescription(description) {

@@ -478,7 +478,7 @@ export default function Trades() {
             const {tradePlan, ...tradeData } = trades[tradeIdx];
             const updatedTrade = {...tradeData};
 
-            const updatedTrades = [trades.slice(0,tradeIdx), updatedTrade, trades.slice(tradeIdx + 1)];
+            const updatedTrades = [...trades.slice(0,tradeIdx), updatedTrade, ...trades.slice(tradeIdx + 1)];
             setTrades(updatedTrades);
         } else if (resp.error) {
             console.error(resp.error);
@@ -498,10 +498,11 @@ export default function Trades() {
             const tradePlan = tradePlans.find(({id }) => id === tradePlanTradeResultLink.tradePlanId);
             const updatedTrade = {...trade, tradePlan};
 
-            const updatedTrades = [trades.slice(0,tradeIdx), updatedTrade, trades.slice(tradeIdx + 1)];
+            const updatedTrades = [...trades.slice(0,tradeIdx), updatedTrade, ...trades.slice(tradeIdx + 1)];
             setTrades(updatedTrades);
         }
     }
+    setTradeInfo(null);
   }
 
   useEffect(() => {
