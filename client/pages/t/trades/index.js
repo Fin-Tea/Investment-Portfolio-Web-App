@@ -556,8 +556,6 @@ export default function Trades() {
     })
   );
 
-  console.log("tradePlanOptions", tradePlanOptions);
-
   return (
     <div>
       <Layout>

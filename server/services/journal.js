@@ -1,4 +1,3 @@
-import Bluebird from "bluebird";
 import db from "../db";
 
 export const JOURNAL_TAGS = {
@@ -858,8 +857,12 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
     const existingTradeIdsSet = new Set(existingTradeIds);
     const linkedTradeIdsSet = new Set(linkedTradeIds);
 
-    const activeTradeIds = existingTradeIds.filter((id) => linkedTradeIdsSet.has(id));
-    const inactiveTradeIds = existingTradeIds.filter((id) => !linkedTradeIdsSet.has(id));
+    const activeTradeIds = existingTradeIds.filter((id) =>
+      linkedTradeIdsSet.has(id)
+    );
+    const inactiveTradeIds = existingTradeIds.filter(
+      (id) => !linkedTradeIdsSet.has(id)
+    );
     const now = new Date();
 
     if (activeTradeIds.length) {
@@ -872,13 +875,13 @@ async function updateTradePlanEntry(journalEntryId, formFields, currentDate) {
     }
 
     if (inactiveTradeIds.length) {
-        await db("tradePlanTradeResults")
-          .whereIn("tradeHistoryId", inactiveTradeIds)
-          .update({
-            deletedAt: now,
-            updatedAt: now,
-          });
-      }
+      await db("tradePlanTradeResults")
+        .whereIn("tradeHistoryId", inactiveTradeIds)
+        .update({
+          deletedAt: now,
+          updatedAt: now,
+        });
+    }
 
     const newTradeIds = linkedTradeIds.filter(
       (id) => !existingTradeIdsSet.has(id)

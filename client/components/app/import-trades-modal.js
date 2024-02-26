@@ -18,6 +18,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 const FILE_UPLOAD_KEY = "csv";
 const PLATFORM_ACCOUNT_KEY = "platformAccountId";
+const TIMEZONE_KEY = "timezone";
 const CONNECT_PLATFORM_KEY = "connectPlatformId";
 
 const platformOptions = [
@@ -36,35 +37,31 @@ const ACTIONS = {
 };
 
 function BaseForm({ children, formId, onSubmit, onClose }) {
-
   return (
     <div>
       <ModalBody>{children}</ModalBody>
       <ModalFooter>
-          {formId === 1 && (
-            <button
-              className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
-              onClick={onSubmit}
-            >
-              Upload
-            </button>
-          )}
-
-          {formId === 2 && (
-            <button
-              className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
-              onClick={onSubmit}
-            >
-              Connect
-            </button>
-          )}
+        {formId === 1 && (
           <button
-            className="rounded-md border p-2 px-4 mr-4"
-            onClick={onClose}
+            className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
+            onClick={onSubmit}
           >
-            Close
+            Upload
           </button>
-        </ModalFooter>
+        )}
+
+        {formId === 2 && (
+          <button
+            className="rounded-md border p-2 px-4 mr-4 bg-purple-800 text-sm text-white"
+            onClick={onSubmit}
+          >
+            Connect
+          </button>
+        )}
+        <button className="rounded-md border p-2 px-4 mr-4" onClick={onClose}>
+          Close
+        </button>
+      </ModalFooter>
     </div>
   );
 }
@@ -72,16 +69,18 @@ function BaseForm({ children, formId, onSubmit, onClose }) {
 function MainForm({ platforms, connectedPlatforms, onClose, formId, onClick }) {
   return (
     <BaseForm formId={formId} onClose={onClose}>
-    <div>
-      <div className="flex flex-col mb-4">
-        <button
-          className="rounded-full border-x border-y border-purple-800 text-sm text-purple-800 hover:bg-purple-800 hover:text-white px-2 py-2"
-          onClick={() => onClick && onClick({ action: ACTIONS.NAV_TO_UPLOAD })}
-        >
-          Upload CSV
-        </button>
-        {/* TODO: Connecting accounts not in scope for MVP */}
-        {/* <button
+      <div>
+        <div className="flex flex-col mb-4">
+          <button
+            className="rounded-full border-x border-y border-purple-800 text-sm text-purple-800 hover:bg-purple-800 hover:text-white px-2 py-2"
+            onClick={() =>
+              onClick && onClick({ action: ACTIONS.NAV_TO_UPLOAD })
+            }
+          >
+            Upload CSV
+          </button>
+          {/* TODO: Connecting accounts not in scope for MVP */}
+          {/* <button
           className="rounded-full border-x border-y border-purple-800 text-sm text-purple-800 hover:bg-purple-800 hover:text-white px-2 py-2 mt-4"
           onClick={() =>
             onClick && onClick({ action: ACTIONS.NAV_TO_CONNECT_PLATFORM })
@@ -89,8 +88,8 @@ function MainForm({ platforms, connectedPlatforms, onClose, formId, onClick }) {
         >
           Connect Platform
         </button> */}
-      </div>
-      {/* <h4 className="text-lg">Connected Platforms</h4>
+        </div>
+        {/* <h4 className="text-lg">Connected Platforms</h4>
       <hr className="w-full border-t border-gray-300 mx-auto mt-0" />
       <div>
         {connectedPlatforms ? (
@@ -101,78 +100,81 @@ function MainForm({ platforms, connectedPlatforms, onClose, formId, onClick }) {
           <span>No platforms connected yet</span>
         )}
       </div> */}
-    </div>
+      </div>
     </BaseForm>
   );
 }
 
- function UploadForm({ items, formId, onSubmit, onClose}) {
+function UploadForm({ items, formId, onSubmit, onClose }) {
   const validationSchema = Yup.object().shape({
-    [PLATFORM_ACCOUNT_KEY]: Yup.object().nullable().required(
-      "Trading/Investing account is required"
-    ),
+    [PLATFORM_ACCOUNT_KEY]: Yup.object()
+      .nullable()
+      .required("Trading/Investing account is required"),
     [FILE_UPLOAD_KEY]: Yup.mixed().nullable().required("Csv is required"),
   });
 
   const formOptions = {
     defaultValues: {
-        [PLATFORM_ACCOUNT_KEY]: null,
-        [FILE_UPLOAD_KEY]: null
+      [PLATFORM_ACCOUNT_KEY]: null,
+      [FILE_UPLOAD_KEY]: null,
     },
     resolver: yupResolver(validationSchema),
   };
 
-  const { setValue, value, handleSubmit, formState, getValues } = useForm(formOptions);
+  const { setValue, value, handleSubmit, formState, getValues } =
+    useForm(formOptions);
 
-//   console.log("handleSubmit", await handleSubmit(onSubmit)());
+  //   console.log("handleSubmit", await handleSubmit(onSubmit)());
 
-const { errors } = formState;
+  const { errors } = formState;
   console.log("errors", errors);
-  console.log('values' , getValues());
+  console.log("values", getValues());
   return (
-    <BaseForm formId={formId} onSubmit={handleSubmit(onSubmit)} onClose={onClose}>
-    <div>
-      <form>
-        <div>
-          <Select
-            placeholder="Choose Trading/Investing Account..."
-            options={items}
-            value={value}
-            onChange={(val) => setValue(PLATFORM_ACCOUNT_KEY, val)}
+    <BaseForm
+      formId={formId}
+      onSubmit={handleSubmit(onSubmit)}
+      onClose={onClose}
+    >
+      <div>
+        <form>
+          <div>
+            <Select
+              placeholder="Choose Trading/Investing Account..."
+              options={items}
+              value={value}
+              onChange={(val) => setValue(PLATFORM_ACCOUNT_KEY, val)}
+            />
+            <div className="text-red-600 text-xs">
+              {errors && errors[PLATFORM_ACCOUNT_KEY]
+                ? errors[PLATFORM_ACCOUNT_KEY].message
+                : ""}
+            </div>
+          </div>
+          <DragDropUpload
+            onFileDrop={(file) => setValue(FILE_UPLOAD_KEY, file)}
           />
           <div className="text-red-600 text-xs">
-            {errors && errors[PLATFORM_ACCOUNT_KEY] ? errors[PLATFORM_ACCOUNT_KEY].message : ""}
+            {errors && errors[FILE_UPLOAD_KEY]?.message}
           </div>
-        </div>
-        <DragDropUpload
-          onFileDrop={(file) => setValue(FILE_UPLOAD_KEY, file)}
-        />
-        <div className="text-red-600 text-xs">
-          {errors && errors[FILE_UPLOAD_KEY]?.message}
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
     </BaseForm>
   );
 }
 
-function ConnectPlatformForm({
-  formId,
-  onSubmit,
-  onClose
-}) {
+function ConnectPlatformForm({ formId, onSubmit, onClose }) {
   return (
     <BaseForm formId={formId} onSubmit={onSubmit} onClose={onClose}>
-    <div>
-      <form>
-        <div>
-          <Select
-            placeholder="Choose Trading/Investing Platform..."
-            options={connectPlatformOptions}
-          />
-        </div>
-      </form>
-    </div>
+      <div>
+        <form>
+          <div>
+            <Select
+              placeholder="Choose Trading/Investing Platform..."
+              options={connectPlatformOptions}
+            />
+          </div>
+        </form>
+      </div>
     </BaseForm>
   );
 }
@@ -208,16 +210,20 @@ export default function ImportTradesModal({
   }
 
   function processSubmit(data) {
-    console.log(data);
     if (formId === 1) {
-        const formData = new FormData();
-        formData.append(FILE_UPLOAD_KEY, data[FILE_UPLOAD_KEY]);
-        formData.append(PLATFORM_ACCOUNT_KEY, data[PLATFORM_ACCOUNT_KEY].value);
-        console.log("formData", formData.get(PLATFORM_ACCOUNT_KEY), formData.get(FILE_UPLOAD_KEY));
-        onSubmit && onSubmit({action: "upload", formData});
+      const formData = new FormData();
+      const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
+      formData.append(FILE_UPLOAD_KEY, data[FILE_UPLOAD_KEY]);
+      formData.append(PLATFORM_ACCOUNT_KEY, data[PLATFORM_ACCOUNT_KEY].value);
+      formData.append(TIMEZONE_KEY, timeZone);
+      // console.log(
+      //   "formData",
+      //   formData.get(PLATFORM_ACCOUNT_KEY),
+      //   formData.get(FILE_UPLOAD_KEY)
+      // );
+      onSubmit && onSubmit({ action: "upload", formData });
     }
-
-  };
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
@@ -237,15 +243,14 @@ export default function ImportTradesModal({
           </div>
         </ModalHeader>
         <ModalCloseButton />
-        
-          <CurrentForm
-            formId={formId}
-            items={platformAccountItems}
-            onClick={handleClick}
-            onClose={handleClose}
-            onSubmit={processSubmit}
-          />
 
+        <CurrentForm
+          formId={formId}
+          items={platformAccountItems}
+          onClick={handleClick}
+          onClose={handleClose}
+          onSubmit={processSubmit}
+        />
       </ModalContent>
     </Modal>
   );

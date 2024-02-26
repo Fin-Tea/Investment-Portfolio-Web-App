@@ -1,6 +1,7 @@
 import db from "../db";
 import * as csv from "csv-string";
 import Bluebird from "bluebird";
+import { DateTime } from "luxon";
 import { formatDate, formatObjectDates, toCapitalizedCase } from "../utils";
 import { HOURS_MARKET_OPEN } from "../constants";
 
@@ -867,7 +868,8 @@ function groupOrdersBySymbol(uploadedOrders) {
   }, new Map());
 }
 
-function createTrades(symbol, description, orders) {
+function createTrades(symbol, description, orders, options = {}) {
+  const { timezone } = options; // TODO: handle timezone
   const trades = {
     completedTrades: [],
     openTrades: [],
@@ -895,6 +897,7 @@ function createTrades(symbol, description, orders) {
     if (instruction.includes("CLOSE")) {
       // it's the end of a trade
       currentTrade.tradeClosedAt = tradeTime; // set the latest close time
+      // TODO: handle timezone
 
       while (i < orders.length && orders[i].instruction.includes("CLOSE")) {
         currentTrade.closeQty += orders[i].quantity;
@@ -938,15 +941,20 @@ function createTrades(symbol, description, orders) {
   return trades;
 }
 
-export function mapUploadedTDAOrdersToTradeInfo(uploadedOrders) {
+export function mapUploadedTDAOrdersToTradeInfo(uploadedOrders, options = {}) {
+  const { timezone } = options;
   const groupedOrdersMap = groupOrdersBySymbol(uploadedOrders);
 
   return Array.from(groupedOrdersMap.values()).reduce(
     (acc, groupedOrder) => {
       const { ordersLong, ordersShort, symbol, description } = groupedOrder;
 
-      const tradesLong = createTrades(symbol, description, ordersLong);
-      const tradesShort = createTrades(symbol, description, ordersShort);
+      const tradesLong = createTrades(symbol, description, ordersLong, {
+        timezone,
+      });
+      const tradesShort = createTrades(symbol, description, ordersShort, {
+        timezone,
+      });
 
       for (let key in acc) {
         acc[key].push(...tradesLong[key]);
@@ -959,9 +967,11 @@ export function mapUploadedTDAOrdersToTradeInfo(uploadedOrders) {
   );
 }
 
-export function mapUploadedNinjaTradesToTradeInfo(uploadedTrades) {
-  console.log("uploadedTrades length", uploadedTrades.length);
-  console.log("uploadedTrades", JSON.stringify(uploadedTrades));
+export function mapUploadedNinjaTradesToTradeInfo(
+  uploadedTrades,
+  options = {}
+) {
+  const { timezone } = options;
 
   return uploadedTrades.reduce(
     (acc, rawTrade) => {
@@ -1007,11 +1017,23 @@ export function mapUploadedNinjaTradesToTradeInfo(uploadedTrades) {
         pnlF *= -1;
       }
 
+      tradeOpenedAt = new Date(tradeOpenedAt);
+      tradeClosedAt = new Date(tradeClosedAt);
+
+      if (timezone) {
+        tradeOpenedAt = DateTime.fromJSDate(tradeOpenedAt)
+          .setZone(timezone)
+          .toJSDate();
+        tradeClosedAt = DateTime.fromJSDate(tradeClosedAt)
+          .setZone(timezone)
+          .toJSDate();
+      }
+
       const trade = {
         securityType: "Future",
         tradeDirectionType,
-        tradeOpenedAt: new Date(tradeOpenedAt),
-        tradeClosedAt: new Date(tradeClosedAt),
+        tradeOpenedAt,
+        tradeClosedAt,
         openQty: qty,
         closeQty: qty,
         securitySymbol: symbol,
