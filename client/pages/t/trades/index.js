@@ -457,6 +457,7 @@ export default function Trades() {
         // if successful, refetch tradeHistory data and populate store
         if (resp.success) {
           console.log("csvUpload success. loading tradehistory");
+          setImportLogs([resp.importLog, ...importLogs]);
           loadTradeHistory();
         }
       }
