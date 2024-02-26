@@ -379,16 +379,12 @@ export default function Trades() {
     };
   });
 
-  console.log("data", data);
-
   if (debouncedSearchString) {
     console.log("debouncedSearchString", debouncedSearchString);
     data = data.filter(({ securityName }) =>
       securityName.toLowerCase().includes(debouncedSearchString.toLowerCase())
     );
   }
-
-  console.log("filtered data", data);
 
   async function loadPlatformAccounts() {
     try {
