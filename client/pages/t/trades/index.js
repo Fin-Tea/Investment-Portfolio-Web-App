@@ -593,7 +593,7 @@ export default function Trades() {
                   <div>
                     {importLogs.length ? (
                       <span className="text-sm">
-                        Last Updated
+                        Last Import
                         <br />{" "}
                         <i> {formatJournalDate(importLogs[0].createdAt)}</i>
                       </span>
