@@ -30,3 +30,7 @@ export function appendQueryParam(endpoint, paramKey, paramValue) {
 
   return endpoint;
 }
+
+export function formatCurrency(value) {
+  return value >= 0 ? `$${value.toFixed(2)}` : `-$${(value * -1).toFixed(2)}`;
+}

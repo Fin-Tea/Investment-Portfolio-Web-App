@@ -8,6 +8,7 @@ import usePlatformAccounts from "../../../hooks/platformAccounts";
 import useTrades from "../../../hooks/trades";
 import useJournal from "../../../hooks/journal";
 import { formatJournalDate } from "../../../date-utils";
+import { formatCurrency } from "../../../data-utils";
 import Loader from "../../../components/loader";
 import TradingAccountRequiredModal from "../../../components/app/trading-account-required-modal";
 
@@ -370,9 +371,9 @@ export default function Trades() {
       ...trade,
       tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
       tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
-      pnl:
-        trade.pnl ||
-        (parseFloat(trade.closePrice) - parseFloat(trade.openPrice)).toFixed(2),
+      pnl: 
+        formatCurrency(trade.pnl ||
+        parseFloat(trade.closePrice) - parseFloat(trade.openPrice)),
       platformAccount: platformAccount
         ? `${platformAccount.platform.name} ${platformAccount.accountName}`
         : "",
