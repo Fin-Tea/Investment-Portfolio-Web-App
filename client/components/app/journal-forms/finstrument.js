@@ -42,7 +42,7 @@ export default function Finstrument({ data, items, onSubmit, onDelete }) {
 
   useEffect(() => {
     reset(formOptions.defaultValues);
-  }, [data]);
+  }, [data, items]);
 
   return (
     <BaseForm

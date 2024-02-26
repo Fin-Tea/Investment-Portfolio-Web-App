@@ -214,6 +214,10 @@ export default function TradingJournal() {
         }
       }
 
+      const journalItemsResp = await fetchJournalItems();
+
+      setJournalItems({ ...journalItems, ...journalItemsResp.journalItems });
+
       // toast/alert that journal entry was created or an error happened
     } catch (e) {
       // show error
@@ -475,7 +479,7 @@ export default function TradingJournal() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={({ label }) => {
-            if (label) {;
+            if (label) {
               setCurrentFormName(label);
               setIsModalOpen(false);
             }

@@ -45,7 +45,7 @@ export default function Reflection({ data, onSubmit, onDelete }) {
 
   useEffect(() => {
     reset(formOptions.defaultValues);
-  }, [data]);
+  }, [data, items]);
 
   return (
     <BaseForm

@@ -43,7 +43,7 @@ export default function ImprovementArea({ data, onSubmit, onDelete }) {
 
   useEffect(() => {
     reset(formOptions.defaultValues);
-  }, [data]);
+  }, [data, items]);
 
   return (
     <BaseForm

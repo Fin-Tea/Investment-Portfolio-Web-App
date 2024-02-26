@@ -345,7 +345,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
 
   useEffect(() => {
     reset(formOptions.defaultValues);
-  }, [data]);
+  }, [data, items]);
 
   let tradeResults = (data?.tradePlan?.tradeResults || []).map((trade) => {
     const platformAccount = platformAccounts.find(
