@@ -942,7 +942,7 @@ function createTrades(symbol, description, orders, options = {}) {
 }
 
 export function mapUploadedTDAOrdersToTradeInfo(uploadedOrders, options = {}) {
-  const { timezone } = options;
+  const { timezone, timezoneOffset } = options;
   const groupedOrdersMap = groupOrdersBySymbol(uploadedOrders);
 
   return Array.from(groupedOrdersMap.values()).reduce(
@@ -971,7 +971,9 @@ export function mapUploadedNinjaTradesToTradeInfo(
   uploadedTrades,
   options = {}
 ) {
-  const { timezone } = options;
+  const { timezone, timezoneOffset } = options;
+
+  // console.log("mapUploadedNinjaTradesToTradeInfo timezone", timezone);
 
   return uploadedTrades.reduce(
     (acc, rawTrade) => {
@@ -1020,11 +1022,14 @@ export function mapUploadedNinjaTradesToTradeInfo(
       tradeOpenedAt = new Date(tradeOpenedAt);
       tradeClosedAt = new Date(tradeClosedAt);
 
-      if (timezone) {
+      if (timezone && timezoneOffset) {
+        const timezoneOffsetMinutes = parseInt(timezoneOffset);
         tradeOpenedAt = DateTime.fromJSDate(tradeOpenedAt)
+          .plus({ minutes: timezoneOffsetMinutes })
           .setZone(timezone)
           .toJSDate();
         tradeClosedAt = DateTime.fromJSDate(tradeClosedAt)
+          .plus({ minutes: timezoneOffsetMinutes })
           .setZone(timezone)
           .toJSDate();
       }
@@ -1209,7 +1214,7 @@ export async function processUploadedTrades(
       }
     );
 
-    console.log(JSON.stringify(dbTradeInfo));
+    // console.log(JSON.stringify(dbTradeInfo));
 
     try {
       await db("tradeHistory").insert(dbTradeInfo.tradesToInsert);

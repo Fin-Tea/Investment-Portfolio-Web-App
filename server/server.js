@@ -995,7 +995,7 @@ app.post(
   authMiddleware,
   async (req, res) => {
     const { accountId } = req.params;
-    const { platformAccountId, timezone } = req.body;
+    const { platformAccountId, timezone, timezoneOffset } = req.body;
 
     if (!req.files.csv || !platformAccountId) {
       return res.send({
@@ -1030,12 +1030,12 @@ app.post(
       if (platform.id === tradingService.PLATFORMS.TD_AMERITRADE) {
         // console.log(req.files.csv.data.toString("utf8"));
         const orders = tradingService.parseTDAOrdersFromCSV(file);
-        console.log(JSON.stringify(orders));
-        tradeInfo = tradingService.mapUploadedTDAOrdersToTradeInfo(orders, { timezone });
+        // console.log(JSON.stringify(orders));
+        tradeInfo = tradingService.mapUploadedTDAOrdersToTradeInfo(orders, { timezone, timezoneOffset });
       } else if (platform.id === tradingService.PLATFORMS.NINJA_TRADER) {
         const trades = tradingService.parseNinjaTradesFromCSV(file);
 
-        tradeInfo = tradingService.mapUploadedNinjaTradesToTradeInfo(trades, { timezone });
+        tradeInfo = tradingService.mapUploadedNinjaTradesToTradeInfo(trades, { timezone, timezoneOffset });
       }
 
       if (tradeInfo) {
