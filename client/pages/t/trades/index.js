@@ -379,6 +379,16 @@ export default function Trades() {
     };
   });
 
+  // sort linked trade plans to top
+  data = data.sort((a, b) => {
+    if (b.tradePlan) {
+      return 1;
+    } else if (a.tradePlan) {
+      return -1;
+    }
+    return 0;
+  });
+
   if (debouncedSearchString) {
     console.log("debouncedSearchString", debouncedSearchString);
     data = data.filter(({ securityName }) =>
@@ -401,7 +411,10 @@ export default function Trades() {
 
   async function loadTradeHistory() {
     try {
-      const resp = await fetchTradeHistory({ platformAccountsOnly: true, includeTradePlans: true });
+      const resp = await fetchTradeHistory({
+        platformAccountsOnly: true,
+        includeTradePlans: true,
+      });
       console.log("tradeHistory resp", resp);
       setTrades(resp.tradeHistory);
       setLoading(false);
@@ -469,38 +482,50 @@ export default function Trades() {
 
   async function handleTradePlanModalSubmit({ tradePlanId, tradeId }) {
     if (tradeInfo?.tradePlan) {
-        const resp = await unlinkTradePlanTradeResult(tradePlanId, tradeId);
-        console.log("unlinkTradePlanTradeResult", resp);
-        
-        if (resp.deleted) {
-            // remove trade plan from trades
-            const tradeIdx = trades.findIndex((({id}) => id === resp.tradeId));
-            const {tradePlan, ...tradeData } = trades[tradeIdx];
-            const updatedTrade = {...tradeData};
+      const resp = await unlinkTradePlanTradeResult(tradePlanId, tradeId);
+      console.log("unlinkTradePlanTradeResult", resp);
 
-            const updatedTrades = [...trades.slice(0,tradeIdx), updatedTrade, ...trades.slice(tradeIdx + 1)];
-            setTrades(updatedTrades);
-        } else if (resp.error) {
-            console.error(resp.error);
-        }
+      if (resp.deleted) {
+        // remove trade plan from trades
+        const tradeIdx = trades.findIndex(({ id }) => id === resp.tradeId);
+        const { tradePlan, ...tradeData } = trades[tradeIdx];
+        const updatedTrade = { ...tradeData };
+
+        const updatedTrades = [
+          ...trades.slice(0, tradeIdx),
+          updatedTrade,
+          ...trades.slice(tradeIdx + 1),
+        ];
+        setTrades(updatedTrades);
+      } else if (resp.error) {
+        console.error(resp.error);
+      }
     } else {
-        const resp = await linkTradePlanTradeResult(tradePlanId, tradeId);
-        console.log("linkTradePlanTradeResult", resp);
+      const resp = await linkTradePlanTradeResult(tradePlanId, tradeId);
+      console.log("linkTradePlanTradeResult", resp);
 
-        if (resp.error) {
-            console.error(resp.error);
-        } else {
-            const { tradePlanTradeResultLink } = resp;
+      if (resp.error) {
+        console.error(resp.error);
+      } else {
+        const { tradePlanTradeResultLink } = resp;
 
-            // find the tradePlan and update trades 
-            const tradeIdx = trades.findIndex((({id}) => id === tradePlanTradeResultLink.tradeId));
-            const trade = trades[tradeIdx];
-            const tradePlan = tradePlans.find(({id }) => id === tradePlanTradeResultLink.tradePlanId);
-            const updatedTrade = {...trade, tradePlan};
+        // find the tradePlan and update trades
+        const tradeIdx = trades.findIndex(
+          ({ id }) => id === tradePlanTradeResultLink.tradeId
+        );
+        const trade = trades[tradeIdx];
+        const tradePlan = tradePlans.find(
+          ({ id }) => id === tradePlanTradeResultLink.tradePlanId
+        );
+        const updatedTrade = { ...trade, tradePlan };
 
-            const updatedTrades = [...trades.slice(0,tradeIdx), updatedTrade, ...trades.slice(tradeIdx + 1)];
-            setTrades(updatedTrades);
-        }
+        const updatedTrades = [
+          ...trades.slice(0, tradeIdx),
+          updatedTrade,
+          ...trades.slice(tradeIdx + 1),
+        ];
+        setTrades(updatedTrades);
+      }
     }
     setTradeInfo(null);
   }
@@ -600,8 +625,8 @@ export default function Trades() {
                       onSearch={setSearchString}
                     />
                   </div>
-                ): null}
-                {loading && (<Loader />)}
+                ) : null}
+                {loading && <Loader />}
                 {trades.length && data.length ? (
                   <div className="mx-auto mt-4 max-w-[90%]">
                     <BasicTable
@@ -643,7 +668,10 @@ export default function Trades() {
         onClose={() => setTradeInfo(null)}
         onSubmit={handleTradePlanModalSubmit}
       />
-      <TradingAccountRequiredModal body="To import and view trades/investments, create an account first" isOpen={isAcctRequiredModalOpen} />
+      <TradingAccountRequiredModal
+        body="To import and view trades/investments, create an account first"
+        isOpen={isAcctRequiredModalOpen}
+      />
     </div>
   );
 }
