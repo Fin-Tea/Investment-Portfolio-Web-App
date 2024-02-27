@@ -366,7 +366,8 @@ async function readTradePlanEntries(journalEntryIds) {
       "priceTarget2",
       "positionSizePercent2",
       "priceTarget3",
-      "positionSizePercent3"
+      "positionSizePercent3",
+      "isManagedStopLoss",
     )
     .from("tradePlans")
     .whereIn("journalEntryId", journalEntryIds);
