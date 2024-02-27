@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import BaseForm from "./base-form";
 import Autocomplete from "../autocomplete";
 import Select from "react-select";
-import { Switch } from "@chakra-ui/react";
+import { Switch, Checkbox } from "@chakra-ui/react";
 import Tooltip from "../tooltip";
 import Pill from "../pill";
 import LinkTradesModal from "../link-trades-modal";
@@ -215,6 +215,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
                 label === data.tradePlan.confirmations[2].confirmationText
             )
           : "",
+      isManagedStopLoss: data?.tradePlan.isManagedStopLoss,
     },
     resolver: yupResolver(validationSchema),
   };
@@ -261,6 +262,8 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   const confirmation2 = watch("confirmation2");
   const confirmation3 = watch("confirmation3");
 
+  const isManagedStopLoss = watch("isManagedStopLoss");
+
   const [showLinkTradesModal, setShowLinkTradesModal] = useState(false);
 
   console.log("errors", errors);
@@ -272,6 +275,10 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   function handleTradeLinkUpdates(linkedTradeIds) {
     setValue("linkedTradeIds", linkedTradeIds);
     handleSubmit(onSubmit)();
+  }
+
+  function handleManagedStopLossCheck(e) {
+    setValue("isManagedStopLoss", e.target.checked);
   }
 
   let plannedAverageExit = 0;
@@ -319,7 +326,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
         data.tradePlan.tradeResults.reduce((acc, result) => {
           return acc + result.openPrice;
         }, 0) / data.tradePlan.tradeResults.length;
-      if (actualPnL >= 0) {
+      if (actualPnL >= 0 && !isManagedStopLoss) {
         actualRewardRisk = actualPnL / Math.abs(entry - stopLoss);
         actualRewardRiskColor = "text-orange-500";
         if (actualRewardRisk >= 2) {
@@ -792,6 +799,14 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
         ) : null}
 
         {tradeResults.length ? (
+          <div className="flex items-center mt-4 text-sm">
+            <Checkbox className="mr-2" checked={isManagedStopLoss} onChange={handleManagedStopLossCheck} colorScheme="purple" />
+            Managed stop loss?{" "}
+            <Tooltip text="Makes it clear that a stop loss was moved up/down instead of an emotional early exit" />
+          </div>
+        ) : null}
+
+        {tradeResults.length ? (
           <div className="mt-4">
             <p>Trade Analysis</p>
             {/* TODO: Add grades and points after MVP launch (not in scope for MVP) */}
@@ -821,7 +836,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
             <p className="text-sm">
               Stopped Out Late?{" "}
               <span className={`${isStopLossLateColor}`}>{` ${
-                actualPnL < 0 ? (isStopLossLate ? "Yes" : "No") : "N/A"
+                actualPnL < 0 || isManagedStopLoss ? (isStopLossLate ? "Yes" : "No") : "N/A"
               }`}</span>
             </p>
           </div>
