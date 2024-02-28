@@ -7,7 +7,7 @@ import BaseForm from "./base-form";
 import Pill from "../pill";
 import Tooltip from "../tooltip";
 
-export default function Milestone({ data, onSubmit, onDelete }) {
+export default function Milestone({ data, items, onSubmit, onDelete }) {
   const validationSchema = Yup.object().shape({
     growthTypeId: Yup.number()
       .transform((value) => (Number.isNaN(value) ? null : value))

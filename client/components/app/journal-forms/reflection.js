@@ -5,7 +5,7 @@ import * as Yup from "yup";
 import BaseForm from "./base-form";
 import Pill from "../pill";
 
-export default function Reflection({ data, onSubmit, onDelete }) {
+export default function Reflection({ data, items, onSubmit, onDelete }) {
   const validationSchema = Yup.object().shape({
     timeframeType: Yup.string().required("Timeframe is required"),
     moodType: Yup.string().required("Mood is required"),

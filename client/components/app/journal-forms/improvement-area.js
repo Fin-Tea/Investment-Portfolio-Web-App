@@ -7,7 +7,7 @@ import BaseForm from "./base-form";
 import Pill from "../pill";
 import Tooltip from "../tooltip";
 
-export default function ImprovementArea({ data, onSubmit, onDelete }) {
+export default function ImprovementArea({ data, items, onSubmit, onDelete }) {
   const validationSchema = Yup.object().shape({
     growthTypeId: Yup.number()
       .transform((value) => (Number.isNaN(value) ? null : value))
