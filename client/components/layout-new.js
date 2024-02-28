@@ -10,7 +10,7 @@ export default function Layout({ children }) {
     <div>
       <Head>
         <title>Fin Tea</title>
-        <link rel="icon" href="/favicon.ico?v=2" />
+        <link rel="icon" href="/favicon.ico?v=3" />
         <meta
           name="description"
           content="Easy Trading Journaling &amp; Performance Insights"
