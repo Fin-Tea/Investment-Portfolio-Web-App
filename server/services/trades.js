@@ -187,6 +187,7 @@ export async function getTradeHistory(accountId, options = {}) {
         "priceTarget3",
         "positionSizePercent3",
         "isManagedStopLoss",
+        "isMissedTradeEntry",
       )
       .from("tradePlans")
       .whereIn("id", tradePlanIds);

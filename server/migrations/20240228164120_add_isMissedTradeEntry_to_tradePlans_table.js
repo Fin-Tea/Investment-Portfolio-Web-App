@@ -1,12 +1,12 @@
 
 exports.up = function(knex) {
     return knex.schema.alterTable("tradePlans", (t) => {
-        t.boolean("isManagedStopLoss").defaultTo(false);
+        t.boolean("isMissedTradeEntry").defaultTo(false);
       });
 };
 
 exports.down = function(knex) {
     return knex.schema.alterTable("tradePlans", (t) => {
-        t.dropColumn("isManagedStopLoss");
+        t.dropColumn("isMissedTradeEntry");
       });
 };

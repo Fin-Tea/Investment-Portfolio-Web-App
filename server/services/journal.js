@@ -118,8 +118,8 @@ async function createTradePlanEntry(journalEntry, formFields, currentDate) {
         positionSizePercent1,
         priceTarget2,
         positionSizePercent2,
-        priceTarget3,
-        positionSizePercent3,
+        priceTarget3, // FIX: handle null?
+        positionSizePercent3, // FIX: handle null?
         createdAt: now,
         updatedAt: now,
       },
@@ -143,7 +143,9 @@ async function createTradePlanEntry(journalEntry, formFields, currentDate) {
       "priceTarget2",
       "positionSizePercent2",
       "priceTarget3",
-      "positionSizePercent3"
+      "positionSizePercent3",
+      "isManagedStopLoss",
+      "isMissedTradeEntry"
     )
     .from("tradePlans")
     .where({ id: tradePlanId })
@@ -368,6 +370,7 @@ async function readTradePlanEntries(journalEntryIds) {
       "priceTarget3",
       "positionSizePercent3",
       "isManagedStopLoss",
+      "isMissedTradeEntry",
     )
     .from("tradePlans")
     .whereIn("journalEntryId", journalEntryIds);
