@@ -325,12 +325,13 @@ export default function TradingJournal() {
   let journalEntrySummaries = journalEntries.map((entry) => {
     const { id, journalTagId, updatedAt } = entry;
     const tag = journalTags.find(({ value }) => value === journalTagId).label;
-    const summary = { id, journalTagId, tag, updatedAt };
+    const summary = { id, journalTagId, tag, updatedAt, isLinked: false };
 
     switch (journalTagId) {
       case 1:
         summary.symbol = entry.tradePlan.securitySymbol;
         summary.entryText = entry.tradePlan.hypothesis;
+        summary.isLinked = entry.tradePlan.tradeResults && entry.tradePlan.tradeResults.length; 
         break;
       case 2:
         summary.entryText = entry.milestone.milestoneText;
@@ -408,11 +409,12 @@ export default function TradingJournal() {
                 </div>
               )}
               {journalEntrySummaries.map(
-                ({ id, tag, symbol, updatedAt, entryText }) => (
+                ({ id, tag, symbol, updatedAt, entryText, isLinked }) => (
                   <div key={id}>
                     <JournalEntry
                       id={id}
                       tag={tag}
+                      isLinked={isLinked}
                       symbol={symbol}
                       isActive={id === currentJournalEntry?.id}
                       date={formatJournalDate(updatedAt)}
