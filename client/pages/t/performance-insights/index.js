@@ -545,8 +545,8 @@ export default function PerformanceInsights() {
 
   const winLossRatios = winLossRatio
     ? [
-        { x: "Loss Ratio", y: 1, color: "tomato" },
-        { x: "Win Ratio", y: winLossRatio, color: "green" },
+        { x: "Loss Ratio", y: 1 / (1 + winLossRatio), color: "tomato" },
+        { x: "Win Ratio", y: winLossRatio / (1 + winLossRatio), color: "green" }, // FIX: amounts need to add up to 100
       ]
     : [];
 
@@ -826,10 +826,10 @@ export default function PerformanceInsights() {
                             />
                             <div className="text-center text-sm">
                               <p>{`Win Rate ${
-                                winRate ? `${winRate}%` : "Unknown"
+                                winRate ? `${winRate.toFixed(0)}%` : "Unknown"
                               }`}</p>
                               <p>{`Loss Rate ${
-                                lossRate ? `${lossRate}%` : "Unknown"
+                                lossRate ? `${lossRate.toFixed(0)}%` : "Unknown"
                               }`}</p>
                             </div>
                           </div>
