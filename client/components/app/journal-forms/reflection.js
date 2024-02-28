@@ -10,7 +10,7 @@ export default function Reflection({ data, items, onSubmit, onDelete }) {
     timeframeType: Yup.string().required("Timeframe is required"),
     moodType: Yup.string().required("Mood is required"),
     energyType: Yup.string().required("Energy is required"),
-    thoughts: Yup.string().required("Thoughts are required"),
+    thoughts: Yup.string().required("Thoughts are required").max(2500, 'Max length 2500 chars'),
   });
 
   const formOptions = {
