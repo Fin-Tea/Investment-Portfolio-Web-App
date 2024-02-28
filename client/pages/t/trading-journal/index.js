@@ -123,6 +123,8 @@ export default function TradingJournal() {
         confirmation2,
         confirmation3Id,
         confirmation3,
+        isManagedStopLoss,
+        isMissedTradeEntry,
         ...tradePlanFields
       } = data;
       data = {
@@ -131,6 +133,8 @@ export default function TradingJournal() {
         setup: data.setup.label,
         tradeDirectionType: data.tradeDirectionType.label,
         planType: isAdvancedExit ? "Advanced" : "Simple",
+        isManagedStopLoss: isManagedStopLoss ? 1 : 0,
+        isMissedTradeEntry: isMissedTradeEntry ? 1 : 0,
       };
 
       if (catalystLabel) {

@@ -215,7 +215,8 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
                 label === data.tradePlan.confirmations[2].confirmationText
             )
           : "",
-      isManagedStopLoss: data?.tradePlan.isManagedStopLoss,
+      isManagedStopLoss: !!data?.tradePlan.isManagedStopLoss,
+      isMissedTradeEntry: !!data?.tradePlan.isMissedTradeEntry,
     },
     resolver: yupResolver(validationSchema),
   };
@@ -263,6 +264,8 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   const confirmation3 = watch("confirmation3");
 
   const isManagedStopLoss = watch("isManagedStopLoss");
+  const isMissedTradeEntry = watch("isMissedTradeEntry");
+
 
   const [showLinkTradesModal, setShowLinkTradesModal] = useState(false);
 
@@ -279,6 +282,10 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
 
   function handleManagedStopLossCheck(e) {
     setValue("isManagedStopLoss", e.target.checked);
+  }
+
+  function handleMissedTradeEntryCheck(e) {
+    setValue("isMissedTradeEntry", e.target.checked);
   }
 
   let plannedAverageExit = 0;
@@ -733,6 +740,12 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
           <Tooltip text="The expected reward (profit) divided by the planned risk amount based on stop loss. A Reward Risk ratio of 2+ is standard" />
         </div>
 
+       {!tradeResults.length ? (<div className="flex items-center mt-4 ">
+            <Checkbox className="mr-2" isChecked={isMissedTradeEntry} onChange={handleMissedTradeEntryCheck} colorScheme="purple" />
+            Missed trade entry?{" "}
+            <Tooltip text="Check if your trade plan happened, but you missed your entry" />
+          </div>) : null}
+
         <div className="mt-4 flex items-center">
           <button
             className="rounded-md bg-purple-800 text-white px-4"
@@ -800,7 +813,7 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
 
         {tradeResults.length ? (
           <div className="flex items-center mt-4 text-sm">
-            <Checkbox className="mr-2" checked={isManagedStopLoss} onChange={handleManagedStopLossCheck} colorScheme="purple" />
+            <Checkbox className="mr-2" isChecked={isManagedStopLoss} onChange={handleManagedStopLossCheck} colorScheme="purple" />
             Managed stop loss?{" "}
             <Tooltip text="Makes it clear that a stop loss was moved up/down instead of an emotional early exit" />
           </div>
