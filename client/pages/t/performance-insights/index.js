@@ -785,7 +785,7 @@ export default function PerformanceInsights() {
                 <hr className="w-full border-t border-gray-300 mx-auto" />
                 {!loading ? (
                   <div className="mx-auto mt-4 w-full">
-                    <div className="flex h-72">
+                    <div className="flex">
                       <div className="basis-full border-r">
                         <LineChart
                           title="Daily Trade/Investment PnL"
@@ -861,7 +861,7 @@ export default function PerformanceInsights() {
                         </div>
                       </div>
                     </div>
-                    <hr className="w-full border-t border-gray-300 mx-auto lg:mt-14 xl:mt-24" />
+                    <hr className="w-full border-t border-gray-300 mx-auto mt-8" />
                     <div className="flex">
                       <div className="flex basis-full flex-col border-r">
                         <div className="flex">
