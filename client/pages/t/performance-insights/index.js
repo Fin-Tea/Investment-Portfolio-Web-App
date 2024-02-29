@@ -381,7 +381,7 @@ function calcImprovementAreaStatus(startDate, endDate) {
     return "Not yet started";
   }
 
-  if (now >= start && now <= end) {
+  if (!endDate || (now >= start && now <= end)) {
     return "In progress";
   }
 
@@ -516,7 +516,6 @@ export default function PerformanceInsights() {
     }
   }, [selectedPlatformItem, insights]);
 
-
   const netTradePnL = insights?.dailyPnL?.map(({ date, pnl }) => ({
     x: date,
     y: pnl,
@@ -547,7 +546,11 @@ export default function PerformanceInsights() {
   const winLossRatios = winLossRatio
     ? [
         { x: "Loss Ratio", y: 1 / (1 + winLossRatio), color: "tomato" },
-        { x: "Win Ratio", y: winLossRatio / (1 + winLossRatio), color: "green" }, // FIX: amounts need to add up to 100
+        {
+          x: "Win Ratio",
+          y: winLossRatio / (1 + winLossRatio),
+          color: "green",
+        },
       ]
     : [];
 
@@ -810,9 +813,9 @@ export default function PerformanceInsights() {
                         />
                         {cumulativePnL?.length ? (
                           <div className="mt-2 text-center">
-                            <span className="text-sm">{`Net Current PnL ${
-                             formatCurrency(cumulativePnL[cumulativePnL.length - 1].y)
-                            }`}</span>
+                            <span className="text-sm">{`Net Current PnL ${formatCurrency(
+                              cumulativePnL[cumulativePnL.length - 1].y
+                            )}`}</span>
                           </div>
                         ) : null}
                       </div>
