@@ -476,6 +476,7 @@ export default function PerformanceInsights() {
 
   async function loadInsights(params) {
     try {
+      setLoading(true);
       const resp = await fetchPlatformInsights(params);
 
       console.log("insights resp", resp);
