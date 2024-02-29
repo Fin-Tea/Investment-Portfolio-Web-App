@@ -12,6 +12,7 @@ import useInsights from "../../../hooks/insights";
 import { formatJournalDate } from "../../../date-utils";
 import Loader from "../../../components/loader";
 import TradingAccountRequiredModal from "../../../components/app/trading-account-required-modal";
+import { formatCurrency } from "../../../data-utils";
 
 const MAX_FINSTRUMENTS = 3;
 const MAX_STRATEGIES = 3;
@@ -809,8 +810,8 @@ export default function PerformanceInsights() {
                         />
                         {cumulativePnL?.length ? (
                           <div className="mt-2 text-center">
-                            <span className="text-sm">{`Net Current PnL $${
-                              cumulativePnL[cumulativePnL.length - 1].y
+                            <span className="text-sm">{`Net Current PnL ${
+                             formatCurrency(cumulativePnL[cumulativePnL.length - 1].y)
                             }`}</span>
                           </div>
                         ) : null}
