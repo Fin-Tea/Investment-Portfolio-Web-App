@@ -85,8 +85,6 @@ async function getTradesPnL(platformAccountIds, options = {}) {
         const { securityType, quantity, openPrice, closePrice, pnl } = trade;
 
         if (pnl !== null) {
-          console.log("pnl", pnl);
-          console.log("pnl type", typeof pnl);
           return acc2 + pnl;
         } else {
           let pnl2 = (closePrice - openPrice) * quantity;
@@ -196,10 +194,12 @@ async function getTradeResults(platformAccountIds, options = {}) {
     const tradeHistoryIds = trades.map(({ id }) => id);
 
     builder = db("tradePlanTradeResults")
-      .select("tradePlanId")
+      .select("tradePlanId", "tradeHistoryId")
       .whereIn("tradeHistoryId", tradeHistoryIds);
 
     const tradePlanTradeResults = await builder;
+
+    console.log("tradePlanTradeResults", JSON.stringify(tradePlanTradeResults));
 
     const tradePlanTradeResultIdsMap = tradePlanTradeResults.reduce(
       (acc, { tradePlanId, tradeHistoryId }) => {
@@ -225,10 +225,13 @@ async function getTradeResults(platformAccountIds, options = {}) {
         "priceTarget2",
         "positionSizePercent2",
         "priceTarget3",
-        "positionSizePercent3"
+        "positionSizePercent3",
+        "isManagedStopLoss",
       )
       .from("tradePlans")
       .whereIn("id", tradePlanIds);
+
+      // console.log("tradePlans", JSON.stringify(tradePlans));
 
     const tradePlansMap = tradePlans.reduce((acc, tradePlan) => {
       acc.set(tradePlan.id, tradePlan);
@@ -239,7 +242,11 @@ async function getTradeResults(platformAccountIds, options = {}) {
       const { id } = trade;
       const tradePlanId = tradePlanTradeResultIdsMap.get(id);
 
+      // console.log("tradePlanId", JSON.stringify(tradePlanId));
+
       const tradePlan = tradePlansMap.get(tradePlanId);
+
+      // console.log("tradePlan", JSON.stringify(tradePlan));
 
       return { ...trade, tradePlan };
     });
@@ -272,6 +279,8 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
     ...options,
     includeTradePlans: true,
   });
+
+  console.log("Trade quality trades", JSON.stringify(trades));
 
   const groupedTrades = trades.reduce((acc, trade) => {
     const {
@@ -321,7 +330,10 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
           const { pnl, tradeDirectionType, openPrice, closePrice, tradePlan } =
             trade;
 
+            console.log("Checking trade quality");
+
           if (!tradePlan) {
+            console.log("No trade plan");
             isHighQuality = false;
           } else {
             const {
@@ -335,6 +347,7 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
               positionSizePercent2,
               priceTarget3,
               positionSizePercent3,
+              isManagedStopLoss,
             } = tradePlan;
 
             const isProfit = pnl
@@ -343,7 +356,7 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
               ? closePrice - openPrice >= 0
               : openPrice - closePrice >= 0;
 
-            if (isProfit) {
+            if (isProfit && !isManagedStopLoss) { // TODO: Fix isManagedStopLoss logic
               const targetPrice = planType === "Simple" ? exit : priceTarget1;
               const profitDelta = Math.abs(targetPrice - entry);
               const profitTolerance = profitDelta * QUALITY_TOLERANCE;
@@ -351,29 +364,39 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
                 Math.abs(closePrice - openPrice) <
                 profitDelta - profitTolerance
               ) {
+                console.log("Exited early");
                 isHighQuality = false;
               }
-            } else {
+            } else if (!isProfit) {
               const stopLossDelta = Math.abs(entry - stopLoss);
               const stopLossTolerance = stopLossDelta * QUALITY_TOLERANCE;
               if (
                 Math.abs(openPrice - closePrice) <
-                stopLossDelta + stopLossTolerance
+                stopLossDelta + stopLossTolerance 
               ) {
+                console.log("Stop lossed too late");
                 isHighQuality = false;
               }
             }
 
-            if (planType === "Simple") {
+            if (planType === "Simple") { // Wrong logic!
+              // Check trade plan Reward Risk 
               if (Math.abs(exit - entry) / Math.abs(entry - stopLoss) < 2) {
+                console.log("Trade plan RR < 2");
                 isHighQuality = false;
               }
+
+              // Check trade Reward Risk, if profitable trade
+              if (isProfit && !isManagedStopLoss) {
               const simpleDelta = Math.abs(closePrice - openPrice);
 
               if (simpleDelta / Math.abs(entry - stopLoss) < 2) {
+                console.log("Trade results RR < 2");
                 isHighQuality = false;
               }
+            }
             } else {
+               // Check trade plan Reward Risk 
               let averageExit =
                 (Math.abs(priceTarget1 - entry) * positionSizePercent1) / 100 +
                 (Math.abs(priceTarget2 - entry) * positionSizePercent2) / 100;
