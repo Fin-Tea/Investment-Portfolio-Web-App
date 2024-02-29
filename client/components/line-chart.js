@@ -99,6 +99,7 @@ export default function LineChart({
               tickLabels: {
                 color: "#555555",
                 fill: "#555555",
+                angle: 45
               },
             }}
             offsetY={xAxisOffset || null}
