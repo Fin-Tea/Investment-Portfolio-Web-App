@@ -137,7 +137,7 @@ async function getTradesPnL(platformAccountIds, options = {}) {
     const to = new Date(toDate);
     filteredDailyPnL = filteredDailyPnL.filter((trade) => {
       const tradeDate = new Date(trade.date);
-      console.log("Date filter", new Date(trade.date) >= to, tradeDate, to);
+      // console.log("Date filter", new Date(trade.date) >= to, tradeDate, to);
       return new Date(trade.date) <= to;
     });
     filteredCumulativePnL = filteredCumulativePnL.filter(
@@ -175,12 +175,16 @@ async function getTradeResults(platformAccountIds, options = {}) {
     .whereIn("platformAccountId", platformAccountIds);
 
   if (fromDate) {
-    const formattedFromDate = new Date(fromDate);
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", ">=", formattedFromDate);
   }
 
   if (toDate) {
-    const formattedToDate = new Date(toDate);
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", "<=", formattedToDate);
   }
 
@@ -226,12 +230,12 @@ async function getTradeResults(platformAccountIds, options = {}) {
         "positionSizePercent2",
         "priceTarget3",
         "positionSizePercent3",
-        "isManagedStopLoss",
+        "isManagedStopLoss"
       )
       .from("tradePlans")
       .whereIn("id", tradePlanIds);
 
-      // console.log("tradePlans", JSON.stringify(tradePlans));
+    // console.log("tradePlans", JSON.stringify(tradePlans));
 
     const tradePlansMap = tradePlans.reduce((acc, tradePlan) => {
       acc.set(tradePlan.id, tradePlan);
@@ -330,7 +334,7 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
           const { pnl, tradeDirectionType, openPrice, closePrice, tradePlan } =
             trade;
 
-            console.log("Checking trade quality");
+          console.log("Checking trade quality");
 
           if (!tradePlan) {
             console.log("No trade plan");
@@ -356,7 +360,7 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
               ? closePrice - openPrice >= 0
               : openPrice - closePrice >= 0;
 
-            if (isProfit && !isManagedStopLoss) { // TODO: Fix isManagedStopLoss logic
+            if (isProfit && !isManagedStopLoss) {
               const targetPrice = planType === "Simple" ? exit : priceTarget1;
               const profitDelta = Math.abs(targetPrice - entry);
               const profitTolerance = profitDelta * QUALITY_TOLERANCE;
@@ -372,15 +376,15 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
               const stopLossTolerance = stopLossDelta * QUALITY_TOLERANCE;
               if (
                 Math.abs(openPrice - closePrice) <
-                stopLossDelta + stopLossTolerance 
+                stopLossDelta + stopLossTolerance
               ) {
                 console.log("Stop lossed too late");
                 isHighQuality = false;
               }
             }
 
-            if (planType === "Simple") { // Wrong logic!
-              // Check trade plan Reward Risk 
+            if (planType === "Simple") {
+              // Check trade plan Reward Risk
               if (Math.abs(exit - entry) / Math.abs(entry - stopLoss) < 2) {
                 console.log("Trade plan RR < 2");
                 isHighQuality = false;
@@ -388,15 +392,15 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
 
               // Check trade Reward Risk, if profitable trade
               if (isProfit && !isManagedStopLoss) {
-              const simpleDelta = Math.abs(closePrice - openPrice);
+                const simpleDelta = Math.abs(closePrice - openPrice);
 
-              if (simpleDelta / Math.abs(entry - stopLoss) < 2) {
-                console.log("Trade results RR < 2");
-                isHighQuality = false;
+                if (simpleDelta / Math.abs(entry - stopLoss) < 2) {
+                  console.log("Trade results RR < 2");
+                  isHighQuality = false;
+                }
               }
-            }
             } else {
-               // Check trade plan Reward Risk 
+              // Check trade plan Reward Risk
               let averageExit =
                 (Math.abs(priceTarget1 - entry) * positionSizePercent1) / 100 +
                 (Math.abs(priceTarget2 - entry) * positionSizePercent2) / 100;
@@ -568,12 +572,16 @@ async function getNumTrades(platformAccountIds, options = {}) {
   }
 
   if (fromDate) {
-    const formattedFromDate = new Date(fromDate);
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", ">=", formattedFromDate);
   }
 
   if (toDate) {
-    const formattedToDate = new Date(toDate);
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", "<=", formattedToDate);
   }
 
@@ -605,12 +613,16 @@ async function getTradesValue(platformAccountIds, options = {}) {
   }
 
   if (fromDate) {
-    const formattedFromDate = new Date(fromDate);
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", ">=", formattedFromDate);
   }
 
   if (toDate) {
-    const formattedToDate = new Date(toDate);
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", "<=", formattedToDate);
   }
 
@@ -655,11 +667,17 @@ export async function getWinRate(platformAccountIds, options = {}) {
     });
 
   if (fromDate) {
-    winBuilder = winBuilder.andWhere("tradeClosedAt", ">=", new Date(fromDate));
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
+    winBuilder = winBuilder.andWhere("tradeClosedAt", ">=", formattedFromDate);
   }
 
   if (toDate) {
-    winBuilder = winBuilder.andWhere("tradeClosedAt", "<=", new Date(toDate));
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
+    winBuilder = winBuilder.andWhere("tradeClosedAt", "<=", formattedToDate);
   }
 
   winBuilder = winBuilder.first();
@@ -682,12 +700,16 @@ export async function getPnlBySymbols(platformAccountIds, options = {}) {
     .whereIn("platformAccountId", platformAccountIds);
 
   if (fromDate) {
-    const formattedFromDate = new Date(fromDate);
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", ">=", formattedFromDate);
   }
 
   if (toDate) {
-    const formattedToDate = new Date(toDate);
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", "<=", formattedToDate);
   }
 
@@ -721,7 +743,9 @@ export async function getPnlByTradingSetups(platformAccountIds, options = {}) {
     .whereIn("tradeHistory.platformAccountId", platformAccountIds);
 
   if (fromDate) {
-    const formattedFromDate = new Date(fromDate);
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
     builder = builder.andWhere(
       "tradeHistory.tradeClosedAt",
       ">=",
@@ -730,7 +754,9 @@ export async function getPnlByTradingSetups(platformAccountIds, options = {}) {
   }
 
   if (toDate) {
-    const formattedToDate = new Date(toDate);
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
     builder = builder.andWhere(
       "tradeHistory.tradeClosedAt",
       "<=",
@@ -766,12 +792,16 @@ function getTopTrades(platformAccountIds, options = {}) {
     .whereIn("platformAccountId", platformAccountIds);
 
   if (fromDate) {
-    const formattedFromDate = formatDate(fromDate);
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", ">=", formattedFromDate);
   }
 
   if (toDate) {
-    const formattedToDate = formatDate(toDate);
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
     builder = builder.andWhere("tradeClosedAt", "<=", formattedToDate);
   }
 
@@ -892,7 +922,10 @@ export async function getInsights(platformAccountIds, options = {}) {
     pnlType: LOSS,
   });
 
-  const milestonesSnapshot = await getAchievedMilestones(platformAccountIds, options);
+  const milestonesSnapshot = await getAchievedMilestones(
+    platformAccountIds,
+    options
+  );
   const improvementAreasSnapshot = await getImprovementAreas(
     platformAccountIds,
     options
