@@ -44,6 +44,8 @@ async function getTradesPnL(platformAccountIds, options = {}) {
     )
     .whereIn("platformAccountId", platformAccountIds);
 
+    builder = builder.orderBy("tradeClosedAt", "asc");
+
   const trades = await builder;
 
   // group trades by date (same close date)
