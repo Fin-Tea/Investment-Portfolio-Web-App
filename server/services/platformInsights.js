@@ -156,6 +156,12 @@ async function getTradesPnL(platformAccountIds, options = {}) {
   };
 }
 
+function sortTradeInsights(insights) {
+  return insights.sort((a,b) => {
+    return new Date(a.date) - new Date(b.date);
+  });
+}
+
 async function getTradeResults(platformAccountIds, options = {}) {
   const { fromDate, toDate, includeTradePlans, orderBy } = options;
 
@@ -443,8 +449,8 @@ async function getTradesByQuality(platformAccountIds, options = {}) {
   );
 
   return {
-    highQualityTrades,
-    lowQualityTrades,
+    highQualityTrades: sortTradeInsights(highQualityTrades),
+    lowQualityTrades: sortTradeInsights(lowQualityTrades),
   };
 }
 
@@ -512,7 +518,7 @@ async function getRevengeTrades(platformAccountIds, options = {}) {
     []
   );
 
-  return revengeTrades;
+  return sortTradeInsights(revengeTrades);
 }
 
 async function getPnlTrades(platformAccountIds, options = {}) {
@@ -550,7 +556,7 @@ async function getPnlTrades(platformAccountIds, options = {}) {
     { profitTrades: [], lossTrades: [] }
   );
 
-  return { profitTrades, lossTrades };
+  return { profitTrades: sortTradeInsights(profitTrades), lossTrades: sortTradeInsights(lossTrades) };
 }
 
 async function getNumTrades(platformAccountIds, options = {}) {
