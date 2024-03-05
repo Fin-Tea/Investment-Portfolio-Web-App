@@ -20,6 +20,34 @@ const testData2 = [
   { x: new Date("2021-12-31"), y: 10011 },
 ];
 
+function calcTickCount(dataset1, dataset2) {
+  let max = dataset1.reduce((acc, datum) => {
+    if (datum.y > acc) {
+      return datum.y;
+    }
+    return acc;
+  }, 0);
+
+  if (dataset2) {
+    max = dataset2.reduce((acc, datum) => {
+      if (datum.y > acc) {
+        return datum.y;
+      }
+      return acc;
+    }, max);
+  }
+
+  if (max === 1) {
+    return 2;
+  }
+
+  if (max === 0 || max === 1) {
+    return 1;
+  }
+
+  return undefined;
+}
+
 export default function LineChart({
   title,
   data,
@@ -41,10 +69,12 @@ export default function LineChart({
   return (
     <div>
       <div className="flex justify-center items-center">
-      <Header style={{ marginBottom: 0 }}>{title}</Header>
-      {tooltip && <Tooltip text={tooltip} />}
+        <Header style={{ marginBottom: 0 }}>{title}</Header>
+        {tooltip && <Tooltip text={tooltip} />}
       </div>
-      {legendItems && legendPosition === "Top" && (<Legend className="mt-2 mx-auto" items={legendItems} />)}
+      {legendItems && legendPosition === "Top" && (
+        <Legend className="mt-2 mx-auto" items={legendItems} />
+      )}
       {data?.length || dataset2?.length ? (
         <VictoryChart
           height={height}
@@ -66,7 +96,9 @@ export default function LineChart({
           <VictoryAxis
             dependentAxis
             tickFormat={(t) =>
-              `${prefix}${parseFloat(t).toLocaleString("en-US")}${suffix}`
+              Number.isInteger(t)
+                ? `${prefix}${parseFloat(t).toLocaleString("en-US")}${suffix}`
+                : null
             }
             width={5}
             style={{
@@ -83,6 +115,7 @@ export default function LineChart({
             }}
             standalone={false}
             crossAxis={false}
+            tickCount={calcTickCount(data, dataset2)}
           />
           {/* X Axis */}
           <VictoryAxis
@@ -99,7 +132,7 @@ export default function LineChart({
               tickLabels: {
                 color: "#555555",
                 fill: "#555555",
-                angle: 45
+                angle: 45,
               },
             }}
             offsetY={xAxisOffset || null}
@@ -171,7 +204,9 @@ export default function LineChart({
           <p>No Info</p>
         </div>
       )}
-      {legendItems && legendPosition === "Bottom" && (<Legend className="mt-2 mx-auto" items={legendItems} />)}
+      {legendItems && legendPosition === "Bottom" && (
+        <Legend className="mt-2 mx-auto" items={legendItems} />
+      )}
     </div>
   );
 }
@@ -199,5 +234,5 @@ LineChart.defaultProps = {
   showDataPoints: true,
   showDataset2Area: false,
   xAxisOffset: PropTypes.number,
-  legendPosition: "Top"
+  legendPosition: "Top",
 };
