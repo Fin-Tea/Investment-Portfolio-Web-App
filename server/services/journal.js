@@ -183,7 +183,7 @@ async function createTradePlanEntry(journalEntry, formFields, currentDate) {
       throw new Error("Confirmations must be an array");
     }
 
-    let dbConfirmations = confirmations.map((confirmationText) => ({
+    let dbConfirmations = confirmations.map(({ confirmationText }) => ({
       accountId,
       tradePlanId,
       confirmationText,
@@ -370,7 +370,7 @@ async function readTradePlanEntries(journalEntryIds) {
       "priceTarget3",
       "positionSizePercent3",
       "isManagedStopLoss",
-      "isMissedTradeEntry",
+      "isMissedTradeEntry"
     )
     .from("tradePlans")
     .whereIn("journalEntryId", journalEntryIds);
