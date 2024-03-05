@@ -139,7 +139,7 @@ export default function TradingJournal() {
 
       if (catalystLabel) {
         data.newsCatalyst = {
-          tradePlanId: currentJournalEntry.tradePlan.id,
+          tradePlanId: currentJournalEntry?.tradePlan?.id,
           label: catalystLabel.label,
           sentimentType: catalystSentimentType,
           url: catalystURL,
