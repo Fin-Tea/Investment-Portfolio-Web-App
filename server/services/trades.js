@@ -42,6 +42,7 @@ export async function getTradeHistory(accountId, options = {}) {
     tradeOpenedAt,
     isPlatformAccounts,
     includeTradePlans,
+    platformAccountId,
   } = options;
 
   let builder = db
@@ -124,6 +125,10 @@ export async function getTradeHistory(accountId, options = {}) {
     builder = builder.whereNotNull("platformAccountId");
   }
 
+  if (platformAccountId) {
+    builder = builder.andWhere({ platformAccountId });
+  }
+
   if (tradeOpenedAt) {
     builder = builder.andWhere(
       "tradeOpenedAt",
@@ -187,7 +192,7 @@ export async function getTradeHistory(accountId, options = {}) {
         "priceTarget3",
         "positionSizePercent3",
         "isManagedStopLoss",
-        "isMissedTradeEntry",
+        "isMissedTradeEntry"
       )
       .from("tradePlans")
       .whereIn("id", tradePlanIds);

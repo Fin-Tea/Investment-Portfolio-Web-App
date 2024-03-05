@@ -16,6 +16,7 @@ const platformInsightsService = require("./services/platformInsights");
 const config = require("./config");
 
 export const PORT = 8080;
+const IS_NUM_REGEX = /^\d+$/;
 
 const key = fs.readFileSync(path.join(__dirname, "/security/key.pem"));
 const cert = fs.readFileSync(path.join(__dirname, "/security/new_cert.pem"));
@@ -249,6 +250,7 @@ app.get(
       allAccounts,
       platformAccountsOnly,
       includeTradePlans,
+      platformAccountId,
     } = req.query;
 
     const options = {
@@ -303,6 +305,10 @@ app.get(
 
     if (platformAccountsOnly && platformAccountsOnly.toLowerCase() === "true") {
       options.isPlatformAccounts = true;
+    }
+
+    if (platformAccountId && IS_NUM_REGEX.test(platformAccountId)) {
+      options.platformAccountId = parseInt(platformAccountId);
     }
 
     console.log("includeTradePlans", includeTradePlans);
@@ -590,7 +596,7 @@ app.post("/api/account/magicLogin", async (req, res) => {
     const decodedToken = accountService.authenticateToken(token);
 
     if (decodedToken.error) {
-      throw new Error (decodedToken.error);
+      throw new Error(decodedToken.error);
     }
 
     // sign jwt
@@ -636,19 +642,19 @@ app.post("/api/account/magicLink", async (req, res) => {
       300
     );
 
-    const magicLinkUrl = `${config.clientBaseUrl}/login?token=${tempAccessToken}`
+    const magicLinkUrl = `${config.clientBaseUrl}/login?token=${tempAccessToken}`;
 
     // send magic link email
-   const info = await mailService.sendMail({
+    const info = await mailService.sendMail({
       from: mailService.SUPPORT_EMAIL,
       to: account.email,
       subject: "Magic Login Link",
       template: "magic-link",
       context: { name: account.firstName, magicLinkUrl },
-      text: "Easy login"
+      text: "Easy login",
     });
 
-    console.log("info",JSON.stringify(info));
+    console.log("info", JSON.stringify(info));
 
     res.json({ emailSent: true });
   } catch (e) {
@@ -664,41 +670,47 @@ app.post("/api/account/logout", async (req, res) => {
   res.json({ loggedOut: true });
 });
 
-app.post("/api/account/:accountId/changePassword", authMiddleware, async (req, res) => {
-  try {
-    const { accountId } = req.params;
-    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+app.post(
+  "/api/account/:accountId/changePassword",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { accountId } = req.params;
+      const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
-    if (!currentPassword || !newPassword || !confirmNewPassword) {
-      throw new Error("Missing current password, new password, or password confirmation");
+      if (!currentPassword || !newPassword || !confirmNewPassword) {
+        throw new Error(
+          "Missing current password, new password, or password confirmation"
+        );
+      }
+
+      const account = await accountService.getAccount({ id: accountId });
+
+      if (!account) {
+        throw new Error("Account not found");
+      }
+
+      if (newPassword.length < 8) {
+        throw new Error("New password must be at least 8 chars");
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        throw new Error("New password and password confirmation don't match");
+      }
+
+      // authenticate current password
+      await accountService.authenticate(account.email, currentPassword);
+
+      // update password
+      await accountService.updatePassword(account.email, newPassword);
+
+      res.json({ passwordChanged: true });
+    } catch (e) {
+      // send error
+      res.json({ error: e.message });
     }
-
-    const account = await accountService.getAccount({ id: accountId });
-
-    if (!account) {
-      throw new Error("Account not found");
-    }
-
-    if (newPassword.length < 8) {
-      throw new Error("New password must be at least 8 chars");
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      throw new Error("New password and password confirmation don't match");
-    }
-
-    // authenticate current password
-    await accountService.authenticate(account.email, currentPassword);
-
-    // update password
-    await accountService.updatePassword(account.email, newPassword);
-
-    res.json({ passwordChanged: true });
-  } catch (e) {
-    // send error
-    res.json({ error: e.message });
   }
-});
+);
 
 app.post(
   "/api/account/:accountId/tradeHistory",
@@ -1031,11 +1043,17 @@ app.post(
         // console.log(req.files.csv.data.toString("utf8"));
         const orders = tradingService.parseTDAOrdersFromCSV(file);
         // console.log(JSON.stringify(orders));
-        tradeInfo = tradingService.mapUploadedTDAOrdersToTradeInfo(orders, { timezone, timezoneOffset });
+        tradeInfo = tradingService.mapUploadedTDAOrdersToTradeInfo(orders, {
+          timezone,
+          timezoneOffset,
+        });
       } else if (platform.id === tradingService.PLATFORMS.NINJA_TRADER) {
         const trades = tradingService.parseNinjaTradesFromCSV(file);
 
-        tradeInfo = tradingService.mapUploadedNinjaTradesToTradeInfo(trades, { timezone, timezoneOffset });
+        tradeInfo = tradingService.mapUploadedNinjaTradesToTradeInfo(trades, {
+          timezone,
+          timezoneOffset,
+        });
       }
 
       if (tradeInfo) {
