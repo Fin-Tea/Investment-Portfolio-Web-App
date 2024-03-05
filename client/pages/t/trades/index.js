@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Select from "react-select";
 import Layout from "../../../components/app/layout";
 import SearchBox from "../../../components/app/search-box";
 import BasicTable from "../../../components/app/basic-table";
@@ -279,6 +280,8 @@ const testData = [
   },
 ];
 
+const ALL_PLATFORMS_ITEM = { label: "All Accounts", value: null };
+
 export default function Trades() {
   const [isAcctRequiredModalOpen, setAcctRequiredOpen] = useState(false);
   const [isImportModalOpen, setImportModalOpen] = useState(false);
@@ -286,6 +289,8 @@ export default function Trades() {
   const [journalItems, setJournalItems] = useState({});
   const [tradeInfo, setTradeInfo] = useState(null);
   const [platformAccounts, setPlatformAccounts] = useState([]);
+  const [selectedPlatformItem, setSelectedPlatformItem] =
+    useState(ALL_PLATFORMS_ITEM);
   const [trades, setTrades] = useState([]);
   const [importLogs, setImportLogs] = useState([]);
   const [searchString, setSearchString] = useState("");
@@ -371,9 +376,9 @@ export default function Trades() {
       ...trade,
       tradeOpenedAt: formatJournalDate(trade.tradeOpenedAt),
       tradeClosedAt: formatJournalDate(trade.tradeClosedAt),
-      pnl: 
-        formatCurrency(trade.pnl ||
-        parseFloat(trade.closePrice) - parseFloat(trade.openPrice)),
+      pnl: formatCurrency(
+        trade.pnl || parseFloat(trade.closePrice) - parseFloat(trade.openPrice)
+      ),
       platformAccount: platformAccount
         ? `${platformAccount.platform.name} ${platformAccount.accountName}`
         : "",
@@ -397,6 +402,18 @@ export default function Trades() {
     );
   }
 
+  const platformAccountItems = platformAccounts.map(
+    ({ accountName, id, platform: { name } }) => ({
+      label: `${name} ${accountName}`,
+      value: id,
+    })
+  );
+
+  const extendedPlatformAccountItems = [
+    ALL_PLATFORMS_ITEM,
+    ...platformAccountItems,
+  ];
+
   async function loadPlatformAccounts() {
     try {
       const resp = await fetchPlatformAccounts();
@@ -410,11 +427,12 @@ export default function Trades() {
     }
   }
 
-  async function loadTradeHistory() {
+  async function loadTradeHistory(platformAccountId = null) {
     try {
       const resp = await fetchTradeHistory({
         platformAccountsOnly: true,
         includeTradePlans: true,
+        platformAccountId,
       });
       console.log("tradeHistory resp", resp);
       setTrades(resp.tradeHistory);
@@ -531,6 +549,12 @@ export default function Trades() {
     setTradeInfo(null);
   }
 
+  function handleAccountChange(account) {
+    setSelectedPlatformItem(account);
+    setLoading(true);
+    loadTradeHistory(account.value);
+  }
+
   useEffect(() => {
     loadTradeHistory();
     loadPlatformAccounts();
@@ -544,7 +568,7 @@ export default function Trades() {
       setDebouncedSearchString(searchString);
     }, 500);
     return () => clearTimeout(delayInputTimeoutId);
-  }, [searchString, 500]);
+  }, [searchString]);
 
   let tradePlanOptions = tradePlans.map(
     ({
@@ -618,15 +642,39 @@ export default function Trades() {
                 <hr className="w-[90%] border-t border-gray-300 mx-auto" />
               </div>
               <div className="w-full h-full">
-                {trades.length ? (
-                  <div className="flex justify-end">
-                    <SearchBox
-                      className="mr-8"
-                      placeholder={"Search Symbol"}
-                      onSearch={setSearchString}
-                    />
+                <div className="flex justify-between w-[90%] mx-auto">
+                  <div className="min-w-48">
+                    {extendedPlatformAccountItems ? (
+                      <Select
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            height: 35,
+                            minHeight: 35,
+                          }),
+                          input: (base) => ({
+                            ...base,
+                            margin: "0px",
+                          }),
+                        }}
+                        placeholder="Select account..."
+                        options={extendedPlatformAccountItems}
+                        value={selectedPlatformItem}
+                        onChange={handleAccountChange}
+                      />
+                    ) : (
+                      "Loading accounts..."
+                    )}
                   </div>
-                ) : null}
+                  {trades.length ? (
+                    <div>
+                      <SearchBox
+                        placeholder={"Search Symbol"}
+                        onSearch={setSearchString}
+                      />
+                    </div>
+                  ) : null}
+                </div>
                 {loading && <Loader />}
                 {trades.length && data.length ? (
                   <div className="mx-auto mt-4 max-w-[90%]">
@@ -637,11 +685,11 @@ export default function Trades() {
                     />
                   </div>
                 ) : trades.length && !data.length ? (
-                  <div className="max-w-[90%] mx-auto">
+                  <div className="max-w-[90%] mx-auto mt-4">
                     <p>No search results</p>
                   </div>
                 ) : (
-                  <div className="max-w-[90%] mx-auto">
+                  <div className="max-w-[90%] mx-auto mt-4">
                     <p>No trades uploaded yet</p>
                   </div>
                 )}
@@ -653,12 +701,7 @@ export default function Trades() {
       <ImportTradesModal
         isOpen={isImportModalOpen}
         onClose={() => setImportModalOpen(false)}
-        platformAccountItems={platformAccounts.map(
-          ({ accountName, id, platform: { name } }) => ({
-            label: `${name} ${accountName}`,
-            value: id,
-          })
-        )}
+        platformAccountItems={platformAccountItems}
         onSubmit={handleImportTrades}
       />
       <LinkTradePlanModal
