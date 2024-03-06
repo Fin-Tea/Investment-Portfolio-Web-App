@@ -1334,7 +1334,9 @@ export async function processUploadedTrades(
           ) {
             profitAndLoss =
               TDA_FUTURES_MULTIPLIERS[securityName] *
-              (closePrice - openPrice) *
+              (tradeDirectionType === "Long"
+                ? closePrice - openPrice
+                : openPrice - closePrice) *
               closeQty;
           }
 
