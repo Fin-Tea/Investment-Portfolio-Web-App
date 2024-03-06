@@ -24,6 +24,118 @@ const NINJA_TRADER_HEADERS = [
 
 const PNL_REGEX = /[$()]/g;
 
+// Futures contract multipliers don't vary across platforms
+// This is a map of multipliers of futures products TD Ameritrade offers
+const TDA_FUTURES_MULTIPLIERS = {
+  ES: 50,
+  MES: 5,
+  NQ: 20,
+  MNQ: 2,
+  RTY: 50,
+  M2K: 5,
+  YM: 5,
+  MYM: 0.50,
+  VX: 1000,
+  VXM: 100,
+  NKD: 5,
+  EMD: 100,
+  MME: 50,
+  GC: 100,
+  SI: 5000,
+  HG: 25000,
+  MHG: 2500,
+  PL: 50,
+  PA: 100,
+  SIL: 1000,
+  MGC: 10,
+  QO: 50,
+  QI: 2500,
+  QC: 12500,
+  MCL: 100,
+  QG: 2500,
+  RB: 42000,
+  HO: 42000,
+  CL: 1000,
+  NG: 10000,
+  QM: 500,
+  BZ: 1000,
+  AW: 100,
+  ZC: 50,
+  XC: 10,
+  XW: 10,
+  XK: 10,
+  GF: 500,
+  KE: 50,
+  HE: 400,
+  LE: 400,
+  DC: 2000,
+  ZO: 50,
+  ZR: 2000,
+  ZS: 50,
+  ZM: 100,
+  ZL: 600,
+  ZW: 50,
+  "6A": 100000,
+  "6L": 100000,
+  "6B": 62500,
+  "6C": 100000,
+  M6A: 10000,
+  M6B: 6250,
+  M6E: 12500,
+  J7: 6250000,
+  "6E": 125000,
+  "6J": 12500000,
+  "6M": 500000,
+  MCD: 10000,
+  MSF: 12500,
+  E7: 62500,
+  "6N": 100000,
+  "6Z": 500000,
+  "6S": 125000,
+  DX: 1000,
+  ZT: 2000,
+  ZF: 1000,
+  ZN: 1000,
+  ZB: 1000,
+  GE: 2500,
+  ZQ: 4167,
+  UB: 1000,
+  TN: 1000,
+  SR3: 2500,
+  SR1: 4167,
+  "10Y": 1000,
+  BTC: 5,
+  MBT: 0.10,
+  ETH: 50,
+  MET: 0.10,
+  CC: 10,
+  KC: 375,
+  CT: 500,
+  OJ: 150,
+  SB: 1120,
+}
+
+const FUTURES_CONTRACTS_MONTHS_SET = new Set(["F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z"]);
+
+function parseSecurityName(securitySymbol) {
+  const [formattedSymbol] = securitySymbol.replace("/","").split(" ");
+  let i = formattedSymbol.length - 1;
+  let idx = 0;
+
+  while (i >= 0) {
+    if (FUTURES_CONTRACTS_MONTHS_SET.has(formattedSymbol[i])) {
+      idx = i;
+      break;
+    }
+    i--;
+  }
+
+  if (idx) {
+    return formattedSymbol.substring(0,idx);
+  }
+  return formattedSymbol;
+}
+
 export async function getTradeHistory(accountId, options = {}) {
   const {
     limit,
@@ -876,6 +988,7 @@ function groupOrdersBySymbol(uploadedOrders) {
   }, new Map());
 }
 
+// TODO: Refactor function signature to remove description
 function createTrades(symbol, description, orders, options = {}) {
   const { timezone } = options; // TODO: handle timezone
   const trades = {
@@ -897,7 +1010,7 @@ function createTrades(symbol, description, orders, options = {}) {
       closeQty: 0,
       openQty: 0,
       securitySymbol: symbol,
-      securityName: description,
+      securityName: parseSecurityName(symbol),
       closePrices: [],
       openPrices: [],
     };
@@ -1050,7 +1163,7 @@ export function mapUploadedNinjaTradesToTradeInfo(
         openQty: qty,
         closeQty: qty,
         securitySymbol: symbol,
-        securityName: symbol.substring(0, symbol.length - 2),
+        securityName: parseSecurityName(symbol),
         openPrices: [openPrice],
         closePrices: [closePrice],
         pnl: pnlF,
