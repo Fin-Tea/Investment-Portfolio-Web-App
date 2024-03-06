@@ -34,7 +34,7 @@ const TDA_FUTURES_MULTIPLIERS = {
   RTY: 50,
   M2K: 5,
   YM: 5,
-  MYM: 0.50,
+  MYM: 0.5,
   VX: 1000,
   VXM: 100,
   NKD: 5,
@@ -105,20 +105,33 @@ const TDA_FUTURES_MULTIPLIERS = {
   SR1: 4167,
   "10Y": 1000,
   BTC: 5,
-  MBT: 0.10,
+  MBT: 0.1,
   ETH: 50,
-  MET: 0.10,
+  MET: 0.1,
   CC: 10,
   KC: 375,
   CT: 500,
   OJ: 150,
   SB: 1120,
-}
+};
 
-const FUTURES_CONTRACTS_MONTHS_SET = new Set(["F", "G", "H", "J", "K", "M", "N", "Q", "U", "V", "X", "Z"]);
+const FUTURES_CONTRACTS_MONTHS_SET = new Set([
+  "F",
+  "G",
+  "H",
+  "J",
+  "K",
+  "M",
+  "N",
+  "Q",
+  "U",
+  "V",
+  "X",
+  "Z",
+]);
 
 function parseSecurityName(securitySymbol) {
-  const [formattedSymbol] = securitySymbol.replace("/","").split(" ");
+  const [formattedSymbol] = securitySymbol.replace("/", "").split(" ");
   let i = formattedSymbol.length - 1;
   let idx = 0;
 
@@ -131,7 +144,7 @@ function parseSecurityName(securitySymbol) {
   }
 
   if (idx) {
-    return formattedSymbol.substring(0,idx);
+    return formattedSymbol.substring(0, idx);
   }
   return formattedSymbol;
 }
@@ -1303,6 +1316,21 @@ export async function processUploadedTrades(
           const isScaledIn = openPrices.length > 1;
           const isScaledOut = closePrices.length > 1;
 
+          let profitAndLoss = pnl;
+
+          if (
+            profitAndLoss === undefined &&
+            TDA_FUTURES_MULTIPLIERS[securityName] &&
+            openPrice &&
+            closePrice &&
+            closeQty
+          ) {
+            profitAndLoss =
+              TDA_FUTURES_MULTIPLIERS[securityName] *
+              (closePrice - openPrice) *
+              closeQty;
+          }
+
           const dbTrade = {
             accountId,
             tradeOpenedAt,
@@ -1321,7 +1349,7 @@ export async function processUploadedTrades(
             updatedAt: todayFormatted,
             platformAccountId,
             importLogId: id,
-            pnl,
+            pnl: profitAndLoss,
           };
 
           newAcc.tradesToInsert.push(dbTrade);
@@ -1334,8 +1362,6 @@ export async function processUploadedTrades(
         tradesAlreadyInserted: [],
       }
     );
-
-    // console.log(JSON.stringify(dbTradeInfo));
 
     try {
       await db("tradeHistory").insert(dbTradeInfo.tradesToInsert);
