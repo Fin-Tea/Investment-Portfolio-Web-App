@@ -1034,14 +1034,14 @@ function createTrades(symbol, description, orders, options = {}) {
       // TODO: handle timezone
 
       while (i < orders.length && orders[i].instruction.includes("CLOSE")) {
-        currentTrade.closeQty += orders[i].quantity;
-        currentTrade.closePrices.push(orders[i].netPrice);
+        currentTrade.closeQty += parseInt(orders[i].quantity);
+        currentTrade.closePrices.push(parseFloat(orders[i].netPrice));
         i++;
       }
 
       while (i < orders.length && orders[i].instruction.includes("OPEN")) {
-        currentTrade.openQty += orders[i].quantity;
-        currentTrade.openPrices.push(orders[i].netPrice);
+        currentTrade.openQty += parseInt(orders[i].quantity);
+        currentTrade.openPrices.push(parseFloat(orders[i].netPrice));
         currentTrade.tradeOpenedAt = orders[i].tradeTime; // set the earliest open time
         i++;
       }
@@ -1060,8 +1060,8 @@ function createTrades(symbol, description, orders, options = {}) {
       // it's the beginning of an open trade
 
       while (i < orders.length && orders[i].instruction.includes("OPEN")) {
-        currentTrade.openQty += orders[i].quantity;
-        currentTrade.openPrices.push(orders[i].averagePrice);
+        currentTrade.openQty += parseInt(orders[i].quantity);
+        currentTrade.openPrices.push(parseFloat(orders[i].averagePrice));
         currentTrade.tradeOpenedAt = orders[i].tradeTime; // set the earliest open time
         i++;
       }
@@ -1106,8 +1106,6 @@ export function mapUploadedNinjaTradesToTradeInfo(
   options = {}
 ) {
   const { timezone, timezoneOffset } = options;
-
-  // console.log("mapUploadedNinjaTradesToTradeInfo timezone", timezone);
 
   return uploadedTrades.reduce(
     (acc, rawTrade) => {
@@ -1238,6 +1236,7 @@ export async function processUploadedTrades(
   console.log("processUploadedTrades");
 
   let jobStatus = "In Progress";
+  let message = null;
 
   if (completedTrades && completedTrades.length) {
     // create a new import log
@@ -1313,6 +1312,14 @@ export async function processUploadedTrades(
             closePrices.reduce((acc, price) => acc + price, 0) /
             closePrices.length;
 
+          // if (isNaN(openPrice) || isNaN(closePrice)) {
+          //   console.log("securitySymbol", securitySymbol);
+          //   console.log("tradeOpenedAt", tradeOpenedAt);
+          //   console.log("tradeClosedAt", tradeClosedAt);
+          //   console.log("openPrices", JSON.stringify(openPrices));
+          //   console.log("closePrices", JSON.stringify(closePrices));
+          // }
+
           const isScaledIn = openPrices.length > 1;
           const isScaledOut = closePrices.length > 1;
 
@@ -1371,9 +1378,13 @@ export async function processUploadedTrades(
     } catch (e) {
       // set jobStatus to error
       jobStatus = "Error";
+      console.log("Import Error", e.message);
+      message = e.message.substring(0, 255);
     }
 
-    await db("importLog").where({ id }).update({ jobStatus, updatedAt: now });
+    await db("importLog")
+      .where({ id })
+      .update({ jobStatus, message, updatedAt: now });
 
     const [importLog] = await readImportLogs(accountId, { importLogId: id });
 
