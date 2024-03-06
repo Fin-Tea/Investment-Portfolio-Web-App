@@ -1124,35 +1124,26 @@ export function mapUploadedNinjaTradesToTradeInfo(
       let pnlF = parseFloat(pnl.replace(PNL_REGEX, ""));
 
       let tradeDirectionType = "Long";
-      let tradeOpenedAt = boughtTimestamp;
-      let tradeClosedAt = soldTimestamp;
+      const boughtDate = new Date(boughtTimestamp);
+      const soldDate = new Date(soldTimestamp);
+      let tradeOpenedAt = boughtDate;
+      let tradeClosedAt = soldDate;
       let openPrice = buyPriceF;
       let closePrice = sellPriceF;
 
       const isProfit = !pnl.includes("(");
 
-      if (new Date(tradeOpenedAt) > new Date(tradeClosedAt)) {
-        tradeOpenedAt = soldTimestamp;
-        tradeClosedAt = boughtTimestamp;
+      if (tradeOpenedAt > tradeClosedAt) {
+        tradeOpenedAt = soldDate;
+        tradeClosedAt = boughtDate;
+        tradeDirectionType = "Short";
+        openPrice = sellPriceF;
+        closePrice = buyPriceF;
       }
 
-      if (isProfit) {
-        if (sellPriceF < buyPriceF) {
-          tradeDirectionType = "Short";
-          openPrice = sellPriceF;
-          closePrice = buyPriceF;
-        }
-      } else {
-        if (sellPrice > buyPriceF) {
-          tradeDirectionType = "Short";
-          openPrice = sellPriceF;
-          closePrice = buyPriceF;
-        }
+      if (!isProfit) {
         pnlF *= -1;
       }
-
-      tradeOpenedAt = new Date(tradeOpenedAt);
-      tradeClosedAt = new Date(tradeClosedAt);
 
       if (timezone && timezoneOffset) {
         const timezoneOffsetMinutes = parseInt(timezoneOffset);
