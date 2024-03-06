@@ -490,7 +490,7 @@ export default function Trades() {
         if (resp.success) {
           console.log("csvUpload success. loading tradehistory");
           setImportLogs([resp.importLog, ...importLogs]);
-          loadTradeHistory();
+          loadTradeHistory(selectedPlatformItem.value);
         }
       }
     } catch (e) {
