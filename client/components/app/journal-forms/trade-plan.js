@@ -266,7 +266,6 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
   const isManagedStopLoss = watch("isManagedStopLoss");
   const isMissedTradeEntry = watch("isMissedTradeEntry");
 
-
   const [showLinkTradesModal, setShowLinkTradesModal] = useState(false);
 
   console.log("errors", errors);
@@ -334,7 +333,9 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
           return acc + result.openPrice;
         }, 0) / data.tradePlan.tradeResults.length;
       if (actualPnL >= 0 && !isManagedStopLoss) {
-        actualRewardRisk = actualPnL / Math.abs(entry - stopLoss);
+        actualRewardRisk =
+          Math.abs(averageClosePrice - averageOpenPrice) /
+          Math.abs(entry - stopLoss);
         actualRewardRiskColor = "text-orange-500";
         if (actualRewardRisk >= 2) {
           actualRewardRiskColor = "text-green-600";
@@ -740,11 +741,18 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
           <Tooltip text="The expected reward (profit) divided by the planned risk amount based on stop loss. A Reward Risk ratio of 2+ is standard" />
         </div>
 
-       {!tradeResults.length ? (<div className="flex items-center mt-4 ">
-            <Checkbox className="mr-2" isChecked={isMissedTradeEntry} onChange={handleMissedTradeEntryCheck} colorScheme="purple" />
+        {!tradeResults.length ? (
+          <div className="flex items-center mt-4 ">
+            <Checkbox
+              className="mr-2"
+              isChecked={isMissedTradeEntry}
+              onChange={handleMissedTradeEntryCheck}
+              colorScheme="purple"
+            />
             Missed trade entry?{" "}
             <Tooltip text="Check if your trade plan happened, but you missed your entry" />
-          </div>) : null}
+          </div>
+        ) : null}
 
         <div className="mt-4 flex items-center">
           <button
@@ -813,7 +821,12 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
 
         {tradeResults.length ? (
           <div className="flex items-center mt-4 text-sm">
-            <Checkbox className="mr-2" isChecked={isManagedStopLoss} onChange={handleManagedStopLossCheck} colorScheme="purple" />
+            <Checkbox
+              className="mr-2"
+              isChecked={isManagedStopLoss}
+              onChange={handleManagedStopLossCheck}
+              colorScheme="purple"
+            />
             Managed stop loss?{" "}
             <Tooltip text="Makes it clear that a stop loss was moved up/down instead of an emotional early exit" />
           </div>
@@ -849,7 +862,11 @@ export default function TradePlan({ data, items, onSubmit, onDelete }) {
             <p className="text-sm">
               Stopped Out Late?{" "}
               <span className={`${isStopLossLateColor}`}>{` ${
-                actualPnL < 0 || isManagedStopLoss ? (isStopLossLate ? "Yes" : "No") : "N/A"
+                actualPnL < 0 || isManagedStopLoss
+                  ? isStopLossLate
+                    ? "Yes"
+                    : "No"
+                  : "N/A"
               }`}</span>
             </p>
           </div>
