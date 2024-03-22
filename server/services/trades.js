@@ -930,7 +930,7 @@ export function parseNinjaTradesFromCSV(file) {
 
   const ninjaCsv = csv.parse(data, { output: "objects" });
 
-  console.log("ninjaCsv", ninjaCsv);
+  // console.log("ninjaCsv", ninjaCsv);
 
   if (ninjaCsv.length) {
     const keySet = new Set(Object.keys(ninjaCsv[0]));
@@ -1390,4 +1390,16 @@ export async function processUploadedTrades(
   // add the importLog to processedTradesInfo
 
   return processedTradesInfo;
+}
+
+export async function updateTradeHistory(accountId, tradeId, tradeData) {
+  let trade = await getTradeHistory(accountId, { tradeId });
+
+  if (!trade) {
+    throw Error("Trade not found or unauthoried");
+  }
+
+  await db("tradeHistory").update(tradeData).where({ id: tradeId });
+
+  return getTradeHistory(accountId, { tradeId });
 }

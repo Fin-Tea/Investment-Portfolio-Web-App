@@ -207,7 +207,7 @@ export async function readPlatformAccounts(accountId, options = {}) {
 
   const platformIds = platformAccounts.map(({ platformId }) => platformId);
 
-  console.log("platformIds", JSON.stringify(platformIds));
+  // console.log("platformIds", JSON.stringify(platformIds));
   const platforms = await readPlatforms(platformIds);
 
   const platformsMap = platforms.reduce((acc, platform) => {
