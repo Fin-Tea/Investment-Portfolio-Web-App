@@ -6,15 +6,35 @@ function formatDate(date) {
   }
 }
 
-exports.seed = function(knex) {
+exports.seed = function (knex) {
+  // TODO: UPDATE. Running this script now will delete active user accounts
   // Deletes ALL existing entries
-  return knex('account').del()
+  return knex("account")
+    .del()
     .then(function () {
       const now = formatDate(new Date());
       // Inserts seed entries
-      return knex('account').insert([
-        {id: 1, firstName: 'Jabari', lastName: 'Holloway', email: "jabari@jabariholloway.com", passwordHash: "test", accountName: "Options", createdAt: now, updatedAt: now },
-        {id: 2, firstName: 'Jabari', lastName: 'Holloway', email: "jabarisalih@gmail.com", passwordHash: "test", accountName: "Futures", createdAt: now, updatedAt: now },
+      return knex("account").insert([
+        {
+          id: 1,
+          firstName: "Jabari",
+          lastName: "Holloway",
+          email: "jabari@jabariholloway.com",
+          passwordHash: "test",
+          accountName: "Options",
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 2,
+          firstName: "Jabari",
+          lastName: "Holloway",
+          email: "jabarisalih@gmail.com",
+          passwordHash: "test",
+          accountName: "Futures",
+          createdAt: now,
+          updatedAt: now,
+        },
       ]);
     });
 };

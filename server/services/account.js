@@ -7,6 +7,7 @@ import { formatDate } from "../utils";
 const SECONDS_EXPIRES_IN = 60 * 60 * 24; // 1 day
 const HASH_ROUNDS = 12;
 
+// Returns a promise
 export function generatePasswordHash(plainTextPassword) {
   return bcrypt.hash(plainTextPassword, HASH_ROUNDS);
 }
@@ -44,6 +45,33 @@ export async function getAccount({ id, email }) {
   }
 
   return account;
+}
+
+export async function createAccount(
+  firstName,
+  lastName,
+  email,
+  password,
+  accountName
+) {
+  const now = new Date();
+  const passwordHash = await generatePasswordHash(password);
+
+  console.log("passwordHash", passwordHash);
+
+  const [accountId] = await db("account").insert([
+    {
+      firstName,
+      lastName,
+      email,
+      passwordHash,
+      accountName: accountName || null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]);
+
+  return getAccount({ id: accountId });
 }
 
 export function getSyncableAccounts({ minInSyncDate, allowedAccountEmails }) {
@@ -132,7 +160,8 @@ export function authenticateToken(token) {
     const decodedToken = jwt.verify(token, config.auth.jwtTokenSecret);
     return decodedToken;
   } catch (e) {
-    const message = e.name === "TokenExpiredError" ? "Token expired" : e.message;
+    const message =
+      e.name === "TokenExpiredError" ? "Token expired" : e.message;
     return { error: message };
   }
 }
@@ -157,13 +186,10 @@ export function updateTDATokens(accountId, tdaTokenRespJson = {}) {
 }
 
 export function readPlatforms(options = {}) {
+  const { platformIds } = options;
 
-  const {platformIds} = options;
+  let builder = db.select("id", "name", "description", "url").from("platforms");
 
-  let builder = db
-  .select("id", "name", "description", "url")
-  .from("platforms");
- 
   if (platformIds) {
     if (platformIds.length) {
       builder = builder.whereIn("id", platformIds);
@@ -241,8 +267,10 @@ export async function createPlatformAccount(accountId, formFields) {
     ])
     .returning("id");
 
-  const [platformAccount] = await readPlatformAccounts(accountId, { platformAccountId: id});
- 
+  const [platformAccount] = await readPlatformAccounts(accountId, {
+    platformAccountId: id,
+  });
+
   return platformAccount;
 }
 
