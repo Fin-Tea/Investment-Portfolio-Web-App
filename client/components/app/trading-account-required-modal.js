@@ -8,10 +8,7 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 
-export default function TradingAccountRequiredModal({
-  body,
-  isOpen,
-}) {
+export default function TradingAccountRequiredModal({ body, isOpen }) {
   return (
     <Modal isOpen={isOpen} onClose={() => {}}>
       <ModalOverlay />
@@ -20,7 +17,7 @@ export default function TradingAccountRequiredModal({
         <ModalCloseButton />
         <ModalBody>
           {body && <p>{body}</p>}
-          <Link href="/app/accounts?create=true">
+          <Link href="/t/accounts?create=true">
             <button className="rounded-full w-full bg-purple-800 text-white px-4 py-1">
               Create Trading/Investing Account
             </button>
