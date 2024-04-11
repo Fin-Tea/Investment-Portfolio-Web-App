@@ -1015,7 +1015,7 @@ export default function PerformanceInsights() {
                         />
                       </div>
 
-                      <div className="flex basis-full flex-col justify-between">
+                      <div className="flex basis-full flex-col">
                         <MiniTable
                           className="px-2"
                           title={"Top Winning Trades"}
