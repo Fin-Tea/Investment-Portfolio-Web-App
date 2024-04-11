@@ -829,7 +829,7 @@ export default function PerformanceInsights() {
                         {insights?.cumulativePnL?.length ? (
                           <div>
                             <div className="mt-2 text-center">
-                              <span className="text-sm">{`Current PnL ${formatCurrency(
+                              <span className="text-sm">{`Current Gross PnL ${formatCurrency(
                                 insights?.cumulativePnL[
                                   insights?.cumulativePnL.length - 1
                                 ].pnl
@@ -843,7 +843,7 @@ export default function PerformanceInsights() {
                               )}`}</span>
                             </div>
                             <div className="mt-2 text-center">
-                              <span className="text-sm">{`Current Account Value ${formatCurrency(
+                              <span className="text-sm">{`Current Net PnL ${formatCurrency(
                                 insights?.cumulativePnL[
                                   insights?.cumulativePnL.length - 1
                                 ].pnl -
