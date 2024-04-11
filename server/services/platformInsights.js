@@ -1,6 +1,8 @@
 import db from "../db";
 import { DateTime } from "luxon";
 import Bluebird from "bluebird";
+import { promises as fs } from "fs";
+import path from "path";
 import { readJournalEntries, JOURNAL_TAGS } from "./journal";
 import { formatDate } from "../utils";
 
@@ -10,6 +12,23 @@ const NOT_ENOUGH_INFO = "Not enough info";
 const NUM_TRADES_DEFAULT = 10;
 const QUALITY_TOLERANCE = 0.2;
 const REVENGE_TRADE_DURATION_MINUTES = 30;
+
+const PLATFORM_FEES_PATH = path.join(__dirname, "../platform_fees/");
+
+const PLATFORM_NAMES = {
+  NINJA_TRADER : "Ninja Trader",
+  THINKORSWIM: "thinkorswim",
+  SCHWAB: "Charles Schwab"
+};
+
+const PLATFORMS_FEES_FILE_NAMES = {
+  ["Ninja Trader"] : "ninja-trader.json",
+  ["thinkorswim"] : "td-ameritrade.json",
+  ["Charles Schwab"]: "schwab.json" 
+};
+
+const FUTURES_REGEX = /^\/?[A-Z0-9]+[FGHJKMNQUVXZ]\d+$/;
+const OPTIONS_REGEX = /^[A-Z0-9]+\s*\d{6}(P|C)\d+$/;
 
 async function getAccountIds(platformAccountIds) {
   const platformAccounts = await db
@@ -22,36 +41,101 @@ async function getAccountIds(platformAccountIds) {
   return platformAccounts.map(({ accountId }) => accountId);
 }
 
+async function getPlatforms(platformAccountIds) {
+  const platformAccounts = await db
+    .distinct()
+    .select("platformId")
+    .from("platformAccounts")
+    .whereIn("id", platformAccountIds)
+    .andWhere({ deletedAt: null });
+
+  const platformIds = platformAccounts.map(({ platformId }) => platformId);
+
+  return db
+  .select("id", "name")
+  .from("platforms")
+  .whereIn("id", platformIds)
+  .andWhere({ deletedAt: null });
+}
+
+async function readPlatformFees(platformAccountIds) {
+
+  const platforms = await getPlatforms(platformAccountIds);
+
+  // create fees map (JSON)
+  const feesMap = await Bluebird.reduce(platforms, async (acc, platform) => {
+      const fileName = PLATFORMS_FEES_FILE_NAMES[platform.name];
+      if (fileName) {
+        const filePath = `${PLATFORM_FEES_PATH}${fileName}`;
+
+        let data = await fs.readFile(filePath, { encoding: "utf-8" });
+
+        data = JSON.parse(data);
+
+        acc[platform.name] = data;
+      }
+
+      return acc;
+  }, {});
+
+  return feesMap;
+
+}
+
+function getTradeFees(feesMap, platformName, symbol) {
+
+  if (platformName === PLATFORM_NAMES.NINJA_TRADER) {
+    return feesMap[platformName][symbol];
+  }
+
+  if (platformName === PLATFORM_NAMES.THINKORSWIM || platformName === PLATFORM_NAMES.SCHWAB) {
+
+    if (FUTURES_REGEX.test(symbol)) {
+      return feesMap[platformName]["Futures"];
+    }
+
+    if (OPTIONS_REGEX.test(symbol)) {
+      return feesMap[platformName]["Options"];
+    }
+
+    return feesMap[platformName]["Stocks"];
+  }
+
+  return 0;
+}
+
 async function getTradesPnL(platformAccountIds, options = {}) {
   const { fromDate, toDate } = options;
 
-  console.log("fromDate", fromDate);
-  console.log("toDate", toDate);
-
-  let builder = db("tradeHistory")
+  let builder = db("tradeHistory") // join platforms to trades (need to know platform name)
     .select(
-      "id",
-      "tradeClosedAt",
-      "securityType",
-      "tradeDirectionType",
-      "quantity",
-      "securitySymbol",
-      "securityName",
-      "openPrice",
-      "closePrice",
-      "platformAccountId",
-      "pnl"
+      "tradeHistory.id",
+      "tradeHistory.tradeClosedAt",
+      "tradeHistory.securityType",
+      "tradeHistory.tradeDirectionType",
+      "tradeHistory.quantity",
+      "tradeHistory.securitySymbol",
+      "tradeHistory.securityName",
+      "tradeHistory.openPrice",
+      "tradeHistory.closePrice",
+      "tradeHistory.platformAccountId",
+      "tradeHistory.pnl",
+      "platforms.name as platformName"
     )
+    .join("platformAccounts", "platformAccounts.id", "=", "tradeHistory.platformAccountId")
+    .join("platforms", "platforms.id", "=", "platformAccounts.platformId")
     .whereIn("platformAccountId", platformAccountIds);
 
     builder = builder.orderBy("tradeClosedAt", "asc");
 
   const trades = await builder;
 
-  // group trades by date (same close date)
+  const platformFeesMap = await readPlatformFees(platformAccountIds);
 
+  // group trades by date (same close date)
   const groupedTrades = trades.reduce((acc, trade) => {
     const {
+      securityName,
       tradeClosedAt,
       securityType,
       tradeDirectionType,
@@ -59,7 +143,10 @@ async function getTradesPnL(platformAccountIds, options = {}) {
       openPrice,
       closePrice,
       pnl,
+      platformName
     } = trade;
+
+    const feesBase = getTradeFees(platformFeesMap, platformName, securityName);
 
     const day = DateTime.fromJSDate(tradeClosedAt).toFormat("yyyy-MM-dd");
 
@@ -74,6 +161,7 @@ async function getTradesPnL(platformAccountIds, options = {}) {
       quantity,
       openPrice,
       closePrice,
+      fees : quantity * 2 * feesBase
     });
 
     acc.set(day, trades);
@@ -83,11 +171,11 @@ async function getTradesPnL(platformAccountIds, options = {}) {
 
   const { dailyPnL, cumulativePnL } = [...groupedTrades.entries()].reduce(
     (acc, [date, trades]) => {
-      const totalPnl = trades.reduce((acc2, trade) => {
-        const { securityType, quantity, openPrice, closePrice, pnl } = trade;
+      const {totalPnl, totalFees} = trades.reduce((acc2, trade) => {
+        const { securityType, quantity, openPrice, closePrice, pnl, fees } = trade;
 
         if (pnl !== null) {
-          return acc2 + pnl;
+           acc2.totalPnl += pnl;
         } else {
           let pnl2 = (closePrice - openPrice) * quantity;
 
@@ -95,18 +183,32 @@ async function getTradesPnL(platformAccountIds, options = {}) {
             pnl2 *= 100;
           }
 
-          return acc2 + pnl2;
+           acc2.totalPnl += pnl2;
         }
-      }, 0);
 
+        acc2.totalFees += fees;
+
+        return acc2;
+      }, {totalPnl: 0, totalFees: 0});
+
+      // console.log("totalPnl", totalPnl);
+      // console.log("totalFees", totalFees);
+
+      // total fees
       const cumPnL =
         (acc.cumulativePnL[acc.cumulativePnL.length - 1]
           ? acc.cumulativePnL[acc.cumulativePnL.length - 1].pnl
           : 0) + totalPnl;
 
-      acc.dailyPnL.push({ date, pnl: totalPnl });
+      // cumulative fees
+      const cumFees =
+      (acc.cumulativePnL[acc.cumulativePnL.length - 1]
+        ? acc.cumulativePnL[acc.cumulativePnL.length - 1].fees
+        : 0) + totalFees;
 
-      acc.cumulativePnL.push({ date, pnl: cumPnL });
+      acc.dailyPnL.push({ date, pnl: totalPnl, fees: Math.round(totalFees * 100) / 100 });
+
+      acc.cumulativePnL.push({ date, pnl: cumPnL, fees: Math.round(cumFees * 100) / 100  }); 
 
       return acc;
     },
