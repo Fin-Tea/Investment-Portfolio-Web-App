@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { DateTime } from "luxon";
+import { Checkbox } from "@chakra-ui/react";
 import Layout from "../../../components/app/layout";
 import MiniTable from "../../../components/app/mini-table";
 import LineChart from "../../../components/line-chart";
@@ -398,6 +399,7 @@ export default function PerformanceInsights() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showFees, setShowFees] = useState(false);
 
   const { fetchPlatformAccounts } = usePlatformAccounts();
   const { fetchPlatformInsights } = useInsights();
@@ -517,13 +519,13 @@ export default function PerformanceInsights() {
     }
   }, [selectedPlatformItem, insights]);
 
-  const netTradePnL = insights?.dailyPnL?.map(({ date, pnl }) => ({
+  const netTradePnL = insights?.dailyPnL?.map(({ date, pnl, fees }) => ({
     x: date,
-    y: pnl,
+    y: showFees ? Math.round(100 * (pnl - fees)) / 100 : pnl,
   }));
-  const cumulativePnL = insights?.cumulativePnL?.map(({ date, pnl }) => ({
+  const cumulativePnL = insights?.cumulativePnL?.map(({ date, pnl, fees }) => ({
     x: date,
-    y: pnl,
+    y: showFees ? Math.round(100 * (pnl - fees)) / 100 : pnl,
   }));
 
   const winRate = insights?.winRate ? insights.winRate * 100 : null;
@@ -812,11 +814,44 @@ export default function PerformanceInsights() {
                             "Daily PnL shows how much you've profited (or lost) each day. Cumulative PnL shows your overall profit (or loss) from the beginning of your trading history up to that point in time"
                           }
                         />
-                        {cumulativePnL?.length ? (
-                          <div className="mt-2 text-center">
-                            <span className="text-sm">{`Net Current PnL ${formatCurrency(
-                              cumulativePnL[cumulativePnL.length - 1].y
-                            )}`}</span>
+                        {insights?.dailyPnL?.length &&
+                        insights.dailyPnL.some(({ fees }) => !!fees) ? (
+                          <div className="mt-2 mb-3 flex items-center text-center justify-center">
+                            <span className="text-sm">Show Fees</span>
+                            <Checkbox
+                              isChecked={showFees}
+                              colorScheme="purple"
+                              className="p-2"
+                              onChange={(e) => setShowFees(e.target.checked)}
+                            />
+                          </div>
+                        ) : null}
+                        {insights?.cumulativePnL?.length ? (
+                          <div>
+                            <div className="mt-2 text-center">
+                              <span className="text-sm">{`Current PnL ${formatCurrency(
+                                insights?.cumulativePnL[
+                                  insights?.cumulativePnL.length - 1
+                                ].pnl
+                              )}`}</span>
+                            </div>
+                            <div className="mt-2 text-center">
+                              <span className="text-sm">{`Current Fees ${formatCurrency(
+                                insights?.cumulativePnL[
+                                  insights?.cumulativePnL.length - 1
+                                ].fees
+                              )}`}</span>
+                            </div>
+                            <div className="mt-2 text-center">
+                              <span className="text-sm">{`Current Account Value ${formatCurrency(
+                                insights?.cumulativePnL[
+                                  insights?.cumulativePnL.length - 1
+                                ].pnl -
+                                  insights?.cumulativePnL[
+                                    insights?.cumulativePnL.length - 1
+                                  ].fees
+                              )}`}</span>
+                            </div>
                           </div>
                         ) : null}
                       </div>
