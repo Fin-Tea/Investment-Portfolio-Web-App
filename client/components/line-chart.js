@@ -85,8 +85,9 @@ export default function LineChart({
           containerComponent={
             <VictoryVoronoiContainer
               labels={({ datum }) => {
-                // console.log(datum);
-                return `${prefix}${datum.y}${suffix}`;
+                let dt = new Date(datum.x);
+                dt = `${dt.getMonth() + 1}/${dt.getDate()}`;
+                return `\n${dt}\n\n${prefix}${datum.y}${suffix}`;
               }}
               voronoiBlacklist={["scatter", "area"]}
             />
@@ -136,6 +137,7 @@ export default function LineChart({
               },
             }}
             offsetY={xAxisOffset || null}
+            fixLabelOverlap={true}
           />
 
           {showDataset2Area && (
