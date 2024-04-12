@@ -829,6 +829,9 @@ export default function PerformanceInsights() {
                         {insights?.cumulativePnL?.length ? (
                           <div>
                             <div className="mt-2 text-center">
+                              <span className="text-sm">{`Total Trades ${insights.totalTrades}`}</span>
+                            </div>
+                            <div className="mt-2 text-center">
                               <span className="text-sm">{`Current Gross PnL ${formatCurrency(
                                 insights?.cumulativePnL[
                                   insights?.cumulativePnL.length - 1
