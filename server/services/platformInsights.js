@@ -155,7 +155,12 @@ async function getTradesPnL(platformAccountIds, options = {}) {
       platformName,
     } = trade;
 
-    const feesBase = getTradeFees(platformFeesMap, platformName, securitySymbol, securityName);
+    const feesBase = getTradeFees(
+      platformFeesMap,
+      platformName,
+      securitySymbol,
+      securityName
+    );
 
     const day = DateTime.fromJSDate(tradeClosedAt).toFormat("yyyy-MM-dd");
 
@@ -764,7 +769,82 @@ async function getTradesValue(platformAccountIds, options = {}) {
   return builder.first();
 }
 
-// need to include an option for fees
+async function getTradesCost(platformAccountIds, options = {}) {
+  const { fromDate, toDate, profitOrLossType } = options;
+
+  let tradeBuilder = db("tradeHistory")
+    .select(
+      "tradeHistory.id",
+      "tradeHistory.quantity",
+      "tradeHistory.securitySymbol",
+      "tradeHistory.securityName",
+      "tradeHistory.platformAccountId",
+      "platforms.name as platformName"
+    )
+    .join(
+      "platformAccounts",
+      "platformAccounts.id",
+      "=",
+      "tradeHistory.platformAccountId"
+    )
+    .join("platforms", "platforms.id", "=", "platformAccounts.platformId")
+    .whereIn("platformAccountId", platformAccountIds);
+
+  if (profitOrLossType) {
+    const greaterThanOrLessThan = profitOrLossType === PROFIT ? ">=" : "<";
+    tradeBuilder = tradeBuilder.andWhere((bd) => {
+      bd.orWhere("pnl", greaterThanOrLessThan, 0).orWhere(
+        db.raw(
+          "IF(tradeDirectionType = 'Long', closePrice - openPrice, openPrice - closePrice)"
+        ),
+        greaterThanOrLessThan,
+        0
+      );
+    });
+  }
+
+  if (fromDate) {
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
+    tradeBuilder = tradeBuilder.andWhere(
+      "tradeClosedAt",
+      ">=",
+      formattedFromDate
+    );
+  }
+
+  if (toDate) {
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
+    tradeBuilder = tradeBuilder.andWhere(
+      "tradeClosedAt",
+      "<=",
+      formattedToDate
+    );
+  }
+
+  const trades = await tradeBuilder;
+
+  const platformFeesMap = await readPlatformFees(platformAccountIds);
+
+  const cost = trades.reduce((acc, trade) => {
+    const { securitySymbol, securityName, quantity, platformName } = trade;
+
+    const feesBase = getTradeFees(
+      platformFeesMap,
+      platformName,
+      securitySymbol,
+      securityName
+    );
+
+    return acc + quantity * 2 * feesBase;
+  }, 0);
+
+  return cost;
+}
+
 async function getAverageProfitPerTrade(platformAccountIds, options) {
   const fullOptions = {
     ...options,
@@ -773,6 +853,19 @@ async function getAverageProfitPerTrade(platformAccountIds, options) {
   const { tradesValue } = await getTradesValue(platformAccountIds, fullOptions);
   const { numTrades } = await getNumTrades(platformAccountIds, fullOptions);
   return numTrades ? parseFloat((tradesValue / numTrades).toFixed(2)) : 0;
+}
+
+async function getAverageProfitPerTradeAfterFees(platformAccountIds, options) {
+  const fullOptions = {
+    ...options,
+    profitOrLossType: PROFIT,
+  };
+  const { tradesValue } = await getTradesValue(platformAccountIds, fullOptions);
+  const tradesCost = await getTradesCost(platformAccountIds, fullOptions);
+  const { numTrades } = await getNumTrades(platformAccountIds, fullOptions);
+  return numTrades
+    ? parseFloat(((tradesValue - tradesCost) / numTrades).toFixed(2))
+    : 0;
 }
 
 async function getAverageLossPerTrade(platformAccountIds, options) {
@@ -786,7 +879,20 @@ async function getAverageLossPerTrade(platformAccountIds, options) {
   return numTrades ? parseFloat((tradesValue / numTrades).toFixed(2)) : 0;
 }
 
-// need to include winRateWithFees
+async function getAverageLossPerTradeAfterFees(platformAccountIds, options) {
+  const fullOptions = {
+    ...options,
+    profitOrLossType: LOSS,
+  };
+
+  const { tradesValue } = await getTradesValue(platformAccountIds, fullOptions);
+  const tradesCost = await getTradesCost(platformAccountIds, fullOptions);
+  const { numTrades } = await getNumTrades(platformAccountIds, fullOptions);
+  return numTrades
+    ? parseFloat(((tradesValue - tradesCost) / numTrades).toFixed(2))
+    : 0;
+}
+
 export async function getWinRate(platformAccountIds, options = {}) {
   const { fromDate, toDate } = options;
 
@@ -823,6 +929,100 @@ export async function getWinRate(platformAccountIds, options = {}) {
   const { numTrades } = await getNumTrades(platformAccountIds, options);
 
   return numTrades ? parseFloat((wins / numTrades).toFixed(2)) : 0;
+}
+
+export async function getWinRateAfterFees(platformAccountIds, options = {}) {
+  const { fromDate, toDate } = options;
+
+  let winBuilder = db("tradeHistory")
+    .select(
+      "tradeHistory.id",
+      "tradeHistory.tradeDirectionType",
+      "tradeHistory.quantity",
+      "tradeHistory.securitySymbol",
+      "tradeHistory.securityName",
+      "tradeHistory.openPrice",
+      "tradeHistory.closePrice",
+      "tradeHistory.platformAccountId",
+      "tradeHistory.pnl",
+      "platforms.name as platformName"
+    )
+    .join(
+      "platformAccounts",
+      "platformAccounts.id",
+      "=",
+      "tradeHistory.platformAccountId"
+    )
+    .join("platforms", "platforms.id", "=", "platformAccounts.platformId")
+    .whereIn("platformAccountId", platformAccountIds)
+    .andWhere((builder) => {
+      builder
+        .orWhere("pnl", ">=", 0)
+        .orWhere(
+          db.raw(
+            "IF(tradeDirectionType = 'Long', closePrice - openPrice, openPrice - closePrice) >= 0"
+          )
+        );
+    });
+
+  if (fromDate) {
+    const formattedFromDate = DateTime.fromJSDate(new Date(fromDate))
+      .startOf("day")
+      .toJSDate();
+    winBuilder = winBuilder.andWhere("tradeClosedAt", ">=", formattedFromDate);
+  }
+
+  if (toDate) {
+    const formattedToDate = DateTime.fromJSDate(new Date(toDate))
+      .endOf("day")
+      .toJSDate();
+    winBuilder = winBuilder.andWhere("tradeClosedAt", "<=", formattedToDate);
+  }
+
+  const grossWins = await winBuilder;
+  const platformFeesMap = await readPlatformFees(platformAccountIds);
+
+  const winsAfterFees = grossWins.reduce((acc, trade) => {
+    const {
+      securitySymbol,
+      securityName,
+      tradeDirectionType,
+      quantity,
+      openPrice,
+      closePrice,
+      pnl: grossPnl,
+      platformName,
+    } = trade;
+
+    const feesBase = getTradeFees(
+      platformFeesMap,
+      platformName,
+      securitySymbol,
+      securityName
+    );
+    // get the trade pnl
+    let pnl = grossPnl;
+
+    if (!pnl) {
+      pnl =
+        tradeDirectionType === "Long"
+          ? closePrice - openPrice
+          : openPrice - closePrice; // FIX: This doesn't have the profit multiples on futures & options contracts
+      pnl *= quantity;
+    }
+
+    const fees = quantity * 2 * feesBase;
+
+    if (pnl - fees >= 0) {
+      return acc + 1;
+    }
+
+    return acc;
+  }, 0);
+
+  const { numTrades } = await getNumTrades(platformAccountIds, options);
+
+  return numTrades ? parseFloat((winsAfterFees / numTrades).toFixed(2)) : 0;
 }
 
 export async function getPnlBySymbols(platformAccountIds, options = {}) {
@@ -1010,11 +1210,25 @@ export async function getInsights(platformAccountIds, options = {}) {
     options
   );
 
+  const winRateAfterFees = await getWinRateAfterFees(
+    platformAccountIds,
+    options
+  );
+
   const averageProfitAmount = await getAverageProfitPerTrade(
     platformAccountIds,
     options
   );
   const averageLossAmount = await getAverageLossPerTrade(
+    platformAccountIds,
+    options
+  );
+
+  const averageProfitAmountAfterFees = await getAverageProfitPerTradeAfterFees(
+    platformAccountIds,
+    options
+  );
+  const averageLossAmountAfterFees = await getAverageLossPerTradeAfterFees(
     platformAccountIds,
     options
   );
@@ -1072,9 +1286,12 @@ export async function getInsights(platformAccountIds, options = {}) {
     dailyPnL,
     cumulativePnL,
     winRate,
+    winRateAfterFees,
     totalTrades,
     averageProfitAmount,
     averageLossAmount,
+    averageProfitAmountAfterFees,
+    averageLossAmountAfterFees,
     highQualityTrades,
     lowQualityTrades,
     revengeTrades,
