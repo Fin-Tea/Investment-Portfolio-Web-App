@@ -528,7 +528,13 @@ export default function PerformanceInsights() {
     y: showFees ? Math.round(100 * (pnl - fees)) / 100 : pnl,
   }));
 
-  const winRate = insights?.winRate ? insights.winRate * 100 : null;
+  const winRate = showFees
+    ? insights?.winRateAfterFees
+      ? 100 * insights.winRateAfterFees
+      : null
+    : insights?.winRate
+    ? 100 * insights.winRate
+    : null;
   const lossRate = winRate ? 100 - winRate : null;
 
   const winLossRates = winRate
@@ -538,8 +544,12 @@ export default function PerformanceInsights() {
       ]
     : [];
 
-  const avgWinAmount = insights?.averageProfitAmount;
-  const avgLossAmount = insights?.averageLossAmount;
+  const avgWinAmount = showFees
+    ? insights?.averageProfitAmountAfterFees
+    : insights?.averageProfitAmount;
+  const avgLossAmount = showFees
+    ? insights?.averageLossAmountAfterFees
+    : insights?.averageLossAmount;
 
   const winLossRatio =
     avgWinAmount && avgLossAmount
