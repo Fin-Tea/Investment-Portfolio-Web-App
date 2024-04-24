@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
+import { Checkbox } from "@chakra-ui/react";
 import Layout from "../../../components/app/layout";
 import SearchBox from "../../../components/app/search-box";
 import BasicTable from "../../../components/app/basic-table";
@@ -293,6 +294,8 @@ export default function Trades() {
     useState(ALL_PLATFORMS_ITEM);
   const [trades, setTrades] = useState([]);
   const [importLogs, setImportLogs] = useState([]);
+  const [showUnlinkedTrades, setShowUnlinkedTrades] = useState(true);
+  const [showLinkedTrades, setShowLinkedTrades] = useState(false);
   const [searchString, setSearchString] = useState("");
   const [debouncedSearchString, setDebouncedSearchString] = useState("");
   const [loading, setLoading] = useState(true);
@@ -394,6 +397,14 @@ export default function Trades() {
     }
     return 0;
   });
+
+  if (!showLinkedTrades) {
+    data = data.filter((trade) => !trade.tradePlan);
+  }
+
+  if (!showUnlinkedTrades) {
+    data = data.filter((trade) => !!trade.tradePlan);
+  }
 
   if (debouncedSearchString) {
     console.log("debouncedSearchString", debouncedSearchString);
@@ -666,6 +677,34 @@ export default function Trades() {
                       "Loading accounts..."
                     )}
                   </div>
+
+                  {trades.length &&
+                  trades.some((trade) => !!trade.tradePlan) ? (
+                    <div className="flex">
+                      <div className="flex items-center text-center justify-center mr-2">
+                        <span className="text-sm">Unlinked Trades</span>
+                        <Checkbox
+                          isChecked={showUnlinkedTrades}
+                          colorScheme="purple"
+                          className="p-2"
+                          onChange={(e) =>
+                            setShowUnlinkedTrades(e.target.checked)
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center text-center justify-center">
+                        <span className="text-sm">Linked Trades</span>
+                        <Checkbox
+                          isChecked={showLinkedTrades}
+                          colorScheme="purple"
+                          className="p-2"
+                          onChange={(e) =>
+                            setShowLinkedTrades(e.target.checked)
+                          }
+                        />
+                      </div>
+                    </div>
+                  ) : null}
                   {trades.length ? (
                     <div>
                       <SearchBox
