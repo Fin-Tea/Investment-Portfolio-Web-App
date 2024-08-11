@@ -1,7 +1,6 @@
 
 exports.up = function(knex) {
     return knex.schema.alterTable("tradePlans", (t) => {
-        t.dropForeign('tradeplanid');
         t.dropColumn("tradePlanId");
       });
 };
