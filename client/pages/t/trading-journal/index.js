@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import Layout from "../../../components/app/layout";
+import Layout from "../../../components/appV2/layout";
 import SideView from "../../../components/app/side-view";
 import SearchBox from "../../../components/app/search-box";
 import Pill from "../../../components/app/pill";
