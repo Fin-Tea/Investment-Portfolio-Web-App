@@ -29,7 +29,7 @@ export default function InvestingPortfolio() {
           <div className="py-4 h-full flex">
             <div className="ml-5 w-11/12 h-full flex flex-col border-x border-y border-gray-300 bg-white pb-4 mx-auto overflow-auto">
               <div>
-                <div className="pt-2 text-center relative">
+                <div className="pt-3 text-center relative">
                   <div className="flex justify-center">
                     <div className="h-16 w-16 rounded-full overflow-hidden mr-2">
                       <img src="/images/portfolio-example.jpg" />
@@ -40,7 +40,7 @@ export default function InvestingPortfolio() {
                   </div>
                 </div>
               </div>
-              <div className="w-[90%] mx-auto flex">
+              <div className="w-[90%] mx-auto flex justify-between">
                 
               <div className=" min-w-48">
               <Select
@@ -61,6 +61,11 @@ export default function InvestingPortfolio() {
                         onChange={() => {}}
                       />
               </div>
+              <button
+                      className="rounded-full bg-purple-800 text-white px-4 py-1 mb-2"
+                    >
+                      Sync Investments
+                    </button>
               </div>
               <div className="w-full h-full">
                 <div className=" w-[90%] mx-auto border border-gray-2 h-98 mt-2 flex flex-col items-center">
@@ -68,12 +73,6 @@ export default function InvestingPortfolio() {
                   <h4 className="ml-8 mt-3">
                     Active Positions
                   </h4>
-
-                  <button
-                      className="rounded-full bg-purple-800 text-white px-4 py-1 mt-2 mr-8"
-                    >
-                      Sync Investments
-                    </button>
                     </div>
                   <div className="w-[90%] my-3 h-36 border border-gray-2 flex flex-col px-2 py-3">
                     <div className="flex">
