@@ -6,7 +6,7 @@ import LayoutLink from "./layout-link";
 const ROUTES = {
   EVENTS: "/p/events", // social learning (make it fun!)
   PORTFOLIO: "/p/investing-portfolio", // easy portfolio allocation & management
-  INSIGHTS: "/p/performance-insights", // how is your portfolio doing relative to bench marks, risk management, and allocation decisions
+  INSIGHTS: "/p/portfolio-insights", // how is your portfolio doing relative to bench marks, risk management, and allocation decisions
   REWARDS: "/p/rewards", // incentives for good investing habits (reward points(?), products + services)
   MAGICAL_MOMENTS: "/p/magical-moments", // memorable experiences with family, friends, awesome communities, etc. that happened based on your Fin Tea rewards/earnings. Photos of moments that make investing worth it 
 };
