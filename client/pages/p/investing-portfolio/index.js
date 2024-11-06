@@ -55,7 +55,7 @@ export default function InvestingPortfolio() {
                             margin: "0px",
                           }),
                         }}
-                        placeholder="Select account..."
+                        placeholder="Select investing account..."
                         options={[]}
                         value={null}
                         onChange={() => {}}
